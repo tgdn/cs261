@@ -11,11 +11,15 @@ public class URLReader {
         );
         String inputLine;
         boolean firstLine = true;
+        Trade trade;
 
         while ( (inputLine = bis.readLine()) != null ) {
             // dont print header
             if (!firstLine) {
-                System.out.println(inputLine);
+                trade = new Trade(inputLine);
+                System.out.print(trade.getCurrency() + " ");
+                System.out.print(trade.getPrice() + " ");
+                System.out.print(trade.getSector() + "\n");
             }
             firstLine = false;
         }
