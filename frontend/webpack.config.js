@@ -22,7 +22,13 @@ module.exports = {
                 exclude: /node_modules/,
                 loader: 'babel-loader',
                 query: {
-                    plugins: ['transform-runtime'],
+                    plugins: [
+                        'transform-runtime',
+                        'react-html-attrs',
+                        'transform-class-properties',
+                        'transform-decorators-legacy',
+                        'transform-object-rest-spread'
+                    ],
                     presets: ['es2015', 'stage-0', 'react'],
                 }
             }
