@@ -13,15 +13,8 @@ const options = {
 };
 const horizon_server = horizon(http_server, options);
 
-app.use(express.static(__dirname + '/dist'));
+app.use(express.static(path.join(__dirname, 'dist')));
 
-app.get('/', function(req, res) {
-    res.send(path.join(__dirname + '/index.html'));
+app.get('/', (req, res) => {
+    res.send(path.join(__dirname, 'index.html'));
 })
-
-console.log('Listening on port 8181.');
-
-// horizon_server.add_auth_provider(
-//     horizon_instance.auth.facebook,
-//     { id: 'id', secret: 'secret', path: 'facebook' }
-// );
