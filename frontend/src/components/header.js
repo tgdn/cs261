@@ -6,7 +6,7 @@ export default (props) => (
             type="checkbox"
             id="luxbar-checkbox"
         />
-        <div class="luxbar-menu luxbar-menu-material-bluegrey">
+        <div class="luxbar-menu luxbar-menu-dark">
             <ul class="luxbar-navigation">
                 <li class="luxbar-header">
                     <a class="luxbar-brand" href="#">
