@@ -21,52 +21,56 @@
 \setcounter{page}{1}
 
 \section{Abstract}
-This document is the use of the stakeholders (Deutsche Bank) and the assessor (Professor Stephen Jarvis),
+This document is for the use of the stakeholders (Deutsche Bank) and the assessor (Professor Stephen Jarvis),
 along with the software developers, it will outline the requirements of the software to be developed for
 these stakeholders, for discussion in a meeting on Friday 10th February.
 
 \section{Introduction}
 The task set is to produce software to help the stakeholders identify and flag anomalous trading patterns
-on the London Stock Exchange for stocks within the FTSE 100. This is to provide an ‘early warning’ system
+on the London Stock Exchange for stocks within the FTSE 100. This is to provide an 'early warning' system
 to alert the bank to rapid market changes that would be too fast to spot manually. Without this, the
 stakeholders would be left vulnerable and less aware to the events causing major fluctuations within the
 stock market and potentially catch rogue traders, looking to exploit the market using specified, known
-techniques. The identification of such events must be done in a love data environment and the software
+techniques. The identification of such events must be done in a live data environment and the software
 must be capable of coping with the fast-moving nature of the dataset required, thus human intervention
-should only be required as necessary.
+should only be required if necessary.
 
 \section{Glossary}
-Stakeholders - Deutsche Bank
+\textbf{Fat finger errors} - human error entering data, this may include incorrectly inputting the volume
+or price of trades. \\\\
+\textbf{Pump \& Dump} - illegal buying of large share volumes to artificially inflate the price, by encouraging
+others to follow the trend. Shares can then be sold at a higher price, yielding a large profit for the rogue trader. \\\\
+\textbf{Bear Raid} - opposite to pump and dump, a trader or group of traders may short a high volume of stocks,
+thus manipulating the price of the stocks, sending the price down, they will then buy back these shares at the
+lower price hence making a profit. To further ensure the price of the stock will decrease, they may release false
+information, detrimental to the company, thus prompting others to sell their stocks and drive the price down. \\\\
+\textbf{Volume Spikes} - when compared to the average trend for the volume of trades of a share/group of shares,
+if there is an unusually high volume of these stocks being traded either at once or spread out over a certain period. \\\\
+
 
 \section{User Requirements}
 \subsection{Functional Requirements}
 The Software must be able to learn the characteristics of the stocks in the FTSE 100 using a machine learning
 algorithm and send an alert to notify the Business Analysts of the stakeholders when one of the following
-trading patterns is detected. This will then allow the user to obtain the relevant data to perform the root
-cause analysis, through the display of graphs or other relevant data display methods. These patterns can be
-categorised as follows:
+trading patterns is detected. These characteristics will be the average, minimum and maximum values of volumes
+and prices of individual stocks as well as given sectors. This will then allow the user to obtain the relevant
+data to perform the root cause analysis, through the display of graphs or other relevant data display methods.
+These patterns can be categorised as follows:
 \begin{itemize}
-	\item \textbf{Identify Fat finger errors} - human error entering data, this may include incorrectly inputting
-	the volume or price of trades. The algorithm must be able to detect when abnormalities occur in data inputted,
-	i.e. volume or price values are larger than average by a factor of ten.
-	\item \textbf{Pump \& Dump} - illegal buying of large share volumes to artificially inflate the price, by
-	encouraging others to follow the trend. Shares can then be sold at a higher price, yielding a large profit
-	for the rogue trader. The software should check when a single or multiple trader IDs buys a large volume of
+	\item \textbf{Fat finger errors} -  The algorithm must be able to detect when abnormalities occur in data inputted,
+	i.e. the probability of a volume or price values occurring are less than a prescribed percentage.
+	\item \textbf{Pump \& Dump} - The software should check when a single or multiple trader IDs buys a large volume of
 	shares and sells them shortly afterwards for the new higher price.
-	\item \textbf{Bear Raid} - opposite to pump and dump, a trader or group of traders may short a high volume
-	of stocks, thus manipulating the price of the stocks, sending the price down, they will then buy back these
-	shares at the lower price hence making a profit. In a similar manner to pump \& dump, an algorithm must check
-	that traders are not selling large volumes of shares to then buy them back in a short amount of time.
-	\item \textbf{Volume Spikes} - when compared to the average trend for the volume of trades of a share/group
-	of shares, if there is an unusually high volume of these stocks being traded at either once or spread out
-	over a certain period. This could indicate that methods such as pump \& dump or bear raids are taking place
+	\item \textbf{Bear Raid} - In a similar manner to pump \& dump, an algorithm must check that traders are not selling
+	large volumes of shares to then buy them back in a short amount of time.
+	\item \textbf{Volume Spikes} - This could indicate that methods such as pump \& dump or bear raids are taking place
 	and thus should be monitored. The software should compare the volume of each trade to the average volume for
 	this stock as determined by the machine learning algorithm which will be dependent on the fluctuation of this stock.
 \end{itemize}
 
-In doing this the software must be able to analyse both a live feed for up to date data, in addition to a static
+In doing this the software must be able to analyse both a live feed for up-to-date data, in addition to a static
 csv file to analyse historical data in order to make comparisons. This historical data will also be available to
-the user for them to ‘drill down’ into the data which caused the alert, this data should date back to the previous
+the user for them to 'drill down' into the data which caused the alert, this data should date back to the previous
 two days such that meaningful short term predictions and comparisons can be made.
 
 The system should be able to cope with the connection and reconnection of the server from which it retrieves the
@@ -96,7 +100,7 @@ The system should always remain responsive whilst being able to process the larg
 should be the case that delay between a rogue trading pattern occurring and being detected and displayed is at
 a minimum such that there is 5 seconds or less between the trade happening and the user being alerted to this.
 
-The system’s frontend will ensure a simple, effective display of the current system status, suggesting if action
+The system's frontend will ensure a simple, effective display of the current system status, suggesting if action
 is needed to be taken or not. This has been chosen due to the many streams of data already in possession of the
 analysts utilising this software, thus it is not required to replicate all the data received, only the data of
 interest for the investigation of anomalous trading patterns. This allows users of a basic understanding to
@@ -121,13 +125,40 @@ the design and implementation process.
 Through a democratic vote taken from within the group discussions, it has been decided that Thomas will take on
 the role of project manager, due to his knowledge of the task in hand and the experience he has had from similar
 projects in the past. He shall work alongside Stephen to create the frontend of the application, whilst still
-overseeing the work of Harry David and Liam on the frontend. The whole group will meet at least once a week in
-the already discussed available timeslots, although additional meetings may occur will necessary group members as
-required. All major decisions shall be taken as a group vote, with the project manager’s decision counting as final
-in the case of any tied votes, however, all decisions involving the frontend or backend team only, will be taken
-from within the relevant team, including the project manager, such that it allows consistency throughout the
-application.
+overseeing the work of Harry, David and Liam on the frontend. The whole group will meet at least once a week in
+the already discussed available timeslots between 10am and 12am on Mondays, Tuesdays, Wednesdays or Fridays, although
+additional meetings may occur will necessary group members as required. All major decisions shall be taken as a group
+vote, with the project manager's decision counting as final in the case of any tied votes, however, all decisions
+involving the frontend or backend team only, will be taken from within the relevant team, including the project manager,
+such that it allows consistency throughout the application.
 The planning and design of the application will be done in the teams prescribed above, with both teams informing
 each other throughout the process to ensure the feasibility and consistency of the application.
+
+\section{Questions}
+\textbf{Q: Should the user be ale to visually see the data parsed and in what format should it be displayed?}
+A: There is no specific format mandated by DB, however good data visualisation is always important when a user needs to
+understand and respond to information quickly.
+You should consider the use-case; traders manage portfolios containing hundreds of stocks (some of which they may not be
+familiar with) and must respond quickly to events affecting any one of them. Your system needs to make a user aware something
+has happened, but also furnish them with enough information to decide how to respond. I'd suggest basic information about the
+stock (name, sector, price); past price, volume and volatility trend charts at minimum; and any predictions of future behaviour
+your system can generate (stretch goal).  The challenge here is to provide enough information for the trader to make a purchasing
+decision quickly. \\
+\textbf{Q: Should we allow the user to manually adapt any characteristics learned by the machine learning algorithm?}
+A: This is up to you, and is specifically mentioned as a possibility in the specification. If you do choose to allow the user
+this level of control, you should be aware that the users are non-technical, meaning they are not familiar with machine learning
+techniques. You should be careful to expose this functionality in a way that users can understand. \\
+\textbf{Q: Is there a restriction/preferred medium of software (web app or downloadable software)?}
+A: No. You are free to use any hardware or software platform at your disposal. \\
+\textbf{Q: As required by the specification, our software will be able to take data from a static file. However, does this imply
+that the user can at any point upload a file to the software using some means of upload implemented by us?}
+A: No, not at any point. There will never be a case where a user needs to be responding to alerts from static and dynamic data
+simultaneously. That said, there will be times when a user will have to upload a file to your software. \\
+\textbf{Q: How long is an appropriate time frame to predict future data?}
+A: This all depends on how good your predictions are. Your prediction horizon should be as long as your model is accurate for,
+and no longer. It is important to note here that 'prediction' does not mean you have to specify an exact price at an exact time
+in the future. It is more important to show the overall trend in the data. A model which can provide accurate projections for the
+next hour or more would be considered very valuable.
+
 
 \end{document}
