@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import pytz
 from datetime import datetime
+
+tz = pytz.timezone('Europe/London')
 
 class Trade:
     def __init__(self, row):
@@ -8,7 +11,8 @@ class Trade:
         # datetime is given to us such as this one
         #'2017-01-13 15:26:41.917266'
 
-        self.time = datetime.strptime(split_row[0], '%Y-%m-%d %H:%M:%S.%f')
+        # localize timezone
+        self.time = tz.localize(datetime.strptime(split_row[0], '%Y-%m-%d %H:%M:%S.%f'))
         self.buyer = split_row[1]
         self.seller = split_row[2]
         self.price = float(split_row[3])
