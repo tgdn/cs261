@@ -1,0 +1,24 @@
+Metadata-Version: 1.1
+Name: psclient
+Version: 2.0
+Summary: Predictive Services Management Client
+Home-page: https://github.com/turi-code/psclient
+Author: Turi, Inc.
+Author-email: contact@turi.com
+License: LICENSE
+Description: Predictive Services Client (psclient)
+        ======================================
+        
+        This package allows you to create and manage Turi Predictive Services
+        
+        Refer to https://turi.com/learn/userguide/deployment/pred-intro.html for detailed
+        information regarding how to use this client
+        
+Keywords: turi graphlab predictive services
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Information Analysis

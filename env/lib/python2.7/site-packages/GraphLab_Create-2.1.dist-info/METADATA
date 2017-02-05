@@ -1,0 +1,39 @@
+Metadata-Version: 2.0
+Name: GraphLab-Create
+Version: 2.1
+Summary: GraphLab Create enables developers and data scientists to apply machine learning to build state of the art data products.
+Home-page: https://turi.com
+Author: Turi
+Author-email: contact@turi.com
+License: LICENSE.txt
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Financial and Insurance Industry
+Classifier: Intended Audience :: Information Technology
+Classifier: Intended Audience :: Other Audience
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: Other/Proprietary License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Classifier: Operating System :: MacOS :: MacOS X
+Requires-Dist: awscli (==1.6.2)
+Requires-Dist: boto (==2.33.0)
+Requires-Dist: certifi (==2015.04.28)
+Requires-Dist: decorator (==4.0.9)
+Requires-Dist: genson (==0.1.0)
+Requires-Dist: jsonschema (==2.5.1)
+Requires-Dist: multipledispatch (>=0.4.7)
+Requires-Dist: prettytable (==0.7.2)
+Requires-Dist: psclient
+Requires-Dist: requests (==2.9.1)
+Requires-Dist: sseclient (==0.0.8)
+Requires-Dist: tornado (==4.3)
+
+UNKNOWN
+
+

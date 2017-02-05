@@ -1,0 +1,17 @@
+LICENSE.txt
+MANIFEST.in
+README.rst
+requirements.txt
+setup.cfg
+setup.py
+bcdoc/__init__.py
+bcdoc/docevents.py
+bcdoc/docstringparser.py
+bcdoc/restdoc.py
+bcdoc/style.py
+bcdoc/textwriter.py
+bcdoc.egg-info/PKG-INFO
+bcdoc.egg-info/SOURCES.txt
+bcdoc.egg-info/dependency_links.txt
+bcdoc.egg-info/requires.txt
+bcdoc.egg-info/top_level.txt

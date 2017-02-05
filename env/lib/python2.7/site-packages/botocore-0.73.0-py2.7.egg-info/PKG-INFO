@@ -1,0 +1,55 @@
+Metadata-Version: 1.1
+Name: botocore
+Version: 0.73.0
+Summary: Low-level, data-driven core of boto 3.
+Home-page: https://github.com/boto/botocore
+Author: Mitch Garnaat
+Author-email: garnaat@amazon.com
+License: Copyright 2012-2014 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License"). You
+may not use this file except in compliance with the License. A copy of
+the License is located at
+
+    http://aws.amazon.com/apache2.0/
+
+or in the "license" file accompanying this file. This file is
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+ANY KIND, either express or implied. See the License for the specific
+language governing permissions and limitations under the License.
+
+Description: botocore
+        ========
+        
+        .. image:: https://secure.travis-ci.org/boto/botocore.png?branch=develop
+           :target: http://travis-ci.org/boto/botocore
+        
+        .. image:: https://coveralls.io/repos/boto/botocore/badge.png?branch=develop
+           :target: https://coveralls.io/r/boto/botocore?branch=master
+        
+        A low-level interface to a growing number of Amazon Web Services. The
+        botocore package is the foundation for
+        `AWS-CLI <https://github.com/aws/aws-cli>`__.
+        
+        `Documentation <https://botocore.readthedocs.org/en/latest/>`__
+        
+        **WARNING**
+        
+        Botocore is currently under a developer preview, and its API is subject
+        to change prior to a GA (1.0) release.  Until botocore reaches a 1.0 release,
+        backwards compatibility is not guaranteed.
+        
+        If you need a stable interface, please consider using
+        `boto <https://github.com/boto/boto>`__.
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: System Administrators
+Classifier: Natural Language :: English
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3

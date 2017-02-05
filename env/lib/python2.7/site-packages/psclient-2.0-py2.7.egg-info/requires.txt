@@ -1,0 +1,14 @@
+boto
+decorator
+genson
+jsonschema
+python-dateutil
+requests
+
+[dev]
+check-manifest
+
+[test]
+coverage
+mock
+graphlab-create

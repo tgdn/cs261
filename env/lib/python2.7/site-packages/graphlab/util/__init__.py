@@ -1,0 +1,956 @@
+'''
+Copyright (C) 2016 Turi
+All rights reserved.
+
+This software may be modified and distributed under the terms
+of the BSD license. See the LICENSE file for details.
+'''
+# 1st set up logging
+import logging
+import logging.config
+import time as _time
+import tempfile as _tempfile
+import os as _os
+
+import urllib as _urllib
+import re as _re
+from zipfile import ZipFile as _ZipFile
+import bz2 as _bz2
+import tarfile as _tarfile
+import itertools as _itertools
+import uuid as _uuid
+import datetime as _datetime
+import sys as _sys
+import subprocess as _subprocess
+
+from .sframe_generation import generate_random_sframe
+from .sframe_generation import generate_random_regression_sframe
+from .sframe_generation import generate_random_classification_sframe
+from .type_checks import _raise_error_if_not_function
+from .type_checks import _raise_error_if_not_of_type
+from .type_checks import _is_non_string_iterable
+from .type_checks import _is_string
+
+def _i_am_a_lambda_worker():
+    if _re.match(".*lambda_worker.*", _sys.argv[0]) is not None:
+        return True
+    return False
+
+try:
+    import configparser as _ConfigParser
+except ImportError:
+    import ConfigParser as _ConfigParser
+
+# Return the root package name: sframe or graphlab
+root_package_name = __import__(__name__.split('.')[0]).__name__
+client_log_file = _os.path.join(_tempfile.gettempdir(),
+                                root_package_name +
+                                '_client_%d_%d.log' % (_time.time(), _os.getpid()))
+
+
+def init_logger():
+    """
+    Initialize the logging configuration for the graphlab/sframe package. This does not
+    affect the logging config of root or other modules outside of graphlab/sframe.
+    """
+    # Package level logger
+    logging.config.dictConfig({
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'standard': {
+                'format': '%(asctime)s [%(levelname)s] %(name)s, %(lineno)s: %(message)s'
+            },
+            'brief': {
+                'format': '[%(levelname)s] %(name)s: %(message)s'
+            }
+        },
+        'handlers': {
+            'default': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'brief'
+            },
+            'file': {
+                'class': 'logging.FileHandler',
+                'formatter': 'standard',
+                'filename': client_log_file,
+                'encoding': 'UTF-8',
+                'delay': 'False',
+            }
+        },
+        'loggers': {
+            root_package_name: {
+                'handlers': ['default', 'file'],
+                'propagate': 'True'
+            }
+        }
+    })
+
+    # Set module specific log levels
+    logging.getLogger('librato').setLevel(logging.CRITICAL)
+    logging.getLogger('requests').setLevel(logging.CRITICAL)
+    if _i_am_a_lambda_worker():
+        logging.getLogger(root_package_name).setLevel(logging.WARNING)
+    else:
+        logging.getLogger(root_package_name).setLevel(logging.INFO)
+
+
+# Let's call init_logger on import
+init_logger()
+
+
+def _convert_slashes(path):
+    """
+    Converts all windows-style slashes to unix-style slashes
+    """
+    return path.replace('\\', '/')
+
+def _get_aws_credentials():
+    """
+    Returns the values stored in the AWS credential environment variables.
+    Returns the value stored in the AWS_ACCESS_KEY_ID environment variable and
+    the value stored in the AWS_SECRET_ACCESS_KEY environment variable.
+
+    Returns
+    -------
+    out : tuple [string]
+        The first string of the tuple is the value of the AWS_ACCESS_KEY_ID
+        environment variable. The second string of the tuple is the value of the
+        AWS_SECRET_ACCESS_KEY environment variable.
+
+    See Also
+    --------
+    set_credentials
+
+    Examples
+    --------
+    >>> graphlab.aws.get_credentials()
+    ('RBZH792CTQPP7T435BGQ', '7x2hMqplWsLpU/qQCN6xAPKcmWo46TlPJXYTvKcv')
+    """
+
+    if (not 'AWS_ACCESS_KEY_ID' in _os.environ):
+        raise KeyError('No access key found. Please set the environment variable AWS_ACCESS_KEY_ID, or using graphlab.aws.set_credentials()')
+    if (not 'AWS_SECRET_ACCESS_KEY' in _os.environ):
+        raise KeyError('No secret key found. Please set the environment variable AWS_SECRET_ACCESS_KEY, or using graphlab.aws.set_credentials()')
+    return (_os.environ['AWS_ACCESS_KEY_ID'], _os.environ['AWS_SECRET_ACCESS_KEY'])
+
+
+def _try_inject_s3_credentials(url):
+    """
+    Inject aws credentials into s3 url as s3://[aws_id]:[aws_key]:[bucket/][objectkey]
+
+    If s3 url already contains secret key/id pairs, just return as is.
+    """
+    assert url.startswith('s3://')
+    path = url[5:]
+    # Check if the path already contains credentials
+    tokens = path.split(':')
+    # If there are two ':', its possible that we have already injected credentials
+    if len(tokens) == 3:
+        # Edge case: there are exactly two ':'s in the object key which is a false alarm.
+        # We prevent this by checking that '/' is not in the assumed key and id.
+        if ('/' not in tokens[0]) and ('/' not in tokens[1]):
+            return url
+
+    # S3 url does not contain secret key/id pair, query the environment variables
+    (k, v) = _get_aws_credentials()
+    return 's3://' + k + ':' + v + ':' + path
+
+
+def _make_internal_url(url):
+    """
+    Process user input url string with proper normalization
+    For all urls:
+      Expands ~ to $HOME
+    For S3 urls:
+      Returns the s3 URL with credentials filled in using graphlab.aws.get_aws_credential().
+      For example: "s3://mybucket/foo" -> "s3://$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY:mybucket/foo".
+    For hdfs urls:
+      Error if hadoop classpath is not set
+    For local file urls:
+      conver slashes for windows sanity
+
+    Parameters
+    ----------
+    string
+        A URL (as described above).
+
+    Raises
+    ------
+    ValueError
+        If a bad url is provided.
+    """
+    if not url:
+        raise ValueError('Invalid url: %s' % url)
+
+    from .. import sys_util
+    from . import file_util
+
+    # Convert Windows paths to Unix-style slashes
+    url = _convert_slashes(url)
+
+    # Try to split the url into (protocol, path).
+    protocol = file_util.get_protocol(url)
+    is_local = False
+    if protocol in ['http', 'https']:
+        pass
+    elif protocol == 'hdfs':
+        if not sys_util.get_hadoop_class_path():
+            raise ValueError("HDFS URL is not supported because Hadoop not found. Please make hadoop available from PATH or set the environment variable HADOOP_HOME and try again.")
+    elif protocol == 's3':
+        return _try_inject_s3_credentials(url)
+    elif protocol == '':
+        is_local = True
+    elif (protocol == 'local' or protocol == 'remote'):
+        # local and remote are legacy protocol for seperate server process
+        is_local = True
+        # This code assumes local and remote are same machine
+        url = _re.sub(protocol+'://','',url,count=1)
+    else:
+        raise ValueError('Invalid url protocol %s. Supported url protocols are: local, s3://, https:// and hdfs://' % protocol)
+
+    if is_local:
+        url = _os.path.abspath(_os.path.expanduser(url))
+    return url
+
+
+def _download_dataset(url_str, extract=True, force=False, output_dir="."):
+    """Download a remote dataset and extract the contents.
+
+    Parameters
+    ----------
+
+    url_str : string
+        The URL to download from
+
+    extract : bool
+        If true, tries to extract compressed file (zip/gz/bz2)
+
+    force : bool
+        If true, forces to retry the download even if the downloaded file already exists.
+
+    output_dir : string
+        The directory to dump the file. Defaults to current directory.
+    """
+    fname = output_dir + "/" + url_str.split("/")[-1]
+    #download the file from the web
+    if not _os.path.isfile(fname) or force:
+        print("Downloading file from:", url_str)
+        _urllib.urlretrieve(url_str, fname)
+        if extract and fname[-3:] == "zip":
+            print("Decompressing zip archive", fname)
+            _ZipFile(fname).extractall(output_dir)
+        elif extract and fname[-6:] == ".tar.gz":
+            print("Decompressing tar.gz archive", fname)
+            _tarfile.TarFile(fname).extractall(output_dir)
+        elif extract and fname[-7:] == ".tar.bz2":
+            print("Decompressing tar.bz2 archive", fname)
+            _tarfile.TarFile(fname).extractall(output_dir)
+        elif extract and fname[-3:] == "bz2":
+            print("Decompressing bz2 archive:", fname)
+            outfile = open(fname.split(".bz2")[0], "w")
+            print("Output file:", outfile)
+            for line in _bz2.BZ2File(fname, "r"):
+                outfile.write(line)
+            outfile.close()
+    else:
+        print("File is already downloaded.")
+
+def is_directory_archive(path):
+    """
+    Utiilty function that returns True if the path provided is a directory that has an SFrame or SGraph in it.
+
+    SFrames are written to disk as a directory archive, this function identifies if a given directory is an archive
+    for an SFrame.
+
+    Parameters
+    ----------
+    path : string
+        Directory to evaluate.
+
+    Returns
+    -------
+    True if path provided is an archive location, False otherwise
+    """
+    if path is None:
+        return False
+
+    if not _os.path.isdir(path):
+        return False
+
+    ini_path = '/'.join([_convert_slashes(path), 'dir_archive.ini'])
+
+    if not _os.path.exists(ini_path):
+        return False
+
+    if _os.path.isfile(ini_path):
+        return True
+
+    return False
+
+
+def get_archive_type(path):
+    """
+    Returns the contents type for the provided archive path.
+
+    Parameters
+    ----------
+    path : string
+        Directory to evaluate.
+
+    Returns
+    -------
+    Returns a string of: sframe, sgraph, raises TypeError for anything else
+    """
+    if not is_directory_archive(path):
+        raise TypeError('Unable to determine the type of archive at path: %s' % path)
+
+    try:
+        ini_path = '/'.join([_convert_slashes(path), 'dir_archive.ini'])
+        parser = _ConfigParser.SafeConfigParser()
+        parser.read(ini_path)
+
+        contents = parser.get('metadata', 'contents')
+        return contents
+    except Exception as e:
+        raise TypeError('Unable to determine type of archive for path: %s' % path, e)
+
+def get_environment_config():
+    """
+    Returns all the GraphLab Create configuration variables that can only
+    be set via environment variables.
+
+    - *GRAPHLAB_FILEIO_WRITER_BUFFER_SIZE*
+      The file write buffer size.
+
+    - *GRAPHLAB_FILEIO_READER_BUFFER_SIZE*
+      The file read buffer size.
+
+    - *OMP_NUM_THREADS*
+      The maximum number of threads to use for parallel processing.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    Returns a dictionary of {key:value,..}
+    """
+    from ..connect import main as _glconnect
+    unity = _glconnect.get_unity()
+    return unity.list_globals(False)
+
+def get_runtime_config():
+    """
+    Returns all the GraphLab Create configuration variables that can be set
+    at runtime. See :py:func:`graphlab.set_runtime_config()` to set these
+    values and for documentation on the effect of each variable.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    Returns a dictionary of {key:value,..}
+    """
+    from ..connect import main as _glconnect
+    unity = _glconnect.get_unity()
+    return unity.list_globals(True)
+
+def set_runtime_config(name, value):
+    """
+    Configures system behavior at runtime. These configuration values are also
+    read from environment variables at program startup if available. See
+    :py:func:`graphlab.get_runtime_config()` to get the current values for
+    each variable.
+
+    Note that defaults may change across versions and the names
+    of performance tuning constants may also change as improved algorithms
+    are developed and implemented.
+
+    Parameters
+    ----------
+    name: A string referring to runtime configuration variable.
+
+    value: The value to set the variable to.
+
+    Returns
+    -------
+    Nothing
+
+    Raises
+    ------
+    A RuntimeError if the key does not exist, or if the value cannot be
+    changed to the requested value.
+
+    Notes
+    -----
+    **Basic Configuration Variables**
+
+    *GRAPHLAB_CACHE_FILE_LOCATIONS*: The directory in which intermediate
+    SFrames/SArray are stored.  For instance "/var/tmp".  Multiple directories
+    can be specified separated by a colon (ex: "/var/tmp:/tmp") in which case
+    intermediate SFrames will be striped across both directories (useful for
+    specifying multiple disks).  Defaults to /var/tmp if the directory exists,
+    /tmp otherwise.
+
+    *GRAPHLAB_FILEIO_MAXIMUM_CACHE_CAPACITY*: The maximum amount of memory which
+    will be occupied by *all* intermediate SFrames/SArrays. Once this limit is
+    exceeded, SFrames/SArrays will be flushed out to temporary storage (as
+    specified by `GRAPHLAB_CACHE_FILE_LOCATIONS`). On large systems increasing
+    this as well as `GRAPHLAB_FILEIO_MAXIMUM_CACHE_CAPACITY_PER_FILE` can
+    improve performance significantly. Defaults to 2147483648 bytes (2GB).
+
+    *GRAPHLAB_FILEIO_MAXIMUM_CACHE_CAPACITY_PER_FILE*: The maximum amount of
+    memory which will be occupied by any individual intermediate SFrame/SArray.
+    Once this limit is exceeded, the SFrame/SArray will be flushed out to
+    temporary storage (as specified by `GRAPHLAB_CACHE_FILE_LOCATIONS`). On
+    large systems, increasing this as well as
+    `GRAPHLAB_FILEIO_MAXIMUM_CACHE_CAPACITY` can improve performance
+    significantly for large SFrames. Defaults to 134217728 bytes (128MB).
+
+    **SSL Configuration**
+
+    *GRAPHLAB_FILEIO_ALTERNATIVE_SSL_CERT_FILE*: The location of an SSL
+    certificate file used to validate HTTPS / S3 connections. Defaults to the
+    the Python certifi package certificates.
+
+    *GRAPHLAB_FILEIO_ALTERNATIVE_SSL_CERT_DIR*: The location of an SSL
+    certificate directory used to validate HTTPS / S3 connections. Defaults to
+    the operating system certificates.
+
+    *GRAPHLAB_FILEIO_INSECURE_SSL_CERTIFICATE_CHECKS*: If set to a non-zero
+    value, disables all SSL certificate validation.  Defaults to False.
+
+    **ODBC Configuration**
+
+    *GRAPHLAB_LIBODBC_PREFIX*: A directory containing libodbc.so. Also see
+    :func:`graphlab.set_libodbc_path` and :func:`graphlab.connect_odbc`
+
+    *GRAPHLAB_ODBC_BUFFER_MAX_ROWS*: The number of rows to read from ODBC in
+    each batch. Increasing this may give better performance at increased memory
+    consumption. Defaults to 2000.
+
+    *GRAPHLAB_ODBC_BUFFER_SIZE*: The maximum ODBC buffer size in bytes when
+    reading. Increasing this may give better performance at increased memory
+    consumption. Defaults to 3GB.
+
+    **Sort Performance Configuration**
+
+    *GRAPHLAB_SFRAME_SORT_PIVOT_ESTIMATION_SAMPLE_SIZE*: The number of random
+    rows to sample from the SFrame to estimate the sort pivots used to
+    partition the sort. Defaults to 2000000.
+
+    *GRAPHLAB_SFRAME_SORT_BUFFER_SIZE*: The maximum estimated memory consumption
+    sort is allowed to use. Increasing this will increase the size of each sort
+    partition, and will increase performance with increased memory consumption.
+    Defaults to 2GB.
+
+    **Join Performance Configuration**
+
+    *GRAPHLAB_SFRAME_JOIN_BUFFER_NUM_CELLS*: The maximum number of cells to
+    buffer in memory. Increasing this will increase the size of each join
+    partition and will increase performance with increased memory consumption.
+    If you have very large cells (very long strings for instance), decreasing
+    this value will help decrease memory consumption.  Defaults to 52428800.
+
+    **Groupby Aggregate Performance Configuration**
+
+    *GRAPHLAB_SFRAME_GROUPBY_BUFFER_NUM_ROWS*: The number of groupby keys cached
+    in memory. Increasing this will increase performance with increased memory
+    consumption. Defaults to 1048576.
+
+    **Advanced Configuration Variables**
+
+    *GRAPHLAB_SFRAME_FILE_HANDLE_POOL_SIZE*: The maximum number of file handles
+    to use when reading SFrames/SArrays.  Once this limit is exceeded, file
+    handles will be recycled, reducing performance. This limit should be rarely
+    approached by most SFrame/SArray operations. Large SGraphs however may
+    create a large a number of SFrames in which case increasing this limit may
+    improve performance (You may also need to increase the system file handle
+    limit with "ulimit -n").  Defaults to 128.
+    """
+    from ..connect import main as _glconnect
+    unity = _glconnect.get_unity()
+    ret = unity.set_global(name, value)
+    if ret != "":
+        raise RuntimeError(ret);
+
+_GLOB_RE = _re.compile("""[*?]""")
+def _split_path_elements(url):
+    parts = _os.path.split(url)
+    m = _GLOB_RE.search(parts[-1])
+    if m:
+        return (parts[0], parts[1])
+    else:
+        return (url, "")
+
+def crossproduct(d):
+    """
+    Create an SFrame containing the crossproduct of all provided options.
+
+    Parameters
+    ----------
+    d : dict
+        Each key is the name of an option, and each value is a list
+        of the possible values for that option.
+
+    Returns
+    -------
+    out : SFrame
+        There will be a column for each key in the provided dictionary,
+        and a row for each unique combination of all values.
+
+    Example
+    -------
+    settings = {'argument_1':[0, 1],
+                'argument_2':['a', 'b', 'c']}
+    print crossproduct(settings)
+    +------------+------------+
+    | argument_2 | argument_1 |
+    +------------+------------+
+    |     a      |     0      |
+    |     a      |     1      |
+    |     b      |     0      |
+    |     b      |     1      |
+    |     c      |     0      |
+    |     c      |     1      |
+    +------------+------------+
+    [6 rows x 2 columns]
+    """
+
+    from .. import connect as _mt
+    _mt._get_metric_tracker().track('util.crossproduct')
+    from .. import SArray
+    d = [list(zip(list(d.keys()), x)) for x in _itertools.product(*list(d.values()))]
+    sa = [{k:v for (k,v) in x} for x in d]
+    return SArray(sa).unpack(column_name_prefix='')
+
+
+def get_graphlab_object_type(url):
+    '''
+    Given url where a GraphLab Create object is persisted, return the GraphLab
+    Create object type: 'model', 'graph', 'sframe', or 'sarray'
+    '''
+    from ..connect import main as _glconnect
+    ret = _glconnect.get_unity().get_graphlab_object_type(_make_internal_url(url))
+
+    # to be consistent, we use sgraph instead of graph here
+    if ret == 'graph':
+        ret = 'sgraph'
+    return ret
+
+
+def _assert_sframe_equal(sf1,
+                         sf2,
+                         check_column_names=True,
+                         check_column_order=True,
+                         check_row_order=True,
+                         float_column_delta=None):
+    """
+    Assert the two SFrames are equal.
+
+    The default behavior of this function uses the strictest possible
+    definition of equality, where all columns must be in the same order, with
+    the same names and have the same data in the same order.  Each of these
+    stipulations can be relaxed individually and in concert with another, with
+    the exception of `check_column_order` and `check_column_names`, we must use
+    one of these to determine which columns to compare with one another.
+
+    Parameters
+    ----------
+    sf1 : SFrame
+
+    sf2 : SFrame
+
+    check_column_names : bool
+        If true, assert if the data values in two columns are the same, but
+        they have different names.  If False, column order is used to determine
+        which columns to compare.
+
+    check_column_order : bool
+        If true, assert if the data values in two columns are the same, but are
+        not in the same column position (one is the i-th column and the other
+        is the j-th column, i != j).  If False, column names are used to
+        determine which columns to compare.
+
+    check_row_order : bool
+        If true, assert if all rows in the first SFrame exist in the second
+        SFrame, but they are not in the same order.
+
+    float_column_delta : float
+        The acceptable delta that two float values can be and still be
+        considered "equal". When this is None, only exact equality is accepted.
+        This is the default behavior since columns of all Nones are often of
+        float type. Applies to all float columns.
+    """
+    from .. import SFrame as _SFrame
+    if (type(sf1) is not _SFrame) or (type(sf2) is not _SFrame):
+        raise TypeError("Cannot function on types other than SFrames.")
+
+    if not check_column_order and not check_column_names:
+        raise ValueError("Cannot ignore both column order and column names.")
+
+    sf1.__materialize__()
+    sf2.__materialize__()
+
+    if sf1.num_cols() != sf2.num_cols():
+        raise AssertionError("Number of columns mismatched: " +
+            str(sf1.num_cols()) + " != " + str(sf2.num_cols()))
+
+    s1_names = sf1.column_names()
+    s2_names = sf2.column_names()
+
+    sorted_s1_names = sorted(s1_names)
+    sorted_s2_names = sorted(s2_names)
+
+    if check_column_names:
+        if (check_column_order and (s1_names != s2_names)) or (sorted_s1_names != sorted_s2_names):
+            raise AssertionError("SFrame does not have same column names: " +
+                str(sf1.column_names()) + " != " + str(sf2.column_names()))
+
+    if sf1.num_rows() != sf2.num_rows():
+        raise AssertionError("Number of rows mismatched: " +
+            str(sf1.num_rows()) + " != " + str(sf2.num_rows()))
+
+    if not check_row_order and (sf1.num_rows() > 1):
+        sf1 = sf1.sort(s1_names)
+        sf2 = sf2.sort(s2_names)
+
+    names_to_check = None
+    if check_column_names:
+      names_to_check = list(zip(sorted_s1_names, sorted_s2_names))
+    else:
+      names_to_check = list(zip(s1_names, s2_names))
+    for i in names_to_check:
+        col1 = sf1[i[0]]
+        col2 = sf2[i[1]]
+        if col1.dtype() != col2.dtype():
+            raise AssertionError("Columns " + str(i) + " types mismatched.")
+
+        compare_ary = None
+        if col1.dtype() == float and float_column_delta is not None:
+            dt = float_column_delta
+            compare_ary = ((col1 > col2-dt) & (col1 < col2+dt))
+        else:
+            compare_ary = (sf1[i[0]] == sf2[i[1]])
+        if not compare_ary.all():
+            count = 0
+            for j in compare_ary:
+                if not j:
+                  first_row = count
+                  break
+                count += 1
+            raise AssertionError("Columns " + str(i) +
+                " are not equal! First differing element is at row " +
+                str(first_row) + ": " + str((col1[first_row],col2[first_row])))
+
+def _get_temp_file_location():
+    '''
+    Returns user specified temporary file location.
+    The temporary location is specified through:
+
+    >>> graphlab.set_runtime_config('GRAPHLAB_CACHE_FILE_LOCATIONS', ...)
+
+    '''
+    from ..connect import main as _glconnect
+    unity = _glconnect.get_unity()
+    cache_dir = _convert_slashes(unity.get_current_cache_file_location())
+    if not _os.path.exists(cache_dir):
+        _os.makedirs(cache_dir)
+    return cache_dir
+
+def _make_temp_directory(prefix):
+    '''
+    Generate a temporary directory that would not live beyond the lifetime of
+    unity_server.
+
+    Caller is expected to clean up the temp file as soon as the directory is no
+    longer needed. But the directory will be cleaned as unity_server restarts
+    '''
+    temp_dir = _make_temp_filename(prefix=str(prefix))
+    _os.makedirs(temp_dir)
+    return temp_dir
+
+def _make_temp_filename(prefix):
+    '''
+    Generate a temporary file that would not live beyond the lifetime of
+    unity_server.
+
+    Caller is expected to clean up the temp file as soon as the file is no
+    longer needed. But temp files created using this method will be cleaned up
+    when unity_server restarts
+    '''
+    temp_location = _get_temp_file_location()
+    temp_file_name = '/'.join([temp_location, str(prefix)+str(_uuid.uuid4())])
+    return temp_file_name
+
+# datetime utilities
+
+_ZERO = _datetime.timedelta(0)
+
+class _UTC(_datetime.tzinfo):
+    """
+    A UTC datetime.tzinfo class modeled after the pytz library. It includes a
+    __reduce__ method for pickling,
+    """
+    def fromutc(self, dt):
+        if dt.tzinfo is None:
+            return self.localize(dt)
+        return super(_utc.__class__, self).fromutc(dt)
+
+    def utcoffset(self, dt):
+        return _ZERO
+
+    def tzname(self, dt):
+        return "UTC"
+
+    def dst(self, dt):
+        return _ZERO
+
+    def __reduce__(self):
+        return _UTC, ()
+
+    def __repr__(self):
+        return "<UTC>"
+
+    def __str__(self):
+        return "UTC"
+
+_utc = _UTC()
+
+
+def _dt_to_utc_timestamp(t):
+    if t.tzname() == 'UTC':
+        return (t - _datetime.datetime(1970, 1, 1, tzinfo=_utc)).total_seconds()
+    elif not t.tzinfo:
+        return _time.mktime(t.timetuple())
+    else:
+        raise ValueError('Only local time and UTC time is supported')
+
+
+def _pickle_to_temp_location_or_memory(obj):
+        '''
+        If obj can be serialized directly into memory (via cloudpickle) this
+        will return the serialized bytes.
+        Otherwise, gl_pickle is attempted and it will then
+        generates a temporary directory serializes an object into it, returning
+        the directory name. This directory will not have lifespan greater than
+        that of unity_server.
+        '''
+        from . import cloudpickle as cloudpickle
+        try:
+            # try cloudpickle first and see if that works
+            lambda_str = cloudpickle.dumps(obj)
+            return lambda_str
+        except:
+            pass
+
+        # nope. that does not work! lets try again with gl pickle
+        filename = _make_temp_filename('pickle')
+        from .. import _gl_pickle
+        pickler = _gl_pickle.GLPickler(filename)
+        pickler.dump(obj)
+        pickler.close()
+        return filename
+
+
+def get_log_location():
+    from ..connect import main as _glconnect
+    server = _glconnect.get_server()
+    if hasattr(server, 'unity_log'):
+        return server.unity_log
+    else:
+        return None
+
+
+def get_client_log_location():
+    return client_log_file
+
+
+def get_server_log_location():
+    return get_log_location()
+
+
+def get_module_from_object(obj):
+    mod_str = obj.__class__.__module__.split('.')[0]
+    return _sys.modules[mod_str]
+
+def infer_dbapi2_types(cursor, mod_info):
+    desc = cursor.description
+    result_set_types = [i[1] for i in desc]
+    dbapi2_to_python = [ # a type code can match more than one, so ordered by
+                         # preference (loop short-circuits when it finds a match
+                        (mod_info['DATETIME'], _datetime.datetime),
+                        (mod_info['ROWID'],int),
+                        (mod_info['NUMBER'],float),
+                       ]
+    ret_types = []
+
+    # Ugly nested loop because the standard only guarantees that a type code
+    # will compare equal to the module-defined types
+    for i in result_set_types:
+        type_found = False
+        for j in dbapi2_to_python:
+            if i is None or j[0] is None:
+                break
+            elif i == j[0]:
+                ret_types.append(j[1])
+                type_found = True
+                break
+        if not type_found:
+            ret_types.append(str)
+
+    return ret_types
+
+def pytype_to_printf(in_type):
+    if in_type == int:
+        return 'd'
+    elif in_type == float:
+        return 'f'
+    else:
+        return 's'
+
+def subprocess_exe(exe, args, setup=None, teardown=None,
+                   local_log_prefix=None,
+                   out_log_prefix=None,
+                   environment_variables=None):
+    """
+    Wrapper function to execute an external program.
+    This function is exception safe, and always catches
+    the error.
+
+    Parameters
+    ----------
+    exe : str
+        The command to run
+    args : list[str]
+        Arguments to passed to the command
+    setup : function
+        Setup function to run before executing the command
+    teardown : function
+        Teardown function to run after executing the command
+    local_log_prefix: str
+        The prefix of a local file path to the log file while the program is running:
+        <prefix>_commander.stdout
+        <prefix>_commander.stderr
+        <prefix>_worker0.stdout
+        <prefix>_worker0.stderr
+        If "out_log_prefix" is set, the files will be copied into out_log_prefix
+        when the process terminates.
+    out_log_prefix: str
+        The path prefix to the final saved log file.
+        If set, the logs will be save to the following locations:
+            <prefix>.stdout
+            <prefix>.stderr
+        and the return value will contain paths to the log files.
+        The path can be local or hdfs or s3.
+
+    Return
+    ------
+    out : dict
+        A dictionary containing the following keys:
+
+        success : bool
+            True if the command succeeded
+        return_code : int
+            The return code of the command
+        stderr : str
+            Path to the stderr log of the process
+        stdout : str
+            Path to the stdout log of the process
+        python_exception : Exception
+            Python exception
+    """
+    import logging
+    import os
+    ret = {'success': True,
+           'return_code': None,
+           'stdout': None,
+           'stderr': None,
+           'python_exception': None,
+           'proc_object' : None}
+    blocking = True
+
+    # Creates local running log file
+    try:
+        if local_log_prefix in [_subprocess.PIPE,
+                                _subprocess.STDOUT]:
+            local_log_stdout = local_log_prefix
+            local_log_stderr = local_log_prefix
+            blocking = False
+            if out_log_prefix is not None:
+                raise ValueError("Cannot pipe output and set an output log!")
+        elif local_log_prefix:
+            local_log_stdout = open(local_log_prefix + '.stdout', 'w')
+            local_log_stderr = open(local_log_prefix + '.stderr', 'w')
+        else:
+            local_log_stdout = _tempfile.NamedTemporaryFile(delete=False)
+            local_log_stderr = _tempfile.NamedTemporaryFile(delete=False)
+    except Exception as e:
+        ret['success'] = False
+        ret['python_exception'] = e
+
+   # Run setup
+    try:
+        if setup is not None:
+            setup()
+    except Exception as e:
+        ret['success'] = False
+        ret['python_exception'] = e
+
+   # Executes the command
+    if ret['success']:
+        try:
+            if environment_variables is not None:
+                environment_variables = os.environ.copy().update(environment_variables)
+            proc = _subprocess.Popen([exe] + args,
+                                    stdout=local_log_stdout,
+                                    stderr=local_log_stderr,
+                                    env=environment_variables)
+            if blocking:
+                proc.communicate()
+                ret['success'] = proc.returncode == 0
+                ret['return_code'] = proc.returncode
+            else:
+                ret['success'] = None
+                ret['stdout'] = proc.stdout
+                ret['stderr'] = proc.stderr
+                ret['proc_object'] = proc
+        except Exception as e:
+            ret['success'] = False
+            ret['python_exception'] = e
+        finally:
+            if blocking:
+                try:
+                    local_log_stdout.close()
+                    local_log_stderr.close()
+                    if out_log_prefix is not None:
+                        # persistent logfiles. When local log closed,
+                        # they will be loaded to the corresponding hdfs or s3 path
+                        file_log_stdout = out_log_prefix + '.stdout'
+                        file_log_stderr = out_log_prefix + '.stderr'
+                        # copy to target log path
+                        file_util.copy_from_local(local_log_stdout.name, file_log_stdout)
+                        file_util.copy_from_local(local_log_stderr.name, file_log_stderr)
+                        ret['stdout'] = file_log_stdout
+                        ret['stderr'] = file_log_stderr
+                    else:
+                        ret['stdout'] = open(local_log_stdout.name).read()
+                        ret['stderr'] = open(local_log_stderr.name).read()
+                except Exception as e:
+                    ret['_save_log_exception'] = e
+                    logging.warn(str(e))
+
+    # Teardown
+    if teardown is not None:
+        try:
+            teardown()
+        except Exception as e:
+            ret['_tear_down_exception'] = e
+            logging.warn(str(e))
+
+    return ret
+
