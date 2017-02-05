@@ -16,5 +16,5 @@ const horizon_server = horizon(http_server, options);
 app.use(express.static(path.join(__dirname, 'dist')));
 
 app.get('/', (req, res) => {
-    res.send(path.join(__dirname, 'index.html'));
+    res.sendFile('index.html');
 })
