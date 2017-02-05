@@ -1,3 +1,0 @@
-[console_scripts]
-yahoo-finance = yahoo_finance:main
-
