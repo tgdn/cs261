@@ -7,9 +7,14 @@ const path = require('path');
 const app = express();
 const http_server = app.listen(8181);
 const options = {
+    project_name: 'purple',
     auto_create_collection: true,
     auto_create_index: true,
-    auth: { token_secret: 'bdvU6/Cs+QFMYSvuiB3aTgZiUzcXbc1ca0v7abg4Fq3BP2U5IIvkXp/cBPg/vj6pLfDGxfnG8fmv7KEZgI8KJQ==' }
+    permissions: false,
+    auth: {
+        token_secret: 'bdvU6/Cs+QFMYSvuiB3aTgZiUzcXbc1ca0v7abg4Fq3BP2U5IIvkXp/cBPg/vj6pLfDGxfnG8fmv7KEZgI8KJQ==',
+        allow_unauthenticated: true,
+    }
 };
 const horizon_server = horizon(http_server, options);
 
