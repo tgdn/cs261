@@ -1,6 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { Container } from 'semantic-ui-react'
+import { Container, Label } from 'semantic-ui-react'
 
 import Header from './header'
 import Trade from './trade'
@@ -14,7 +14,7 @@ class App extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            trades: []
+            sectors: []
         }
     }
 
@@ -23,13 +23,12 @@ class App extends React.Component {
     }
 
     subscribe() {
-        this.props.trades
-            .order('time', 'descending')
-            .limit(20)
+        this.props.sectors
+            .order('name')
             .watch()
-            .subscribe((trades) => {
+            .subscribe((sectors) => {
                 this.setState({
-                    trades
+                    sectors
                 })
             })
     }
@@ -39,8 +38,10 @@ class App extends React.Component {
             <div>
                 <Header />
                 <Container>
-                    {this.state.trades.map(trade => (
-                        <Trade key={trade.id} trade={trade} />
+                    {this.state.sectors.map(sector => (
+                        <Label as='span' key={sector.name} tag>
+                            {sector.name}
+                        </Label>
                     ))}
                 </Container>
             </div>
@@ -51,5 +52,6 @@ class App extends React.Component {
 export default connect(
     state => ({
         trades: state.db.trades,
+        sectors: state.db.sectors,
     }),
 )(App)

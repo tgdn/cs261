@@ -16,7 +16,7 @@ PURPLE_DB = 'purple'
 class App:
     def __init__(self, argv):
         self.argv = argv
-        #self.setup_db()
+        self.setup_db()
         self.connect_db()
 
         if (len(argv) == 2):
@@ -40,7 +40,7 @@ class App:
             sys.stderr.write('Specify a filename: python main.py [filename]')
 
     def insert_trade(self, trade):
-        inserted = r.table('trades').insert([
+        r.table('trades').insert([
             {
                 'time': trade.time,
                 'price': trade.price,
@@ -54,11 +54,25 @@ class App:
             }
         ]).run(self.rdb_conn)
 
+        r.table('sectors').insert([
+            {
+                'name': trade.sector
+            }
+        ]).run(self.rdb_conn)
+
+        r.table('symbols').insert([
+            {
+                'name': trade.symbol
+            }
+        ]).run(self.rdb_conn)
+
     def setup_db(self):
         connection = r.connect(host=RDB_HOST, port=RDB_PORT)
         try:
             r.db_create(PURPLE_DB).run(connection)
             r.db(PURPLE_DB).table_create('trades').run(connection)
+            r.db(PURPLE_DB).table_create('sectors', primary_key='name').run(connection)
+            r.db(PURPLE_DB).table_create('symbols', primary_key='name').run(connection)
             print 'Database setup complete.'
         except RqlRuntimeError:
             print 'App db already exists.'
