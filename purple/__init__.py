@@ -19,10 +19,15 @@ class App:
         self.setup_db()
         self.connect_db()
 
+        ##
+        ## TODO: parse args so we can decide whether to use file or url
+        ##
+
         if (len(argv) == 2):
             filename = argv[1]
 
             with open(filename, 'r') as f:
+                # set non blocking i/o
                 fd = f.fileno()
                 flag = fcntl.fcntl(fd, fcntl.F_GETFD)
                 fcntl.fcntl(fd, fcntl.F_SETFL, flag |  os.O_NONBLOCK)
@@ -33,38 +38,13 @@ class App:
                         lineno = 1
                         continue
 
-                    t = Trade(line)
-                    self.insert_trade(t)
+                    t = Trade(line).save(self.rdb_conn)
                     print '{} {} {}'.format(t.currency, t.price, t.sector)
         else:
             sys.stderr.write('Specify a filename: python main.py [filename]')
 
-    def insert_trade(self, trade):
-        r.table('trades').insert([
-            {
-                'time': trade.time,
-                'price': trade.price,
-                'size': trade.size,
-                'symbol': trade.symbol,
-                'sector': trade.sector,
-                'bid': trade.bid,
-                'ask': trade.ask,
-                'buyer': trade.buyer,
-                'seller': trade.seller
-            }
-        ]).run(self.rdb_conn)
-
-        r.table('sectors').insert([
-            {
-                'name': trade.sector
-            }
-        ]).run(self.rdb_conn)
-
-        r.table('symbols').insert([
-            {
-                'name': trade.symbol
-            }
-        ]).run(self.rdb_conn)
+        # finally
+        self.close_db()
 
     def setup_db(self):
         connection = r.connect(host=RDB_HOST, port=RDB_PORT)
@@ -73,17 +53,19 @@ class App:
             r.db(PURPLE_DB).table_create('trades').run(connection)
             r.db(PURPLE_DB).table_create('sectors', primary_key='name').run(connection)
             r.db(PURPLE_DB).table_create('symbols', primary_key='name').run(connection)
-            print 'Database setup complete.'
         except RqlRuntimeError:
-            print 'App db already exists.'
+            # fail silently
+            # Remember to destroy if you want this to be successful
+            pass
         finally:
             connection.close()
+        print 'Database setup complete.'
 
     def connect_db(self):
         try:
             self.rdb_conn = r.connect(host=RDB_HOST, port=RDB_PORT, db=PURPLE_DB)
         except RqlDriverError:
-            print 'No db connection could be established.'
+            sys.stderr.write('No db connection could be established.')
             sys.exit(1)
 
     def close_db(self):

@@ -3,6 +3,9 @@
 import pytz
 from datetime import datetime
 
+import rethinkdb as r
+from rethinkdb.errors import RqlRuntimeError, RqlDriverError
+
 tz = pytz.timezone('Europe/London')
 
 class Trade:
@@ -22,6 +25,35 @@ class Trade:
         self.sector = split_row[7]
         self.bid = float(split_row[8])
         self.ask = float(split_row[9])
+
+    def save(self, conn):
+        r.table('trades').insert([
+            {
+                'time': self.time,
+                'price': self.price,
+                'size': self.size,
+                'symbol': self.symbol,
+                'sector': self.sector,
+                'bid': self.bid,
+                'ask': self.ask,
+                'buyer': self.buyer,
+                'seller': self.seller
+            }
+        ]).run(conn)
+
+        r.table('sectors').insert([
+            {
+                'name': self.sector
+            }
+        ]).run(conn)
+
+        r.table('symbols').insert([
+            {
+                'name': self.symbol
+            }
+        ]).run(conn)
+
+        return self
 
 
 ##
