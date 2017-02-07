@@ -6,7 +6,7 @@ export default (props) => (
             type="checkbox"
             id="luxbar-checkbox"
         />
-        <div class="luxbar-menu luxbar-menu-dark">
+        <div class="luxbar-menu luxbar-menu-dark luxbar-menu-black-force">
             <ul class="luxbar-navigation">
                 <li class="luxbar-header">
                     <a class="luxbar-brand" href="#">
@@ -19,7 +19,9 @@ export default (props) => (
                         <span></span>
                     </label>
                 </li>
+                {/*
                 <li class="luxbar-item active"><a href="#">Home</a></li>
+                */}
             </ul>
         </div>
     </div>

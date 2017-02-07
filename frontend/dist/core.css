@@ -3,5 +3,9 @@ body {
 }
 
 #app {
-    padding-top: 78px;
+    padding-top: 72px;
+}
+
+.luxbar-menu-black-force {
+    background: black !important;
 }
