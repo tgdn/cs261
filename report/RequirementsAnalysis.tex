@@ -8,14 +8,16 @@
 	Thomas Gak Deluen
 }
 
-\documentclass[10pt, oneside, a4paper]{article}
+\documentclass[11pt, oneside, a4paper]{article}
 \usepackage[table, xcdraw]{xcolor}
+\usepackage{graphicx}
 \bibliographystyle{plain}
 
 \begin{document}
 
 \clearpage
 \maketitle
+\thispagestyle{empty}
 
 \newpage
 \setcounter{page}{1}
@@ -26,6 +28,10 @@ along with the software developers, it will outline the requirements of the soft
 these stakeholders, for discussion in a meeting on Friday 10th February.
 
 \section{Introduction}
+We have been given a largely simplified version of the FTSE 100 stock market to identify anomalous data, we
+acknowlegde that in a real-life situation, the data would be much more complex. Therefore, our system should
+have the ability to be adapted to identify anomalous data in multiple different situations.
+
 The task set is to produce software to help the stakeholders identify and flag anomalous trading patterns
 on the London Stock Exchange for stocks within the FTSE 100. This is to provide an 'early warning' system
 to alert the bank to rapid market changes that would be too fast to spot manually. Without this, the
@@ -35,27 +41,14 @@ techniques. The identification of such events must be done in a live data enviro
 must be capable of coping with the fast-moving nature of the dataset required, thus human intervention
 should only be required if necessary.
 
-\section{Glossary}
-\textbf{Fat finger errors} - human error entering data, this may include incorrectly inputting the volume
-or price of trades. \\\\
-\textbf{Pump \& Dump} - illegal buying of large share volumes to artificially inflate the price, by encouraging
-others to follow the trend. Shares can then be sold at a higher price, yielding a large profit for the rogue trader. \\\\
-\textbf{Bear Raid} - opposite to pump and dump, a trader or group of traders may short a high volume of stocks,
-thus manipulating the price of the stocks, sending the price down, they will then buy back these shares at the
-lower price hence making a profit. To further ensure the price of the stock will decrease, they may release false
-information, detrimental to the company, thus prompting others to sell their stocks and drive the price down. \\\\
-\textbf{Volume Spikes} - when compared to the average trend for the volume of trades of a share/group of shares,
-if there is an unusually high volume of these stocks being traded either at once or spread out over a certain period. \\\\
-
-
 \section{User Requirements}
 \subsection{Functional Requirements}
 The Software must be able to learn the characteristics of the stocks in the FTSE 100 using a machine learning
 algorithm and send an alert to notify the Business Analysts of the stakeholders when one of the following
-trading patterns is detected. These characteristics will be the average, minimum and maximum values of volumes
-and prices of individual stocks as well as given sectors. This will then allow the user to obtain the relevant
-data to perform the root cause analysis, through the display of graphs or other relevant data display methods.
-These patterns can be categorised as follows:
+trading patterns is detected. These characteristics will be the fluctuation amount, average, minimum and maximum
+values of volumes and prices of individual stocks as well as given sectors. This will then allow the user to obtain
+the relevant data to perform the root cause analysis, through the display of graphs or other relevant data display
+methods. These patterns can be categorised as follows:
 \begin{itemize}
 	\item \textbf{Fat finger errors} -  The algorithm must be able to detect when abnormalities occur in data inputted,
 	i.e. the probability of a volume or price values occurring are less than a prescribed percentage.
@@ -71,7 +64,18 @@ These patterns can be categorised as follows:
 In doing this the software must be able to analyse both a live feed for up-to-date data, in addition to a static
 csv file to analyse historical data in order to make comparisons. This historical data will also be available to
 the user for them to 'drill down' into the data which caused the alert, this data should date back to the previous
-two days such that meaningful short term predictions and comparisons can be made.
+two days such that meaningful short term predictions and comparisons can be made. A sample of the data that is
+required to be analysed can be seen in figure \ref{SampleData}, this includes the timing of the trade, the relevant
+buyer and seller, the price, volume, stock ticker symbol as well as the bid and ask prices. In this also, is the
+market on which the trade was made, however this is irrelevant as this will always be the London Stock Exchange GBX.
+This data should be stored in a database for it to be accessible and analysis to be performed on the data.
+
+\begin{figure}[h]
+	\label{SampleData}
+	\centering
+		\includegraphics[width=350px]{SampleData.png}
+	\caption{Data sample taken from the live data feed}
+\end{figure}
 
 The system should be able to cope with the connection and reconnection of the server from which it retrieves the
 data. Therefore, when the connection resets itself at 12AM, the software should be able to disconnect safely,
@@ -134,8 +138,35 @@ such that it allows consistency throughout the application.
 The planning and design of the application will be done in the teams prescribed above, with both teams informing
 each other throughout the process to ensure the feasibility and consistency of the application.
 
+\section{Glossary}
+\textbf{Fat finger errors} - human error entering data, this may include incorrectly inputting the volume
+or price of trades. \\\\
+\textbf{Pump \& Dump} - illegal buying of large share volumes to artificially inflate the price, by encouraging
+others to follow the trend. Shares can then be sold at a higher price, yielding a large profit for the rogue trader. \\\\
+\textbf{Bear Raid} - opposite to pump and dump, a trader or group of traders may short a high volume of stocks,
+thus manipulating the price of the stocks, sending the price down, they will then buy back these shares at the
+lower price hence making a profit. To further ensure the price of the stock will decrease, they may release false
+information, detrimental to the company, thus prompting others to sell their stocks and drive the price down. \\\\
+\textbf{Volume Spikes} - when compared to the average trend for the volume of trades of a share/group of shares,
+if there is an unusually high volume of these stocks being traded either at once or spread out over a certain period. \\\\
+
+\begin{thebibliography}
+
+	\item Investopedia {\em Bear Raid} \\
+	http://www.investopedia.com/terms/b/bearraid.asp \\
+	Date Accessed: 07/02/2017
+	\item Treanor, Jill {\em 'Fat finger trade' suspected of causing sudden FTSE fall} \\
+	https://www.theguardian.com/business/2015/sep/18/fat-finger-trade-suspected-ftse-100-fall \\
+	Date Accessed: 07/02/2017
+	\item US Securities and Exchange Commission {\em "Pump-and-Dumps" and Market Manipulations} \\
+	https://www.sec.gov/answers/pumpdump.htm \\
+	Date Accessed: 07/02/2017
+\end{thebibliography}
+
+\newpage
+\appendix
 \section{Questions}
-\textbf{Q: Should the user be ale to visually see the data parsed and in what format should it be displayed?}
+\textbf{Q: Should the user be able to visually see the data parsed and in what format should it be displayed?}
 A: There is no specific format mandated by DB, however good data visualisation is always important when a user needs to
 understand and respond to information quickly.
 You should consider the use-case; traders manage portfolios containing hundreds of stocks (some of which they may not be
