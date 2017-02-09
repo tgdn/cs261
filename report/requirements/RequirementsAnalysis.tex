@@ -72,10 +72,10 @@ The system must:
 	  buyer and seller, the price, volume, stock ticker symbol, sector as well as the bid and ask prices. In this also, is the
 	  market on which the trade was made, however this is irrelevant as this will always be the London Stock Exchange GBX.
 	  \begin{figure}[h]
+		\centering
+  	  		\includegraphics[width=350px]{SampleData.png}
+		\caption{Data sample taken from the live data feed}
 	  	\label{SampleData}
-	  	\centering
-	  		\includegraphics[width=350px]{SampleData.png}
-	  	\caption{Data sample taken from the live data feed}
 	  \end{figure}
 	\end{itemize}
 	\item \textbf{C:} Be able to cope with the connection and reconnection of the server from which it receives the live data
@@ -145,12 +145,12 @@ In addition to these mandatory, primary requirements, the software may also:
 	\item \textbf{C:} Allow the user to adapt the machine learning algorithm performing the statistical analysis
 	\begin{itemize}
 		\item \textbf{D:} Give the user sliders and similar methods to select a level of strictness, to determine how extreme values should be to be flagged by the algorithm
-		\item \textbf{Priority:} Medium - Although this is plausible to implement and may be a useful feature for some advanced users to have, the algorithm that we use will be tested so that it already should flag the appropriate, anomalous trades and changing this will allow either too many trades that are not anomalous to be flagged or some anomalous trades not to be flagged
+		\item \textbf{Priority:} Low - Although this may be a useful feature for advanced users, it would be difficult to implementdue to the users not being machine learning experts and without full understanding of the underlying statistical analysis the levels to which the algorithm could be manually changed by the user would be difficult to quantify.
 	\end{itemize}
 	\item \textbf{C:} Automatically organise trading patterns into categories of anomalies
 	\begin{itemize}
 		\item \textbf{D:} When a trade is flagged up as anomalous, flag with the reason it has been flagged and name of the trading pattern associated with this behaviour
-		\item \textbf{Priority:} Low - Our task is to find anomalous trading patterns that are novel and unknown techniques therefore the categorisation of this anomalous data is both unnecessary and infeasible
+		\item \textbf{Priority:} Low - Our task is to find anomalous trading patterns that are novel and unknown techniques therefore the categorisation of this anomalous data is infeasible due to some anomalous data not falling into the known categories, but should nevertheless, still be flagged up as anomalous
 	\end{itemize}
 \end{itemize}
 
