@@ -39,19 +39,19 @@ class Trade:
                 'buyer': self.buyer,
                 'seller': self.seller
             }
-        ]).run(conn)
+        ]).run(conn, durability='soft', noreply=True)
 
-        r.table('sectors').insert([
-            {
-                'name': self.sector
-            }
-        ]).run(conn)
-
-        r.table('symbols').insert([
-            {
-                'name': self.symbol
-            }
-        ]).run(conn)
+        # r.table('sectors').insert([
+        #     {
+        #         'name': self.sector
+        #     }
+        # ]).run(conn)
+        #
+        # r.table('symbols').insert([
+        #     {
+        #         'name': self.symbol
+        #     }
+        # ]).run(conn)
 
         return self
 
