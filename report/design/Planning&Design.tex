@@ -29,7 +29,7 @@
 
 This document outlines the design of the system that will meet the requirements
 outlined in the Requirements Analysis report for the stakeholders, Deutsche Bank.
-The system will serve alert the stakeholders to irregularities and anomalies in
+The system will serve to alert the stakeholders to irregularities and anomalies in
 simulated streams of FTSE 100 stock market data. This solution will be using general
 statistical analysis methods which can be applied to any field to detect anomalous
 data, but will be specialised in this case for analytics of trading data. In a real
@@ -39,9 +39,39 @@ analytical methods will still apply.
 \section{Group Communication}
 
 To communicate between everyone in the group, we will utilise Slack. The coding
-done shall be pushed to our private repository on Github for a centralised code
+done shall be pushed to our private repository on GitHub for a centralised code
 base and its version control. We will use Google Drive and Google Docs for sharing
 reports, so all team members can work simultaneously on the same document.
+
+As displayed in figure \ref{GanttChart}, the Gantt chart will be used to ensure
+that the project runs to time. We have built in buffers such that our group deadline
+for certain tasks is before the official deadline, such that if tasks overrun for
+whatever reason, then it should not compromise the whole project. For example, we
+plan to get the primary features of the coding implemented by the end of week 7,
+such that it gives us time to implement stretch goals and perform rigorous testing
+on the system.
+
+The activity network in figure \ref{ActivityNetwork} shows both how tasks are
+assigned to different group members and the dependencies between activities. The
+tasks have been assigned to group members based on their strengths and the tasks
+that they have completed earlier on in the project. The dependencies should be such
+that the majority of tasks should not be waiting upon other tasks, however, when
+this is unavoidable (for example, writing the final report) then there should be
+enough material to start the task.
+
+\begin{figure}[h]
+	\centering
+		\includegraphics[width=500px]{GanttChart.png}
+	\caption{Gantt chart to show when tasks within the project will be completed}
+	\label{GanttChart}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+		\includegraphics[width=500px]{ActivityNetwork.png}
+	\caption{Activity network to visualise how tasks are assigned throughout the group}
+	\label{ActivityNetwork}
+\end{figure}
 
 \section{Software Methodology}
 
@@ -60,13 +90,13 @@ functionality of the system before adding additional features.
 
 The backend of the software shall be written in Python. We chose this as it offers
 a large variety of machine learning libraries to choose from, such as
-sci-kit learn. Python has a very simple and straightforward syntax, which will
+scikit-learn. Python has a very simple and straightforward syntax, which will
 increase the readability of our code. A large part of the backend of this project
 is statistical analysis of data. Python balances strong statistical analysis with
 general purpose usage, a purely statistical language such as R would not suffice.
 
 The system will use a RethinkDB database. This is a NoSQL document-based database,
-well suited for realtime web applications. It allows the frontend to listen for
+well suited for real-time web applications. It allows the frontend to listen for
 changes, such as update, delete or insert, therefore producing quick updates to
 the user when the backend receives real-time market data or sends an alert. This
 is an important aspect of our system which requires traders to make quick, informed
@@ -108,7 +138,7 @@ normal distribution. The following formulae will be used for calculations:\\
 \textit{Where erf(x) } = $\frac{2}{\sqrt{\pi}}\int_0^x\mathrm{e}^{-x^2}$\\
 
 As stated by the Empirical Rule (68-95-99.7), 99.7\% of the data should lie in the
-range $\mu \pm 3\sigma$. The above formulae shows that a value that lies outside
+range $\mu \pm 3\sigma$. The above formulae show that a value that lies outside
 the above range should occur only once every approximately 370 values:\\
 
 \textit{1 in }$\frac{1}{1-erf(\frac{x}{\sqrt{2}})} \implies $ \textit{1 in }$\frac{1}{1-erf(\frac{3}{\sqrt{2}})} = $ \textit{1 in }$\frac{1}{1-0.9973...} = $ \textit{1 in }$370.37... \approx $ \textit{1 in 370} \\
@@ -170,11 +200,11 @@ ones to find the average error $e$. This formula is shown below:
 	&e=\frac{\sum_{i=1}^{n}|y_i - (mx_i + c)|}{n}&
 \end{align*}
 
-In our program we will compare each stock’s average error to determine its volatility.
+In our program, we will compare each stock’s average error to determine its volatility.
 
 \subsection{Class Interaction}
 Our design features many elements that must work together, the UML class diagram
-in figure \ref{ClassDiagram} illustrated the relationships between different
+in figure \ref{ClassDiagram} illustrates the relationships between different
 entities in the system.
 
 The system will have many trades, each for which, two traders with unique ID's
@@ -186,7 +216,7 @@ consisting of the stock that was being traded along with the type of anomaly tha
 the offending trade may be categorised as, this alert may then be either approved
 or rejected. For each single stock there will exist multiple trades and multiple
 alerts, here each stock will have attributes such as the average price and a
-trendline which will be used to perform the statistical analysis as well as making
+trend line which will be used to perform the statistical analysis as well as making
 predictions based on previous, historical data. A stock may have multiple days of
 this historical data consisting of the open and close price for the relevant days.
 
@@ -217,11 +247,11 @@ to write. Furthermore, JavaScript has many prewritten environments, frameworks
 and applications, which allow us to quickly implement our system with widely used
 applications.
 
-\subsection{Frontend Architechture}
+\subsection{Frontend Architecture}
 The frontend runs in a simple NodeJS app. This uses ExpressJS to handle the
 different aspects of the server such as routing and static assets. This couples
 with a ready to use real-time web framework Horizon. Horizon allows the client to
-connect to the server through websockets to listen for changes in the database.
+connect to the server through web sockets to listen for changes in the database.
 
 We will build the client using ReactJS, a fast and reliable user-interface framework
 that uses a virtual DOM. This removes the need for DOM manipulations: when the state
@@ -240,7 +270,7 @@ access their alerts and upload static files. The alerts page, where the system h
 every alert for review, along with previous saved alerts. The stocks page, where
 the user can analyse the performance of all the FTSE 100 stocks. The page includes
 statistics such as volatility and average stock price alongside short-term stock
-price predictions. This is illustrated in figure \ref{UseCase}. Mockup design images
+price predictions. This is illustrated in figure \ref{UseCase}. Mock-up design images
 for each web page in our system are included in the appendix.
 
 \begin{figure}[h]
@@ -260,7 +290,7 @@ This is illustrated in figure \ref{ArchitechturalPattern}.
 \begin{figure}[h]
 	\centering
 		\includegraphics[width=300px]{ArchitecturalPattern.png}
-	\caption{UML architchtural pattern diagram showing how data will progress through the system}
+	\caption{UML architectural pattern diagram showing how data will progress through the system}
 	\label{ArchitechturalPattern}
 \end{figure}
 
@@ -268,7 +298,7 @@ To keep maintain high uptime and prevent the front end from hanging, once a user
 uploads a file to the front-end, the frontend writes it to the disk and a forks a
 background task to analyse the file. Once the backend launches the task, the front-end
 server lets the user know the file is currently undergoing analysis. The system
-notifies the user in real time of the file’s analysis.
+notifies the user in real-time of the file’s analysis.
 
 \section{Extensibility}
 The nature of the specification lends the system to further extension. We designed
@@ -282,7 +312,7 @@ trade data is approximately 100MB, around 800,000 rows. This means that when the
 system is run, it must be run on a machine with a large memory capacity and a high
 read/write speed.
 
-This system is intended as a model for finding anomalous data. In a real life case,
+This system is intended as a model for finding anomalous data. In a real-life case,
 the data received from the stock market will be much richer in information, however
 we can use the same fundamental principles implemented in this solution to analyse
 richer data, and identify different anomalies.
@@ -303,7 +333,7 @@ it will reconnect as soon as possible, so as little data is lost as possible.
 We will measure the reliability of the system through the consistency of alerts.
 The alerts will appear within 5 seconds of the analysis of the offending trade,
 or final trade in a set of trades. We will multithread the backend Python so that
-we can analyse many trades can at once, ensuring that the analytics will be able
+we can analyse many trades at once, ensuring that the analytics will be able
 to keep up with the live feed of data. Furthermore, the RethinkDB database ensures
 high-speed communication between the frontend and backend. It is able to alert the
 front end immediately after we detect anomalous activity. In this project, the
@@ -339,9 +369,26 @@ this software only serves as a model to provide data analysis. The stakeholders
 can implement security aspects of the software when they receive the final product.
 For example, the system could only be accessible through the stakeholder’s local
 network or virtual private network. Access to the system could be incorporated
-into an SSO (Single Sign On) system that may already used by the stakeholders for
+into an SSO (Single Sign On) system that may already be used by the stakeholders for
 other means. Security considerations that arise from the creation of the software
 are out of the scope of this project.
+
+\section{Risk Analysis}
+In order to analyse the potential risks to the progress of the project, we have
+drawn up a risk register. This displays the identified potential events that could
+cause issues in the project, we have given a probability based on the event occurring
+and the impact it would have on the project. Where possible we have mitigated against
+the event from occurring, but in addition, we have also provided a contingency plan,
+such that there would be less uncertainty if such an event were to occur. As a
+consequence this reduces the possible impact that the event would have upon the
+project.
+
+\begin{figure}[h]
+	\centering
+		\includegraphics[width=400px]{RiskRegister.png}
+	\caption{Risk register}
+	\label{RiskRegister}
+\end{figure}
 
 \section{Testing Plan}
 We will test our Python code using built-in unit tests. Unit tests allow early
@@ -350,7 +397,7 @@ intended.
 
 We will also test our JavaScript code using different testing methods as React
 components display as HTML. Because the JavaScript code is compiled, any syntactic
-errors are quickly spotted. Therefore additional tests serve to verify the code’s
+errors are quickly spotted. Therefore, additional tests serve to verify the code’s
 semantic behaviour. After each sprint planning session, we will run manually
 created unit tests to analyse manually created data designed trigger certain
 functionalities of the software.
@@ -361,6 +408,7 @@ between them.
 
 \newpage
 \begin{thebibliography}
+
 	\item Facebook {\em React} \\
 	https://facebook.github.io/react/ \\
 	Date Accessed: 09/02/2017
@@ -395,48 +443,31 @@ between them.
 
 \newpage
 \appendix
-\section{Gantt Chart & Activity Network}
-
-\begin{figure}[h]
-	\centering
-		\includegraphics[width=300px]{Gantt&Activity.png}
-	\caption{}
-	\label{GanttActivity}
-\end{figure}
-
-\section{Risk Register}
-
-\begin{figure}[h]
-	\centering
-		\includegraphics[width=500px]{RiskRegister.png}
-	\caption{}
-	\label{RiskRegister}
-\end{figure}
-
 \section{User Interface Designs}
 
 \subsection{Homepage}
 
 \begin{figure}[h]
 	\centering
-		\includegraphics[width=300px]{HomepageUIDesign.png}
-	\caption{}
+		\includegraphics[width=350px]{HomepageUIDesign.png}
+	\caption{Mock-up design of home page with annotations}
 	\label{HomeUI}
 \end{figure}
 
 \begin{figure}[h]
 	\centering
-		\includegraphics[width=300px]{HomepageUIDesignAlerts.png}
-	\caption{}
+		\includegraphics[width=150px]{HomepageUIDesignAlerts.png}
+	\caption{Difference to home page when there are alerts that have yet to be actioned}
 	\label{HomeUIAlerts}
 \end{figure}
 
+\newpage
 \subsection{Alerts Page}
 
 \begin{figure}[h]
 	\centering
-		\includegraphics[width=300px]{AlertsUIDesign.png}
-	\caption{}
+		\includegraphics[width=400px]{AlertsUIDesign.png}
+	\caption{Mock-up design of alerts page with annotations}
 	\label{AlertsUI}
 \end{figure}
 
@@ -444,8 +475,8 @@ between them.
 
 \begin{figure}[h]
 	\centering
-		\includegraphics[width=300px]{StocksUIDesign.png}
-	\caption{}
+		\includegraphics[width=400px]{StocksUIDesign.png}
+	\caption{Mock-up design of stocks page with annotations}
 	\label{StocksUI}
 \end{figure}
 
