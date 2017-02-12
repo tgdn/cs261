@@ -1,100 +1,14 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import {
-    Container,
-    Grid,
-    Icon,
-    Header,
-    Menu,
-    Statistic,
-    Dimmer,
-    Loader
-} from 'semantic-ui-react'
-
-import groupBy from 'lodash/groupBy'
-import map from 'lodash/map'
 
 import HeaderNav from './header'
-//import Trade from './trade'
-//import TradeGraph from './trade-graph'
-//const LineGraph = require('react-chartjs').Line
 
 class App extends React.Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-            loaded: false,
-            trades: []
-        }
-    }
-
-    componentDidMount() {
-        this.subscribe()
-    }
-
-    subscribe() {
-        this.props.trades
-            .order('time')
-            .watch()
-            .subscribe((trades) => {
-                this.setState({
-                    loaded: true,
-                    trades
-                })
-            })
-    }
-
     render() {
-        const tradeCount = parseInt(this.state.trades.length, 10)
-
-        const items = [
-          { label: 'Trades', value: tradeCount },
-          { label: 'Issues', value: '219' },
-          { label: 'Unresolved', value: '3' },
-        ]
-
-        const groupedTrades = groupBy(this.state.trades, 'symbol')
-
         return (
             <div>
-                <Dimmer
-                    active={!this.state.loaded}
-                    page
-                >
-                    <Loader size='large'>Loading latest data</Loader>
-                </Dimmer>
                 <HeaderNav />
-                <Grid padded stackable>
-                    <Grid.Row color='black'>
-                        <Grid.Column width={16}>
-                            <Statistic.Group
-                                inverted
-                                widths='three'
-                                items={items}
-                                color='green'
-                            />
-                        </Grid.Column>
-                    </Grid.Row>
-                    <Grid.Column width={4}>
-                        <Menu vertical>
-                            {map(groupedTrades, (trades, symbol) => (
-                                <Menu.Item key={symbol}>
-                                    <Menu.Header>{symbol}</Menu.Header>
-                                    <Menu.Menu>
-                                        <Menu.Item name={`${trades.length} trades`} />
-                                    </Menu.Menu>
-                                </Menu.Item>
-                            ))}
-                        </Menu>
-                    </Grid.Column>
-                    <Grid.Column width={12}>
-                        <Container textAlign='center'>
-                            <Icon color='green' name='check circle' size='massive' />
-                            <Header as='h2' color='green'>No issues</Header>
-                        </Container>
-                    </Grid.Column>
-
-                </Grid>
+                {this.props.children}
             </div>
         )
     }
@@ -103,6 +17,5 @@ class App extends React.Component {
 export default connect(
     state => ({
         trades: state.db.trades,
-        sectors: state.db.sectors,
     }),
 )(App)
