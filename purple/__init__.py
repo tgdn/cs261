@@ -39,7 +39,7 @@ class App:
                         continue
 
                     t = Trade(line).save(self.rdb_conn)
-                    print '{} {} {}'.format(t.currency, t.price, t.sector)
+                    #print '{} {} {}'.format(t.currency, t.price, t.sector)
         else:
             sys.stderr.write('Specify a filename: python main.py [filename]')
 
