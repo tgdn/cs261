@@ -38,8 +38,7 @@ class App:
                         lineno = 1
                         continue
 
-                    t = Trade(line).save(self.rdb_conn)
-                    #print '{} {} {}'.format(t.currency, t.price, t.sector)
+                    Trade(line).save(self.rdb_conn)
         else:
             sys.stderr.write('Specify a filename: python main.py [filename]')
 
@@ -51,8 +50,7 @@ class App:
         try:
             r.db_create(PURPLE_DB).run(connection)
             r.db(PURPLE_DB).table_create('trades').run(connection)
-            r.db(PURPLE_DB).table_create('sectors', primary_key='name').run(connection)
-            r.db(PURPLE_DB).table_create('symbols', primary_key='name').run(connection)
+            ## TODO: create alert table (think of design)
         except RqlRuntimeError:
             # fail silently
             # Remember to destroy if you want this to be successful
