@@ -1,5 +1,6 @@
 import App from './components/app'
 import HomePage from './components/pages/home'
+import PageDoesNotExist from './components/pages/404'
 
 export default [
     {
@@ -7,14 +8,11 @@ export default [
         component: App,
         indexRoute: {
             component: HomePage,
-            // onEnter:(data, replace) => {
-            //     replace('/members/dashboard')
-            // }
         },
         childRoutes: [
             {
-                path: 'random-route',
-                component: null,
+                path: '*',
+                component: PageDoesNotExist,
             }
         //     {
         //         path: 'dashboard',
@@ -32,10 +30,7 @@ export default [
         //                 component: null
         //             }
         //         ]
-        //     }, {
-        //         path: '*',
-        //         component: null
-        //     }
+        //     },
         ]
     }
 ]
