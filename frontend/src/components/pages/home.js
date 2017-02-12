@@ -1,5 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
+import { Link } from 'react-router'
 import {
     Container,
     Grid,
@@ -55,8 +56,8 @@ class HomePage extends React.Component {
 
         const items = [
           { label: 'Trades', value: tradeCount },
-          { label: 'Issues', value: '219' },
-          { label: 'Unresolved', value: '3' },
+          { label: 'Issues', value: '0' },
+          { label: 'Unresolved', value: '0' },
         ]
 
         const groupedTrades = groupBy(this.state.trades, 'symbol')
@@ -93,16 +94,26 @@ class HomePage extends React.Component {
                         </Menu>
                     </Grid.Column>
                     <Grid.Column width={12}>
+                        <Container textAlign='left'>
+                            <Link to='/some/random/url'>Some random url</Link>
+                        </Container>
                         <Container textAlign='center'>
                             <Icon color='green' name='check circle' size='massive' />
                             <Header as='h2' color='green'>No issues</Header>
                         </Container>
                     </Grid.Column>
-
                 </Grid>
             </div>
         )
     }
+}
+
+HomePage.propTypes = {
+    trades: React.PropTypes.object, // eslint-disable-line
+}
+
+HomePage.defaultProps = {
+    trades: [],
 }
 
 export default connect(
