@@ -26,21 +26,21 @@ const options = {
 
 const horizonServer = horizon(httpServer, options);
 
-// below will close connection to db
-// const closeDb = () => {
-//     if (global.db) {
-//         global.db.close((err) => {
-//             if (err) {
-//                 throw err
-//             }
-//         })
-//     }
-// }
+const closeDb = () => {
+    if (global.db) {
+        global.db.close((err) => {
+            if (err) {
+                throw err
+            }
+        })
+    }
+}
 
-app.use(express.static(path.join(__dirname, 'dist')));
+const distPath = path.join(__dirname, 'dist')
+app.use(express.static(distPath));
 
-app.get('/', (req, res) => {
-    res.sendFile('index.html');
+app.get(['/', '*'], (req, res) => {
+    res.sendFile('index.html', { root: distPath });
 })
 
 r.connect({
@@ -63,6 +63,8 @@ r.connect({
     })
 })
 .error((error) => {
+    /* eslint-disable no-console */
     console.log(`Connection to db could not be established:\n${error}`)
     process.exit(1)
+    /* eslint-enable */
 })
