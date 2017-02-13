@@ -3,7 +3,9 @@
 import os
 import sys
 import fcntl
-from contextlib import contextmanager
+import socket
+import requests
+from contextlib import contextmanager, closing
 
 import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
@@ -43,7 +45,21 @@ class App:
 
     def from_stream(self, url, port=80):
         # TODO: read from stream
-        pass
+        print 'hello'
+        server_name = (url, port)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect(server_name)
+
+        line = ''
+        with self.get_reql_connection() as conn:
+            while 1:
+                char = sock.recv(1)
+                if char == '\n':
+                    #print line
+                    Trade(line).save(conn)
+                    line = ''
+                else:
+                    line = line + char
 
     def reset_rdb(self):
         with self.get_reql_connection() as conn:
