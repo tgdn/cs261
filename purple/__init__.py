@@ -3,6 +3,7 @@
 import os
 import sys
 import fcntl
+from contextlib import contextmanager
 
 import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
@@ -14,60 +15,76 @@ RDB_PORT = '28015'
 PURPLE_DB = 'purple'
 
 class App:
-    def __init__(self, argv):
-        self.argv = argv
-        self.setup_db()
-        self.connect_db()
+    def __init__(self, args):
+        # parse cmd line args and execute stuff
+        if args.reset_db:
+            self.reset_rdb()
+        if args.init_db:
+            self.init_rdb()
+        if args.file:
+            self.from_file(args.file)
+        if args.stream_url:
+            port = args.port or 80
+            self.from_stream(url=args.stream_url, port=port)
 
-        ##
-        ## TODO: parse args so we can decide whether to use file or url
-        ##
+        print args
 
-        if (len(argv) == 2):
-            filename = argv[1]
+    def from_file(self, filename):
+        with open(filename, 'r') as f:
+            # set non blocking i/o
+            fd = f.fileno()
+            flag = fcntl.fcntl(fd, fcntl.F_GETFD)
+            fcntl.fcntl(fd, fcntl.F_SETFL, flag |  os.O_NONBLOCK)
+            next(f) # skip header row
 
-            with open(filename, 'r') as f:
-                # set non blocking i/o
-                fd = f.fileno()
-                flag = fcntl.fcntl(fd, fcntl.F_GETFD)
-                fcntl.fcntl(fd, fcntl.F_SETFL, flag |  os.O_NONBLOCK)
-                lineno = 0
-
+            with self.get_reql_connection(PURPLE_DB) as conn:
                 for line in f:
-                    if lineno == 0:
-                        lineno = 1
-                        continue
+                    Trade(line).save(conn)
 
-                    Trade(line).save(self.rdb_conn)
-        else:
-            sys.stderr.write('Specify a filename: python main.py [filename]')
+    def from_stream(self, url, port=80):
+        # TODO: read from stream
+        pass
 
-        # finally
-        self.close_db()
+    def reset_rdb(self):
+        with self.get_reql_connection() as conn:
+            try:
+                r.db_drop(PURPLE_DB).run(conn)
+            except RqlRuntimeError:
+                pass
+            finally:
+                print 'Database dropped successfully.'
 
-    def setup_db(self):
-        connection = r.connect(host=RDB_HOST, port=RDB_PORT)
+    def init_rdb(self):
+        with self.get_reql_connection() as conn:
+            try:
+                r.db_create(PURPLE_DB).run(conn)
+                r.db(PURPLE_DB).table_create('trades').run(conn)
+                ## TODO: create alert table (think of design)
+            except RqlRuntimeError:
+                # fail silently
+                # Remember to reset db first to migrate db
+                pass
+            finally:
+                print 'Database setup complete.'
+
+    @contextmanager
+    def get_reql_connection(db=None):
+        """
+        Make rdb connection available as context manager generator.
+        ie:
+        with self.get_reql_connection('somedb') as conn:
+            r.table('sometable').run(conn)
+        """
         try:
-            r.db_create(PURPLE_DB).run(connection)
-            r.db(PURPLE_DB).table_create('trades').run(connection)
-            ## TODO: create alert table (think of design)
-        except RqlRuntimeError:
-            # fail silently
-            # Remember to destroy if you want this to be successful
-            pass
-        finally:
-            connection.close()
-        print 'Database setup complete.'
-
-    def connect_db(self):
-        try:
-            self.rdb_conn = r.connect(host=RDB_HOST, port=RDB_PORT, db=PURPLE_DB)
+            if db:
+                rdb_conn = r.connect(host=RDB_HOST, port=RDB_PORT, db=PURPLE_DB)
+            else:
+                rdb_conn = r.connect(host=RDB_HOST, port=RDB_PORT)
         except RqlDriverError:
-            sys.stderr.write('No db connection could be established.')
+            sys.stderr.write('Rethinkdb: No db connection could be established.')
             sys.exit(1)
 
-    def close_db(self):
         try:
-            this.rdb_conn.close()
-        except:
-            pass
+            yield rdb_conn
+        finally:
+            rdb_conn.close()
