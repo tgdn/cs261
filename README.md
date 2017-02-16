@@ -61,6 +61,10 @@ You should now be able to type
 That will launch rethinkdb in the background and will setup the
 database. Don't worry if it tells you it needs some input.
 
+### [Database setup](docs/Database.md)
+
+Setup the database [here](docs/Database.md)
+
 ### JavaScript bundle and dependencies
 
     cd frontend/
