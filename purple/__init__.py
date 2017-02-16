@@ -4,18 +4,20 @@ import os
 import sys
 import fcntl
 import socket
+import threading
 from contextlib import contextmanager
 
 import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
 
+from purple import db
 from purple.finance import Trade
 
 RDB_HOST = 'localhost'
 RDB_PORT = '28015'
 PURPLE_DB = 'purple'
 
-# write to stdout
+# write to screen
 def stdout_write(s):
     sys.stdout.write(s)
     sys.stdout.flush()
@@ -28,11 +30,21 @@ def reset_line():
 
 class App:
     def __init__(self, args):
-        # parse cmd line args and execute stuff
+        '''
+        First, parse command line arguments and decide what to do:
+        --init-db                  -> initialise db (tables etc)
+        --reset-db                 -> delete tables and data
+        -f trades.csv              -> import trades from file
+        -s cs261.warw.ac.uk -p 80  -> import trades from live stream
+        '''
+
         if args.reset_db:
             self.reset_rdb()
+            self.reset_psql()
+            print 'Database dropped successfully.'
         if args.init_db:
             self.init_rdb()
+            self.init_psql()
         if args.file:
             self.from_file(args.file)
         if args.stream_url:
@@ -43,7 +55,11 @@ class App:
         '''
         Read file containing trading data.
         Read each line and insert in DB.
-        File is opened by argparse.
+        f is file handle opened by argparse.
+
+        Trades are commited once the whole file
+        has been read. Cancelling command will
+        leave database unchanged.
         '''
         # set non blocking i/o
         fd = f.fileno()
@@ -51,16 +67,41 @@ class App:
         fcntl.fcntl(fd, fcntl.F_SETFL, flag |  os.O_NONBLOCK)
         next(f) # skip header row
 
+        # hold a trade accumulator and a trade count
+        tradeacc = 0
         tradecount = 0
-        with self.get_reql_connection(True) as conn:
-            for line in f:
-                # insert
-                Trade(line).save(conn)
+        trades_objs = []
 
-                # inform user
-                tradecount = tradecount + 1
-                stdout_write('Trades: {} (Ctrl-C to stop)'.format(tradecount))
-                reset_line()
+        # read line by line
+        for line in f:
+            # continue if row is parsed correctly
+            t = Trade(line)
+            if not t.parse_err:
+                # get symbol
+                symbol = db.SymbolModel.get_or_create(t.symbol)
+
+                # create query
+                trade = db.TradeModel(price=t.price, size=t.size, symbol=symbol)
+                trades_objs.append(trade)
+                tradeacc = tradeacc + 1
+
+                # flush database every 2500 objects
+                if tradeacc == 2500:
+                    # bulk save for improved performance
+                    db.session.bulk_save_objects(trades_objs)
+                    db.session.flush()
+                    trades_objs = []
+                    tradeacc = 0
+
+            # inform user
+            tradecount = tradecount + 1
+            stdout_write('Trades: {} (Ctrl-C to stop)'.format(tradecount))
+            reset_line()
+
+        # save last items out of the loop and commit changes to db
+        db.session.bulk_save_objects(trades_objs)
+        db.session.commit()
+
         try:
             f.close()
         except:
@@ -70,53 +111,81 @@ class App:
         '''
         Read live stream of trading data
         and insert into DB.
+
+        Unlike from_file, trades are
+        commited every 100 trades
+        for better live statistics.
         '''
+        # Open socket with given paramaters
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((url, port))
 
+        # store accumulator and trade count
         firstline = True
+        tradeacc = 0
         tradecount = 0
+        trades_objs = []
         line = ''
-        with self.get_reql_connection(True) as conn:
-            while 1:
-                # read character
-                char = sock.recv(1)
-                if char == '\n':
-                    if firstline:
-                        firstline = False
-                    else:
-                        # insert
-                        Trade(line).save(conn)
 
-                        # inform user
-                        tradecount = tradecount + 1
-                        stdout_write('Trades: {} (Ctrl-C to stop)'.format(tradecount))
-                        reset_line()
-                    line = ''
+        # read character by character until new line '\n'
+        # is found. Parse line at that time and continue.
+        while 1:
+            # read character
+            char = sock.recv(1)
+            if char == '\n':
+                if firstline:
+                    firstline = False
                 else:
-                    line = line + char
+                    # parse row
+                    t = Trade(line)
+                    if not t.parse_err:
+                        # get symbol
+                        symbol = db.SymbolModel.get_or_create(t.symbol)
+                        trade = db.TradeModel(price=t.price, size=t.size, symbol=symbol)
+                        trades_objs.append(trade)
+                        tradeacc = tradeacc + 1
+                        if tradeacc == 50:
+                            # bulk save and commit
+                            db.session.bulk_save_objects(trades_objs)
+                            db.session.commit()
+                            trades_objs = []
+                            tradeacc = 0
+
+                    # inform user
+                    tradecount = tradecount + 1
+                    stdout_write('Trades: {} (Ctrl-C to stop)'.format(tradecount))
+                    reset_line()
+                line = ''
+            else:
+                line = line + char
 
     def reset_rdb(self):
+        # connect to rethinkdb and drop database
         with self.get_reql_connection() as conn:
             try:
                 r.db_drop(PURPLE_DB).run(conn)
             except RqlRuntimeError:
                 pass
-            finally:
-                print 'Database dropped successfully.'
 
     def init_rdb(self):
+        # connect to rethinkdb and create database and tables
         with self.get_reql_connection() as conn:
             try:
                 r.db_create(PURPLE_DB).run(conn)
-                r.db(PURPLE_DB).table_create('trades').run(conn)
+                # r.db(PURPLE_DB).table_create('trades').run(conn)
                 ## TODO: create alert table (think of design)
             except RqlRuntimeError:
                 # fail silently
                 # Remember to reset db first to migrate db
                 pass
             finally:
-                print 'Database setup complete.'
+                print 'Rethinkdb setup complete.'
+
+    def reset_psql(self):
+        db.drop_tables()
+
+    def init_psql(self):
+        db.create_tables()
 
     @contextmanager
     def get_reql_connection(self, db=False):
