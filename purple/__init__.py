@@ -5,6 +5,7 @@ import sys
 import pytz
 import fcntl
 import socket
+#import threading
 from datetime import datetime
 
 import rethinkdb as r
@@ -38,13 +39,9 @@ class App:
         '''
 
         if args.reset_db:
-            # self.reset_rdb()
-            # self.reset_psql()
             db.drop_tables()
             print 'Database dropped successfully.'
         if args.init_db:
-            # self.init_rdb()
-            # self.init_psql()
             db.create_tables()
         if args.file:
             self.from_file(args.file)
