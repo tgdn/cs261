@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from contextlib import closing
+import sys
+import rethinkdb as r
+from rethinkdb.errors import RqlRuntimeError, RqlDriverError
+
+from contextlib import closing, contextmanager
 from sqlalchemy import (
     MetaData,
     create_engine,
@@ -15,6 +19,10 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import sessionmaker, relationship
+
+RDB_HOST = 'localhost'
+RDB_PORT = '28015'
+PURPLE_DB = 'purple'
 
 DATABASE_SETTINGS = {
     'drivername': 'postgres',
@@ -31,13 +39,70 @@ Base = declarative_base(bind=engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
+
+@contextmanager
+def get_reql_connection(db=False):
+    """
+    Make rdb connection available as context manager generator.
+    ie:
+    with get_reql_connection(db=True) as conn:
+        r.table('sometable').run(conn)
+    """
+    try:
+        if db:
+            rdb_conn = r.connect(host=RDB_HOST, port=RDB_PORT, db=PURPLE_DB)
+        else:
+            rdb_conn = r.connect(host=RDB_HOST, port=RDB_PORT)
+    except RqlDriverError:
+        sys.stderr.write('Rethinkdb: No db connection could be established.')
+        sys.exit(1)
+
+    try:
+        yield rdb_conn
+    finally:
+        rdb_conn.close()
+
+
+#####################################
+#           Public Methods          #
+#####################################
+
 def create_tables():
-    # will create all tables
+    '''
+    Create all tables
+    '''
+    # Postgres
     Base.metadata.create_all(engine)
 
+    # Rethinkdb
+    with get_reql_connection() as conn:
+        try:
+            r.db_create(PURPLE_DB).run(conn)
+            # r.db(PURPLE_DB).table_create('trades').run(conn)
+            r.db(PURPLE_DB).table_create('alerts').run(conn)
+            ## TODO: create alert table (think of design)
+        except RqlRuntimeError:
+            # fail silently
+            # Remember to reset db first to migrate db
+            pass
+        finally:
+            print 'Rethinkdb setup complete.'
+
+
 def drop_tables():
-    # will delete all data in the tables
+    '''
+    Delete all data in the tables (destroy databases)
+    '''
+    # Postgres
     Base.metadata.drop_all(engine)
+
+    # Rethinkdb
+    with get_reql_connection() as conn:
+        try:
+            r.db_drop(PURPLE_DB).run(conn)
+        except RqlRuntimeError:
+            pass
+
 
 ######################################
 #               Models               #
@@ -77,7 +142,6 @@ class TradeModel(BaseModel):
 
     symbol = relationship('SymbolModel', back_populates='trades')
 
-    def flag(truth_value):
+    def flag(self, truth_value):
         self.flagged = truth_value
         session.commit()
-    

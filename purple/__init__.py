@@ -2,10 +2,10 @@
 
 import os
 import sys
+import pytz
 import fcntl
 import socket
-import threading
-from contextlib import contextmanager
+from datetime import datetime
 
 import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
@@ -14,9 +14,7 @@ from purple import db
 from purple.anomalous_trade_finder import AnomalousTradeFinder
 from purple.finance import Trade
 
-RDB_HOST = 'localhost'
-RDB_PORT = '28015'
-PURPLE_DB = 'purple'
+tz = pytz.timezone('Europe/London')
 
 # write to screen
 def stdout_write(s):
@@ -40,12 +38,14 @@ class App:
         '''
 
         if args.reset_db:
-            self.reset_rdb()
-            self.reset_psql()
+            # self.reset_rdb()
+            # self.reset_psql()
+            db.drop_tables()
             print 'Database dropped successfully.'
         if args.init_db:
-            self.init_rdb()
-            self.init_psql()
+            # self.init_rdb()
+            # self.init_psql()
+            db.create_tables()
         if args.file:
             self.from_file(args.file)
         if args.stream_url:
@@ -88,6 +88,12 @@ class App:
                 trades_objs.append(trade)
                 tradeacc = tradeacc + 1
 
+                # If we've found an anomalous trade, write alert to rethinkDB
+                if anomaly_identifier.is_anomalous(t):
+                    #ALERT DATABASE
+                    self.flag(trade) # flag trade
+                    print "Anomaly identified"
+
                 # flush database every 2500 objects
                 if tradeacc == 2500:
                     # bulk save for improved performance
@@ -95,11 +101,6 @@ class App:
                     db.session.flush()
                     trades_objs = []
                     tradeacc = 0
-
-                # If we've found an anomalous trade, write alert to rethinkDB
-                if anomaly_identifier.is_anomalous(t):
-                    #ALERT DATABASE
-                    print "Anomaly identified"
 
             # inform user
             tradecount = tradecount + 1
@@ -137,7 +138,6 @@ class App:
 
         anomaly_identifier = AnomalousTradeFinder()
 
-
         # read character by character until new line '\n'
         # is found. Parse line at that time and continue.
         while 1:
@@ -154,17 +154,18 @@ class App:
                         trades_objs.append(trade)
                         tradeacc = tradeacc + 1
 
+                        # If we've found an anomalous trade, write alert to rethinkDB
+                        if anomaly_identifier.is_anomalous(t):
+                            #ALERT DATABASE
+                            self.flag(trade) # flag trade
+                            print "Anomaly identified"
+
                         if tradeacc == 50:
                             # bulk save and commit
                             db.session.bulk_save_objects(trades_objs)
                             db.session.commit()
                             trades_objs = []
                             tradeacc = 0
-
-                        # If we've found an anomalous trade, write alert to rethinkDB
-                        if anomaly_identifier.is_anomalous(t):
-                            #ALERT DATABASE
-                            print "Anomaly identified"
 
                     # inform user
                     tradecount = tradecount + 1
@@ -174,52 +175,10 @@ class App:
             else:
                 line = line + char
 
-    def reset_rdb(self):
-        # connect to rethinkdb and drop database
-        with self.get_reql_connection() as conn:
-            try:
-                r.db_drop(PURPLE_DB).run(conn)
-            except RqlRuntimeError:
-                pass
-
-    def init_rdb(self):
-        # connect to rethinkdb and create database and tables
-        with self.get_reql_connection() as conn:
-            try:
-                r.db_create(PURPLE_DB).run(conn)
-                # r.db(PURPLE_DB).table_create('trades').run(conn)
-                ## TODO: create alert table (think of design)
-            except RqlRuntimeError:
-                # fail silently
-                # Remember to reset db first to migrate db
-                pass
-            finally:
-                print 'Rethinkdb setup complete.'
-
-    def reset_psql(self):
-        db.drop_tables()
-
-    def init_psql(self):
-        db.create_tables()
-
-    @contextmanager
-    def get_reql_connection(self, db=False):
-        """
-        Make rdb connection available as context manager generator.
-        ie:
-        with self.get_reql_connection(db=True) as conn:
-            r.table('sometable').run(conn)
-        """
-        try:
-            if db:
-                rdb_conn = r.connect(host=RDB_HOST, port=RDB_PORT, db=PURPLE_DB)
-            else:
-                rdb_conn = r.connect(host=RDB_HOST, port=RDB_PORT)
-        except RqlDriverError:
-            sys.stderr.write('Rethinkdb: No db connection could be established.')
-            sys.exit(1)
-
-        try:
-            yield rdb_conn
-        finally:
-            rdb_conn.close()
+    def flag(self, trade):
+        trade.flag(True)
+        with db.get_reql_connection(db=True) as conn:
+            r.table('alerts').insert([{
+                    'time': tz.localize(datetime.now()),
+                    'trade_pk': trade.id,
+            }]).run(conn, durability='soft')
