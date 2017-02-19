@@ -3,3 +3,4 @@ sqlalchemy
 pytz
 rethinkdb
 numpy
+snakeviz
