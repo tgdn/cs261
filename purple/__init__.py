@@ -66,15 +66,7 @@ class App:
         fcntl.fcntl(fd, fcntl.F_SETFL, flag |  os.O_NONBLOCK)
         next(f) # skip header row
 
-        # hold a trade accumulator and a trade count
-        # tradeacc = 0
-        # tradecount = 0
-        # trades_objs = []
-
-        # anomaly_identifier = AnomalousTradeFinder()
-
         trades_analyser = TradesAnalyser(tradeacc_limit=1000)
-
         # read line by line
         for line in f:
             # continue if row is parsed correctly
