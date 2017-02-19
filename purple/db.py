@@ -47,9 +47,9 @@ class BaseModel(Base):
     __abstract__ = True
     id = Column(Integer, primary_key=True)
 
-class SymbolModel(BaseModel):
+class SymbolModel(Base):
     __tablename__ = 'symbols'
-    name = Column(String)
+    name = Column(String, primary_key=True)
     trades = relationship('TradeModel', back_populates='symbol')
 
     @classmethod
@@ -73,10 +73,11 @@ class TradeModel(BaseModel):
     price = Column(Float)
     size = Column(BigInteger)
     flagged = Column(Boolean, default=False)
-    symbol_id = Column(Integer, ForeignKey('symbols.id'))
+    symbol_name = Column(String, ForeignKey('symbols.name'))
 
     symbol = relationship('SymbolModel', back_populates='trades')
 
     def flag(truth_value):
         self.flagged = truth_value
         session.commit()
+    
