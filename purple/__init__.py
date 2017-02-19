@@ -14,6 +14,7 @@ from rethinkdb.errors import RqlRuntimeError, RqlDriverError
 from purple import db
 from purple.anomalous_trade_finder import AnomalousTradeFinder
 from purple.finance import Trade
+from purple.analysis import TradesAnalyser
 
 tz = pytz.timezone('Europe/London')
 
@@ -66,47 +67,21 @@ class App:
         next(f) # skip header row
 
         # hold a trade accumulator and a trade count
-        tradeacc = 0
-        tradecount = 0
-        trades_objs = []
+        # tradeacc = 0
+        # tradecount = 0
+        # trades_objs = []
 
-        anomaly_identifier = AnomalousTradeFinder()
+        # anomaly_identifier = AnomalousTradeFinder()
+
+        trades_analyser = TradesAnalyser(tradeacc_limit=1000)
 
         # read line by line
         for line in f:
             # continue if row is parsed correctly
             t = Trade(line)
             if not t.parse_err:
-                # get symbol
-                symbol = db.SymbolModel.get_or_create(t.symbol)
-
-                # create query
-                trade = db.TradeModel(price=t.price, size=t.size, symbol=symbol)
-                trades_objs.append(trade)
-                tradeacc = tradeacc + 1
-
-                # If we've found an anomalous trade, write alert to rethinkDB
-                if anomaly_identifier.is_anomalous(t):
-                    #ALERT DATABASE
-                    self.flag(trade) # flag trade
-                    print "Anomaly identified"
-
-                # flush database every 2500 objects
-                if tradeacc == 2500:
-                    # bulk save for improved performance
-                    db.session.bulk_save_objects(trades_objs)
-                    db.session.flush()
-                    trades_objs = []
-                    tradeacc = 0
-
-            # inform user
-            tradecount = tradecount + 1
-            stdout_write('Trades: {} (Ctrl-C to stop)'.format(tradecount))
-            reset_line()
-
-        # save last items out of the loop and commit changes to db
-        db.session.bulk_save_objects(trades_objs)
-        db.session.commit()
+                trades_analyser.add(t)
+        trades_analyser.force_commit()
 
         try:
             f.close()
@@ -133,7 +108,7 @@ class App:
         trades_objs = []
         line = ''
 
-        anomaly_identifier = AnomalousTradeFinder()
+        trades_analyser = TradesAnalyser(tradeacc_limit=50)
 
         # read character by character until new line '\n'
         # is found. Parse line at that time and continue.
@@ -146,28 +121,7 @@ class App:
                 else:
                     t = Trade(line)
                     if not t.parse_err:
-                        symbol = db.SymbolModel.get_or_create(t.symbol)
-                        trade = db.TradeModel(price=t.price, size=t.size, symbol=symbol)
-                        trades_objs.append(trade)
-                        tradeacc = tradeacc + 1
-
-                        # If we've found an anomalous trade, write alert to rethinkDB
-                        if anomaly_identifier.is_anomalous(t):
-                            #ALERT DATABASE
-                            self.flag(trade) # flag trade
-                            print "Anomaly identified"
-
-                        if tradeacc == 50:
-                            # bulk save and commit
-                            db.session.bulk_save_objects(trades_objs)
-                            db.session.commit()
-                            trades_objs = []
-                            tradeacc = 0
-
-                    # inform user
-                    tradecount = tradecount + 1
-                    stdout_write('Trades: {} (Ctrl-C to stop)'.format(tradecount))
-                    reset_line()
+                        trades_analyser.add(t, commit=True)
                 line = ''
             else:
                 line = line + char
