@@ -11,6 +11,7 @@ import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
 
 from purple import db
+from purple.anomalous_trade_finder import AnomalousTradeFinder
 from purple.finance import Trade
 
 RDB_HOST = 'localhost'
@@ -72,6 +73,8 @@ class App:
         tradecount = 0
         trades_objs = []
 
+        anomaly_identifier = AnomalousTradeFinder()
+
         # read line by line
         for line in f:
             # continue if row is parsed correctly
@@ -92,6 +95,11 @@ class App:
                     db.session.flush()
                     trades_objs = []
                     tradeacc = 0
+
+                # If we've found an anomalous trade, write alert to rethinkDB
+                if anomaly_identifier.is_anomalous(t):
+                    #ALERT DATABASE
+                    print "Anomaly identified"
 
             # inform user
             tradecount = tradecount + 1
@@ -127,6 +135,9 @@ class App:
         trades_objs = []
         line = ''
 
+        anomaly_identifier = AnomalousTradeFinder()
+
+
         # read character by character until new line '\n'
         # is found. Parse line at that time and continue.
         while 1:
@@ -142,12 +153,18 @@ class App:
                         trade = db.TradeModel(price=t.price, size=t.size, symbol=symbol)
                         trades_objs.append(trade)
                         tradeacc = tradeacc + 1
+
                         if tradeacc == 50:
                             # bulk save and commit
                             db.session.bulk_save_objects(trades_objs)
                             db.session.commit()
                             trades_objs = []
                             tradeacc = 0
+
+                        # If we've found an anomalous trade, write alert to rethinkDB
+                        if anomaly_identifier.is_anomalous(t):
+                            #ALERT DATABASE
+                            print "Anomaly identified"
 
                     # inform user
                     tradecount = tradecount + 1
