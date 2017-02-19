@@ -136,10 +136,8 @@ class App:
                 if firstline:
                     firstline = False
                 else:
-                    # parse row
                     t = Trade(line)
                     if not t.parse_err:
-                        # get symbol
                         symbol = db.SymbolModel.get_or_create(t.symbol)
                         trade = db.TradeModel(price=t.price, size=t.size, symbol=symbol)
                         trades_objs.append(trade)
