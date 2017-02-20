@@ -19,8 +19,9 @@ class AnomalousTradeFinder:
             previous_mean = self.pricedelta_history[trade.symbol][-2]["mean"]
             previous_stdev = self.pricedelta_history[trade.symbol][-2]["stdev"]
 
+            #print 'delta: {} - prev mean: {} - prev std: {}'.format(current_delta, previous_mean, previous_stdev)
             if current_delta >= previous_mean + previous_stdev * 3:
-                #We don't use stdev or mean of anomalous trades
+                # We don't use stdev or mean of anomalous trades
                 self.pricedelta_history[trade.symbol].pop()["delta"]
                 return True
 
@@ -36,6 +37,7 @@ class AnomalousTradeFinder:
                 'stdev': 0
             }], PREV_TRADES_USED_FOR_ANALYSIS)
         else:
+            # shouldnt we get absolute value here?
             delta = trade.price - self.pricedelta_history[trade.symbol][-1]["price"]
 
             self.pricedelta_history[trade.symbol].append({
