@@ -3,7 +3,9 @@
 const path = require('path');
 const http = require('http');
 const express = require('express');
+const multer = require('multer');
 const r = require('rethinkdb');
+const spawn = require('child_process').spawn;
 
 const app = express();
 const server = http.Server(app);
@@ -26,6 +28,11 @@ const options = {
 
 const horizonServer = horizon(httpServer, options);
 
+const upload = multer({
+    dest: path.join(__dirname, 'uploads'),
+    limits: { files: 1 },
+})
+
 const closeDb = () => {
     if (global.db) {
         global.db.close((err) => {
@@ -39,9 +46,37 @@ const closeDb = () => {
 const distPath = path.join(__dirname, 'dist')
 app.use(express.static(distPath));
 
+app.post('/upload', (req, res) => {
+    upload(req, res, (err) => {
+        if (err) {
+            res.json({ success: false })
+            return
+        }
+
+        /*
+         * At this point upload is complete, start analysing file:
+         * spawn python process that does analysis in the background
+         * docs from: nodejs.org/api/child_process.html#child_process_child_process
+        */
+        spawn('python', ['../main.py', '-f', req.file.path], {
+            detached: true,
+            stdio: 'inherit'
+        }).on('close', (code) => {
+            console.log(`process exit code: ${code}`)
+        })
+
+        res.json({
+            success: true,
+            filename: req.file.originalname,
+            size: req.file.size,
+        })
+    })
+})
+
 app.get(['/', '*'], (req, res) => {
     res.sendFile('index.html', { root: distPath });
 })
+
 
 r.connect({
     host: 'localhost',
