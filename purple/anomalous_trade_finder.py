@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sys
 from purple.finance import Trade
 from collections import deque
 from numpy import std, mean
@@ -13,6 +14,7 @@ class AnomalousTradeFinder:
 
     def is_anomalous(self, trade):
         self._add(trade)
+        #print sys.getsizeof(self.pricedelta_history)
 
         if len(self.pricedelta_history[trade.symbol]) >= TRADE_COUNT_REQUIRED_FOR_ANALYSIS:
             current_delta = self.pricedelta_history[trade.symbol][-1]["delta"]
