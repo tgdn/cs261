@@ -26,7 +26,7 @@ def reset_line():
 class TradesAnalyser:
     def __init__(self, tradeacc_limit=2500):
         # hold symbols in memory
-        self.symbols = []
+        self.symbols = set() # a set has better lookup performance (hashtable)
         self.trades_objs = []
         self.tradecount = 0
         self.tradeacc = 0
@@ -61,6 +61,11 @@ class TradesAnalyser:
         stdout_write('Trades: {} - ({} anomalies) (Ctrl-C to stop)'.format(self.tradecount, self.anomalies))
         reset_line()
 
+        # flag anomalous data
+        if self.anomaly_identifier.is_anomalous(t):
+            self.anomalies = self.anomalies + 1
+            self.flag(trade)
+
         # flush database at accumulator limit
         if self.tradeacc == self.tradeacc_limit:
             self.save_load()
@@ -68,10 +73,6 @@ class TradesAnalyser:
                 db.session.commit()
             else:
                 db.session.flush()
-
-        if self.anomaly_identifier.is_anomalous(t):
-            self.anomalies = self.anomalies + 1
-            self.flag(trade)
 
     def force_commit(self):
         self.save_load()
@@ -90,7 +91,7 @@ class TradesAnalyser:
         if not s in self.symbols:
             # query db or create
             symbol = db.SymbolModel.get_or_create(s)
-            self.symbols.append(s)
+            self.symbols.add(s)
         return s
 
     def flag(self, trade):
