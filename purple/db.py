@@ -4,9 +4,8 @@ import sys
 import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
 
-from contextlib import closing, contextmanager
+from contextlib import contextmanager
 from sqlalchemy import (
-    MetaData,
     create_engine,
     Column,
     Integer,
