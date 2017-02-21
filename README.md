@@ -104,11 +104,11 @@ The first time you run the backend, you will want to initialise the db, which is
 
 Then, if you would like to analyse the live feed as it comes in, run the following:
 
-        python main.py -s cs261.dcs.warwick.ac.uk
+    python main.py -s cs261.dcs.warwick.ac.uk
 
 If you want to analyse a CSV file, run the following:
 
-        python main.py -f /path/to/file
+    python main.py -f /path/to/file
 
 Where /path/to/file is the path to the CSV you want to analyse.
 
