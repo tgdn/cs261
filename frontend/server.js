@@ -3,6 +3,7 @@
 const path = require('path');
 const http = require('http');
 const express = require('express');
+const bodyParser = require('body-parser');
 const multer = require('multer');
 const r = require('rethinkdb');
 const spawn = require('child_process').spawn;
@@ -28,11 +29,6 @@ const options = {
 
 const horizonServer = horizon(httpServer, options);
 
-const upload = multer({
-    dest: path.join(__dirname, 'uploads'),
-    limits: { files: 1 },
-})
-
 const closeDb = () => {
     if (global.db) {
         global.db.close((err) => {
@@ -46,6 +42,13 @@ const closeDb = () => {
 const distPath = path.join(__dirname, 'dist')
 app.use(express.static(distPath));
 
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
+const upload = multer({
+    dest: path.join(__dirname, 'uploads'),
+    limits: { files: 1 },
+})
 const uploadHandler = upload.single('file')
 
 app.post('/upload', (req, res) => {
@@ -55,8 +58,7 @@ app.post('/upload', (req, res) => {
             return
         }
 
-        /*
-         * At this point upload is complete, start analysing file:
+        /* At this point upload is complete, start analysing file:
          * spawn python process that does analysis in the background
          * docs from: nodejs.org/api/child_process.html#child_process_child_process
         */
@@ -72,6 +74,38 @@ app.post('/upload', (req, res) => {
             filename: req.file.originalname,
             size: req.file.size,
         })
+    })
+})
+
+app.post('/setstream', (req, res) => {
+    /* destructuring assignment only in node v6
+     * or use:
+     * node --harmony_destructuring server.js
+     */
+    const streamUrl = req.body.streamUrl
+    const port = req.body.port || 80
+
+    if (streamUrl && port) {
+        console.log(streamUrl);
+        console.log(port);
+        /* At this point, start analysing stream:
+         * spawn python process that does analysis in the background
+        */
+        spawn('python', ['../main.py', '-s', streamUrl, '-p', port], {
+            stdio: 'inherit'
+        }).on('close', (code) => {
+            console.log(`process exit code: ${code}`)
+        })
+
+        res.json({
+            success: true,
+            streamUrl: req.body.streamUrl,
+            port: req.body.port
+        })
+        return
+    }
+    res.json({
+        success: false,
     })
 })
 
