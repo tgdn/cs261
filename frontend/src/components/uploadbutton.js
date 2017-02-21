@@ -126,7 +126,7 @@ UploadButton.propTypes = {
     id: PropTypes.string,
     children: PropTypes.node,
     className: PropTypes.string,
-    multiple: PropTypes.func,
+    multiple: PropTypes.bool,
     uploadingContent: PropTypes.node,
     acceptedTypes: PropTypes.array.isRequired, // eslint-disable-line
     uploadTo: PropTypes.string.isRequired,
@@ -136,7 +136,7 @@ UploadButton.propTypes = {
             value: PropTypes.string,
         })
     ),
-    typeErrorMessage: PropTypes.func,
+    typeErrorMessage: PropTypes.string,
     handleFailure: PropTypes.func,
     handleSuccess: PropTypes.func,
     handleProgress: PropTypes.func,
@@ -155,3 +155,5 @@ UploadButton.defaultProps = {
     handleSuccess: () => {},
     handleProgress: () => {}
 }
+
+export default UploadButton
