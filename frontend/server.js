@@ -46,8 +46,10 @@ const closeDb = () => {
 const distPath = path.join(__dirname, 'dist')
 app.use(express.static(distPath));
 
+const uploadHandler = upload.single('file')
+
 app.post('/upload', (req, res) => {
-    upload(req, res, (err) => {
+    uploadHandler(req, res, (err) => {
         if (err) {
             res.json({ success: false })
             return
@@ -59,7 +61,7 @@ app.post('/upload', (req, res) => {
          * docs from: nodejs.org/api/child_process.html#child_process_child_process
         */
         spawn('python', ['../main.py', '-f', req.file.path], {
-            detached: true,
+            //detached: true,
             stdio: 'inherit'
         }).on('close', (code) => {
             console.log(`process exit code: ${code}`)
