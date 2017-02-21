@@ -97,24 +97,18 @@ I guess you can now go and visit `http://127.0.0.1:8181/`
 The file which handles what you want to do when running the backend is main.py.
 
 The first time you run the backend, you will want to initialise the db, which is done by running:
-
-    ```bash
-        python main.py --init-db
-    ```
-
+    
+    python main.py --init-db
+    
 (You only need to do this once)
 
 Then, if you would like to analyse the live feed as it comes in, run the following:
 
-    ```bash
         python main.py -s cs261.dcs.warwick.ac.uk
-    ```
 
 If you want to analyse a CSV file, run the following:
 
-    ```bash
         python main.py -f /path/to/file
-    ```
 
 Where /path/to/file is the path to the CSV you want to analyse.
 
@@ -124,40 +118,40 @@ Where /path/to/file is the path to the CSV you want to analyse.
 1. Make sure PostgreSQL and rethinkdb are running. PostgreSQL is run through the Mac App, and rethink can be run using:
 
     ```bash
-        rethinkdb &
+    rethinkdb &
     ```
 
 2. Go to your cloned version of the Git repo, and update to the latest version by running:
 
-```bash
+    ```bash
     git pull
-```
+    ```
 
 This will pull the latest changes that have been made by someone else to the central repository.
 
 3. Enter your python virtualenv (the thing that handles all our dependencies) with:
 
     ```bash
-        source env/bin/activate
+    source env/bin/activate
     ```
 
 4. Check to see if any dependencies have changed, by running:
 
     ```bash
-        pip install -r requirements.txt
+    pip install -r requirements.txt
     ```
 
 for the backend, and:
 
     ```bash
-        cd frontend
-        npm install --save
+    cd frontend
+    npm install --save
     ```
 
 5. When you're done, exit the virtualenv by running:
 
     ```bash
-        deactivate
+    deactivate
     ```
 
 Good hacking!
