@@ -50,13 +50,12 @@ Go to the project's root (cs261/) and type one after the other:
 
     virtualenv env
     source env/bin/activate
-    pip install --upgade pip
+    pip install --upgrade pip
     pip install -r requirements.txt
 
-You should now be able to type
+You should now launch rethinkdb in the background by running:
 
     rethinkdb &
-    python main.py
 
 That will launch rethinkdb in the background and will setup the
 database. Don't worry if it tells you it needs some input.
@@ -69,6 +68,9 @@ Setup the database [here](docs/Database.md)
 
     cd frontend/
     npm install --save
+
+
+### Running the Frontend
 
 Now you can
 - Run the server
@@ -89,11 +91,55 @@ On the other tab you can start the server with
 
 I guess you can now go and visit `http://127.0.0.1:8181/`
 
-On a third terminal window you can run the python script
-and it will simultaneously store the trades on the DB.
 
-    python main.py trades.csv
+### Running the Backend
 
-I wouldn't run that command until the end (it takes about 5 minutes or so to read the whole file and store everything in the db). Ctrl-C when you're tired of it. The server and db are still up, its just the python backend that's off.
+The file which handles what you want to do when running the backend is main.py.
+
+The first time you run the backend, you will want to initialise the db, which is done by running:
+
+    python main.py --init-db
+
+(You only need to do this once)
+
+Then, if you would like to analyse the live feed as it comes in, run the following:
+
+    python main.py -s cs261.dcs.warwick.ac.uk
+
+If you want to analyse a CSV file, run the following:
+
+    python main.py -f /path/to/file
+
+Where /path/to/file is the path to the CSV you want to analyse.
+
+
+### General Workflow
+
+1. Make sure PostgreSQL and rethinkdb are running. PostgreSQL is run through the Mac App, and rethink can be run using:
+
+    rethinkdb &
+
+2. Go to your cloned version of the Git repo, and update to the latest version by running:
+
+    git pull
+
+This will pull the latest changes that have been made by someone else to the central repository.
+
+3. Enter your python virtualenv (the thing that handles all our dependencies) with:
+
+    source env/bin/activate
+
+4. Check to see if any dependencies have changed, by running:
+
+    pip install -r requirements.txt
+
+for the backend, and:
+
+    cd frontend
+    npm install --save
+
+5. When you're done, exit the virtualenv by running:
+
+    deactivate
 
 Good hacking!
