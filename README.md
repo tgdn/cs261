@@ -127,28 +127,25 @@ Where /path/to/file is the path to the CSV you want to analyse.
     git pull
     ```
 
-This will pull the latest changes that have been made by someone else to the central repository.
-
 3. Enter your python virtualenv (the thing that handles all our dependencies) with:
 
     ```bash
     source env/bin/activate
     ```
 
-4. Check to see if any dependencies have changed, by running:
+4. Check to see if any backend dependencies have changed, by running the following:
 
     ```bash
     pip install -r requirements.txt
     ```
 
-for the backend, and:
+5. Check to see if any frontend dependenceis have changed, by running the following from the frontend folder:
 
     ```bash
-    cd frontend
     npm install --save
     ```
 
-5. When you're done, exit the virtualenv by running:
+6. When you're done, exit the virtualenv by running:
 
     ```bash
     deactivate
