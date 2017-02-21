@@ -1,4 +1,3 @@
-
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
@@ -10,7 +9,10 @@ import {
 
 import store from './store'
 import routes from './routes'
-// import App from './components/app'
+
+/* polyfills */
+require('es6-promise').polyfill();
+require('isomorphic-fetch')
 
 const history = syncHistoryWithStore(browserHistory, store);
 
