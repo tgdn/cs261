@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react'
+import { Icon, Label } from 'semantic-ui-react'
 
 class UploadButton extends React.Component {
     /* eslint-disable react/sort-comp */
@@ -36,10 +37,11 @@ class UploadButton extends React.Component {
             const file = files[i]
 
             if (file.type && acceptedTypes.indexOf(file.type) !== -1) {
-                data.append('file[]', file)
+                data.append(this.props.name, file)
             } else {
+                this.setState({ uploading: false, })
                 this.props.handleFailure(this.props.typeErrorMessage)
-                break
+                return
             }
         }
         this.handleUpload(data)
@@ -101,9 +103,11 @@ class UploadButton extends React.Component {
         } = this.props
 
         return (
-            <label
+            <Label
+                as='label'
                 class={className + (this.state.uploading ? ' disabled' : '')}
                 htmlFor={id}
+                size='big'
             >
                 <input
                     id={id}
@@ -117,13 +121,14 @@ class UploadButton extends React.Component {
                 <span>
                     {this.state.uploading ? uploadingContent : children}
                 </span>
-            </label>
+            </Label>
         )
     }
 }
 
 UploadButton.propTypes = {
-    id: PropTypes.string,
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
     children: PropTypes.node,
     className: PropTypes.string,
     multiple: PropTypes.bool,
@@ -143,7 +148,8 @@ UploadButton.propTypes = {
 }
 
 UploadButton.defaultProps = {
-    id: '',
+    id: 'fileinput',
+    name: 'file[]',
     children: null,
     className: '',
     multiple: false,
