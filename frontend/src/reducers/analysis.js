@@ -29,25 +29,6 @@ function analysis(state = initialState, action) {
                 port
             }
         }
-        case 'SET_FILE': {
-            const { file } = action.data
-            // TODO: do request here
-            return {
-                ...state,
-                file,
-                streamUrl: '',
-            }
-        }
-        case 'SET_STREAM': {
-            const { streamUrl, port = 80 } = action.data
-            // TODO: do request
-            return {
-                ...state,
-                file: '',
-                streamUrl,
-                port,
-            }
-        }
         default:
             return state
     }

@@ -6,12 +6,14 @@ import UploadButton from './uploadbutton'
 class AnalysisModal extends React.Component {
     state = {
         opened: false,
+        sendingStream: false,
     }
 
     constructor(props) {
         super(props)
         this.handleOpen = this.handleOpen.bind(this)
         this.handleClose = this.handleClose.bind(this)
+        this.sendStream = this.sendStream.bind(this)
     }
 
     handleOpen() {
@@ -26,6 +28,38 @@ class AnalysisModal extends React.Component {
         })
     }
 
+    sendStream() {
+        const { streamUrl, port } = this.props
+
+        if (streamUrl && port) {
+            this.setState({ sendingStream: true, })
+            /* eslint-disable no-undef */
+            fetch('/setstream', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    streamUrl: this.props.streamUrl,
+                    port: this.props.port || 80
+                })
+            })
+            .then((res) => {
+                if (res.status >= 200 && res.status < 300) {
+                    return res.json()
+                }
+                const err = new Error(res.statusText)
+                err.response = res
+                throw err
+            }).then(() => {
+                this.setState({ sendingStream: false, })
+            }).catch(() => {
+                console.log('Request failed')
+            })
+            /* eslint-enable */
+        }
+    }
+
     render() {
         return (
             <Modal
@@ -37,7 +71,7 @@ class AnalysisModal extends React.Component {
                 open={this.state.opened}
                 onClose={this.handleClose}
                 size='small'
-                closeIcon={true}
+                closeIcon
             >
                 <Header icon='terminal' content='Analyse trades' />
                 <Modal.Content>
@@ -72,7 +106,11 @@ class AnalysisModal extends React.Component {
                                             value={this.props.port}
                                         />
                                     </Form.Field>
-                                    <Button secondary type='button'>
+                                    <Button
+                                        secondary
+                                        type='button'
+                                        onClick={this.sendStream}
+                                    >
                                         <Icon name='laptop' /> Start analysing stream
                                     </Button>
                                 </Form>
@@ -83,6 +121,24 @@ class AnalysisModal extends React.Component {
             </Modal>
         )
     }
+}
+
+AnalysisModal.propTypes = {
+    streamUrl: React.PropTypes.string,
+    port: React.PropTypes.number,
+    file: React.PropTypes.string,
+    updateFile: React.PropTypes.func,
+    updateStream: React.PropTypes.func,
+    updatePort: React.PropTypes.func,
+}
+
+AnalysisModal.defaultProps = {
+    streamUrl: '',
+    port: 80,
+    file: '',
+    updateFile: () => {},
+    updateStream: () => {},
+    updatePort: () => {},
 }
 
 export default connect(
