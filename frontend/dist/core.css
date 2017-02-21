@@ -3,7 +3,11 @@ body {
 }
 
 #app {
-    padding-top: 72px;
+    padding-top: 51.42px;
+}
+
+.mainmenu {
+    background-color: #24292e !important;
 }
 
 .luxbar-menu-black-force {
