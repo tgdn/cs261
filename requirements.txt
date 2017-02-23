@@ -4,3 +4,4 @@ pytz
 rethinkdb
 numpy
 snakeviz
+pytest
