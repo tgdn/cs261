@@ -62,12 +62,12 @@ app.post('/upload', (req, res) => {
          * spawn python process that does analysis in the background
          * docs from: nodejs.org/api/child_process.html#child_process_child_process
         */
-        spawn('python', ['../main.py', '-f', req.file.path], {
-            //detached: true,
-            stdio: 'inherit'
-        }).on('close', (code) => {
-            console.log(`process exit code: ${code}`)
-        })
+        // spawn('python', ['../main.py', '-f', req.file.path], {
+        //     //detached: true,
+        //     stdio: 'inherit'
+        // }).on('close', (code) => {
+        //     console.log(`process exit code: ${code}`)
+        // })
 
         res.json({
             success: true,
@@ -78,10 +78,6 @@ app.post('/upload', (req, res) => {
 })
 
 app.post('/setstream', (req, res) => {
-    /* destructuring assignment only in node v6
-     * or use:
-     * node --harmony_destructuring server.js
-     */
     const streamUrl = req.body.streamUrl
     const port = req.body.port || 80
 
@@ -91,11 +87,11 @@ app.post('/setstream', (req, res) => {
         /* At this point, start analysing stream:
          * spawn python process that does analysis in the background
         */
-        spawn('python', ['../main.py', '-s', streamUrl, '-p', port], {
-            stdio: 'inherit'
-        }).on('close', (code) => {
-            console.log(`process exit code: ${code}`)
-        })
+        // spawn('python', ['../main.py', '-s', streamUrl, '-p', port], {
+        //     stdio: 'inherit'
+        // }).on('close', (code) => {
+        //     console.log(`process exit code: ${code}`)
+        // })
 
         res.json({
             success: true,
