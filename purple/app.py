@@ -76,6 +76,9 @@ class App:
         '''
         # Open socket with given paramaters
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print url
+        print port
+        return
         sock.connect((url, port))
 
         line = ''
