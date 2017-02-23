@@ -31,6 +31,7 @@ class UploadButton extends React.Component {
         if (files.length === 0) {
             return
         }
+        this.props.beforeUpload(files)
         this.setState({ uploading: true, })
 
         for (let i = 0; i < files.length; i++) { // eslint-disable-line no-plusplus
@@ -145,6 +146,7 @@ UploadButton.propTypes = {
     handleFailure: PropTypes.func,
     handleSuccess: PropTypes.func,
     handleProgress: PropTypes.func,
+    beforeUpload: PropTypes.func,
 }
 
 UploadButton.defaultProps = {
@@ -159,7 +161,8 @@ UploadButton.defaultProps = {
     uploadingContent: 'Uploading...',
     handleFailure: () => {},
     handleSuccess: () => {},
-    handleProgress: () => {}
+    handleProgress: () => {},
+    beforeUpload: () => {},
 }
 
 export default UploadButton
