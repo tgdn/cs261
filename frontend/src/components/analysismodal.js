@@ -14,6 +14,7 @@ class AnalysisModal extends React.Component {
         this.handleOpen = this.handleOpen.bind(this)
         this.handleClose = this.handleClose.bind(this)
         this.sendStream = this.sendStream.bind(this)
+        this.handleUploadSuccess = this.handleUploadSuccess.bind(this)
     }
 
     handleOpen() {
@@ -25,6 +26,15 @@ class AnalysisModal extends React.Component {
     handleClose() {
         this.setState({
             opened: false,
+        })
+    }
+
+    handleUploadSuccess(res) {
+        const { filename } = res
+        this.props.updateFile(res)
+        this.props.notificationsystem.addNotification({
+            level: 'info',
+            children: `<strong>${filename}</strong> was uploaded successfully and is being processed`
         })
     }
 
@@ -81,7 +91,7 @@ class AnalysisModal extends React.Component {
                                 <Header size='medium'>Static file</Header>
                                 <UploadButton
                                     uploadTo='/upload'
-                                    handleSuccess={this.props.updateFile}
+                                    handleSuccess={this.handleUploadSuccess}
                                     name='file'
                                     acceptedTypes={['text/csv']}
                                 >
@@ -145,7 +155,8 @@ export default connect(
     state => ({
         file: state.analysis.file,
         streamUrl: state.analysis.streamUrl,
-        port: state.analysis.port
+        port: state.analysis.port,
+        notificationsystem: state.notifications.notificationsystem,
     }),
     dispatch => ({
         updateFile: (res) => {

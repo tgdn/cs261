@@ -2,7 +2,7 @@
 
 const initialState = {
     file: '',
-    streamUrl: '',
+    streamUrl: 'cs261.dcs.warwick.ac.uk',
     port: 80,
 }
 
