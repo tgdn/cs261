@@ -33,8 +33,13 @@ class AnalysisModal extends React.Component {
         const { filename } = res
         this.props.updateFile(res)
         this.props.notificationsystem.addNotification({
-            level: 'info',
-            children: `<strong>${filename}</strong> was uploaded successfully and is being processed`
+            allowHtml: true,
+            level: 'success',
+            children: (
+                <div>
+                    <strong>{filename}</strong> was uploaded successfully
+                </div>
+            )
         })
     }
 
