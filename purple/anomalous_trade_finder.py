@@ -19,7 +19,7 @@ class AnomalousTradeFinder:
         # If we've got enough trades, start to analyse
         if len(self.pricedelta_history[trade.symbol]) >= TRADE_COUNT_REQUIRED_FOR_ANALYSIS:
             
-            return self._is_fat_finger(trade) or self._is_volume_spike(trade)
+            return self._is_volume_spike(trade) or self._is_fat_finger(trade)
 
     def _is_fat_finger(self,trade):
 
