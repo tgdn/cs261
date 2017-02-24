@@ -3,6 +3,7 @@
 import os
 import fcntl
 import socket
+import hashlib
 
 from purple import db
 from purple.finance import Trade
@@ -44,24 +45,38 @@ class App:
         fd = f.fileno()
         flag = fcntl.fcntl(fd, fcntl.F_GETFD)
         fcntl.fcntl(fd, fcntl.F_SETFL, flag |  os.O_NONBLOCK)
-        next(f) # skip header row
 
-        #
+        #The blocksize we are using reading into our hash buffer
+        BLOCKSIZE = 65536
+
+        #Take a SHA1 hash of our file
+        file_buff = f.read(BLOCKSIZE)
+
+        while len(file_buff) > 0:
+            hashlib.sha1().update(file_buff)
+            file_buff = f.read(BLOCKSIZE)
+
+        sha1_hash = hashlib.sha1().hexdigest()
+
+        #Return to beginning of file (after header)
+        f.seek(1)
+
         # Tested this with less trades to store before commiting
         # (tradeacc_limit) but havent found a big difference in
         # the time it takes.
-        #
+
         trades_analyser = TradesAnalyser(tradeacc_limit=1000)
         # read line by line
         for line in f:
             # continue if row is parsed correctly
             t = Trade(line)
             if not t.parse_err:
-                trades_analyser.add(t)
+                trades_analyser.add(t,sha1_hash)
         trades_analyser.force_commit()
 
         try:
             f.close()
+
         except:
             pass
 
@@ -96,7 +111,7 @@ class App:
                 else:
                     t = Trade(line)
                     if not t.parse_err:
-                        trades_analyser.add(t, commit=True)
+                        trades_analyser.add(t, None, commit=True)
                 line = ''
             else:
                 line = line + char

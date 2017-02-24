@@ -13,7 +13,9 @@ from sqlalchemy import (
     Float,
     String,
     Boolean,
-    ForeignKey
+    ForeignKey,
+    Date,
+    Binary
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.engine.url import URL
@@ -138,6 +140,8 @@ class TradeModel(BaseModel):
     size = Column(BigInteger)
     flagged = Column(Boolean, default=False)
     symbol_name = Column(String, ForeignKey('symbols.name'))
+    analysis_date = Column(Date)
+    csv_hash = Column(Binary, default=None)
 
     symbol = relationship('SymbolModel', back_populates='trades')
 

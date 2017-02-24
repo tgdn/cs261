@@ -46,7 +46,7 @@ class TradesAnalyser:
             datetime=tz.localize(datetime.now())
         )
 
-    def add(self, t, commit=False):
+    def add(self, t, sha1_hash, commit=False):
         # increment current id
         self.current_pk = self.current_pk + 1
         # get symbol from memory or insert into db
@@ -58,7 +58,10 @@ class TradesAnalyser:
             'price': t.price,
             'size': t.size,
             'symbol_name': symbol_name,
-            'flagged': False
+            'flagged': False,
+            #Using default postgres date formatting of m/d/y
+            'analysis_date': datetime.now().strftime('%m/%d/%Y'),
+            'csv_hash': sha1_hash
         }
 
         self.trades_objs.append(trade)
@@ -70,6 +73,7 @@ class TradesAnalyser:
         reset_line()
 
         # flag anomalous data
+        
         if self.anomaly_identifier.is_anomalous(t):
             self.anomalies = self.anomalies + 1
             self.flag(trade)
