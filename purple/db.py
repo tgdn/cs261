@@ -79,7 +79,7 @@ def create_tables():
             r.db_create(PURPLE_DB).run(conn)
             # r.db(PURPLE_DB).table_create('trades').run(conn)
             r.db(PURPLE_DB).table_create('alerts').run(conn)
-            ## TODO: create alert table (think of design)
+            r.db(PURPLE_DB).table_create('notifications').run(conn)
         except RqlRuntimeError:
             # fail silently
             # Remember to reset db first to migrate db

@@ -8,6 +8,7 @@ import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
 
 from purple import db
+from purple.notificationmanager import NotificationManager
 from purple.anomalous_trade_finder import AnomalousTradeFinder
 
 tz = pytz.timezone('Europe/London')
@@ -26,6 +27,7 @@ def reset_line():
 class TradesAnalyser:
     def __init__(self, tradeacc_limit=2500):
         # hold symbols in memory
+        self.notification_manager = NotificationManager()
         self.symbols = set() # a set has better lookup performance (hashtable)
         self.trades_objs = []
         self.tradecount = 0
@@ -37,6 +39,12 @@ class TradesAnalyser:
         # get last item in db and start holding current id
         last_item = db.session.query(db.TradeModel).order_by(db.TradeModel.id.desc()).first()
         self.current_pk = getattr(last_item, 'id', 0)
+
+        self.notification_manager.add(
+            level='info',
+            message='Started analysing file...',
+            datetime=tz.localize(datetime.now())
+        )
 
     def add(self, t, commit=False):
         # increment current id
