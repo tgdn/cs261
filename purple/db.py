@@ -82,6 +82,9 @@ def create_tables():
             # r.db(PURPLE_DB).table_create('trades').run(conn)
             r.db(PURPLE_DB).table_create('alerts').run(conn)
             r.db(PURPLE_DB).table_create('notifications').run(conn)
+            r.db(PURPLE_DB).table_create('settings', primary_key='key').run(conn)
+            # default settings
+            set_default_settings()
         except RqlRuntimeError:
             # fail silently
             # Remember to reset db first to migrate db
@@ -104,6 +107,18 @@ def drop_tables():
         except RqlRuntimeError:
             pass
 
+def set_default_settings():
+    '''
+    Insert default settings into rethink
+    '''
+    with get_reql_connection(db=True) as conn:
+        r.table('settings').insert([{
+            'key': 'mode',
+            'value': 'live', # 'live' or 'static'
+        }, {
+            'key': 'inverse',
+            'value': False
+        }], conflict='replace').run(conn)
 
 ######################################
 #               Models               #
