@@ -8,7 +8,7 @@ import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
 
 from purple import db
-from purple.notificationmanager import NotificationManager
+from purple.realtime import NotificationManager
 from purple.anomalous_trade_finder import AnomalousTradeFinder
 
 tz = pytz.timezone('Europe/London')
@@ -73,7 +73,7 @@ class TradesAnalyser:
         reset_line()
 
         # flag anomalous data
-        
+
         if self.anomaly_identifier.is_anomalous(t):
             self.anomalies = self.anomalies + 1
             self.flag(trade)
