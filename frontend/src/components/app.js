@@ -8,6 +8,7 @@ class App extends React.Component {
     componentDidMount() {
         this.initialSubscribe = true;
         this.subscribeNotifications()
+        this.subscribeSettings()
     }
 
     subscribeNotifications() {
@@ -27,6 +28,15 @@ class App extends React.Component {
             })
     }
 
+    subscribeSettings() {
+        this.props.settings
+            .order('key')
+            .watch()
+            .subscribe((settings) => {
+                this.props.updateSettings(settings)
+            })
+    }
+
     render() {
         return (
             <div>
@@ -42,5 +52,16 @@ export default connect(
     state => ({
         notifications: state.db.notifications,
         notificationsystem: state.notifications.notificationsystem,
+        settings: state.db.settings,
     }),
+    dispatch => ({
+        updateSettings: (settings) => {
+            dispatch({
+                type: 'UPDATE_SETTINGS',
+                data: {
+                    settings
+                }
+            })
+        }
+    })
 )(App)

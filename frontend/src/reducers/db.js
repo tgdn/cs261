@@ -6,6 +6,7 @@ const horizon = Horizon({ secure: false })
 const initialState = {
     horizon,
     trades: horizon('trades'),
+    settings: horizon('settings'),
     notifications: horizon('notifications'),
 }
 
