@@ -2,3 +2,5 @@ rethinkdb_data
 **/*.log
 .hz/secrets.toml
 node_modules
+bundle.js
+uploads/

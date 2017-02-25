@@ -1,4 +1,7 @@
 *~
+env/
+.cache/
+rethinkdb_data
 
 *.pyc
 .class
