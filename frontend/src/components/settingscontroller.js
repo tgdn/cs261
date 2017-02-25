@@ -15,7 +15,11 @@ import {
     Divider
 } from 'semantic-ui-react'
 
+import SettingsAnalysisPanel from './settingsanalysispanel'
+
 class SettingsController extends React.Component {
+
+    panelStyle = { margin: '0 0 1.2rem' }
 
     constructor(props) {
         super(props)
@@ -48,38 +52,37 @@ class SettingsController extends React.Component {
             <Grid>
                 <Grid.Row columns={1}>
                     <Grid.Column>
-                        <Form as='div'>
-                            <Form.Field>
-                                <Header size='small'>General</Header>
-                                <Checkbox toggle label='Invert colours' />
-                            </Form.Field>
-                            <Form.Field>
-                                <Header size='small'>Analysis</Header>
-                                <Container textAlign='center'>
-                                    <Button.Group basic>
-                                        <Button
-                                            toggle
-                                            active={this.props.mode === 'static'}
-                                            onClick={this.onStaticBtnClick}
-                                        >
-                                            Static file
-                                        </Button>
-                                        <Button
-                                            toggle
-                                            active={this.props.mode === 'live'}
-                                            onClick={this.onLiveBtnClick}
-                                        >
-                                            Live stream
-                                        </Button>
-                                    </Button.Group>
-                                </Container>
-                            </Form.Field>
-                            <Divider />
-                            <Form.Field>
-                                <Header size='small' color='red'>Danger Zone</Header>
-                                <Button color='red' icon='warning sign' content='Reset database' />
-                            </Form.Field>
-                        </Form>
+                        <div style={this.panelStyle}>
+                            <Header size='small'>General</Header>
+                            <Checkbox toggle label='Invert colours' />
+                        </div>
+                        <div style={this.panelStyle}>
+                            <Header size='small'>Analysis</Header>
+                            <Container textAlign='center'>
+                                <Button.Group basic>
+                                    <Button
+                                        toggle
+                                        active={this.props.mode === 'static'}
+                                        onClick={this.onStaticBtnClick}
+                                    >
+                                        Static file
+                                    </Button>
+                                    <Button
+                                        toggle
+                                        active={this.props.mode === 'live'}
+                                        onClick={this.onLiveBtnClick}
+                                    >
+                                        Live stream
+                                    </Button>
+                                </Button.Group>
+                            </Container>
+                            <SettingsAnalysisPanel />
+                        </div>
+                        <Divider />
+                        <div style={this.panelStyle}>
+                            <Header size='small' color='red'>Danger Zone</Header>
+                            <Button color='red' icon='warning sign' content='Reset database' />
+                        </div>
                     </Grid.Column>
                 </Grid.Row>
             </Grid>
