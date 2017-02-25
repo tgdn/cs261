@@ -88,7 +88,7 @@ class AnalysisModal extends React.Component {
                 size='small'
                 closeIcon
             >
-                <Header icon='terminal' content='Analyse trades' />
+                <Header icon='disk outline' content='Analyse trades' />
                 <Modal.Content>
                     <Grid divided='vertically'>
                         <Grid.Row columns={2}>
