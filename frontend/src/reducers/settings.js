@@ -5,6 +5,7 @@ import forEach from 'lodash/forEach'
 const initialState = {
     mode: 'static',
     inverse: false,
+    largetext: false,
 }
 
 function settings(state = initialState, action) {
