@@ -13,7 +13,11 @@ class App extends React.Component {
     }
 
     componentDidMount() {
-        this.initialSubscribe = true;
+        /* eslint-disable no-undef */
+        this.container = document.getElementById('app')
+        this.header = document.getElementById('mainmenu')
+        /* eslint-enable */
+
         this.subscribeNotifications()
         this.subscribeSettings()
     }
@@ -78,6 +82,8 @@ class App extends React.Component {
             App.removeClass(document.documentElement, 'largetext-setting')
         }
         /* eslint-enable */
+        const headerHeight = this.header.offsetHeight
+        this.container.style.paddingTop = `${headerHeight}px`
     }
 
     render() {

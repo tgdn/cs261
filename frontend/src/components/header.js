@@ -6,7 +6,7 @@ import SettingsModal from './settingsmodal'
 
 export default function MainHeader() {
     return (
-        <Menu inverted stackable borderless fixed='top' size='huge' className='mainmenu'>
+        <Menu inverted stackable borderless fixed='top' size='huge' className='mainmenu' id='mainmenu'>
             <Menu.Item header>Purple</Menu.Item>
             <Menu.Menu position='right'>
                 <Menu.Item>
