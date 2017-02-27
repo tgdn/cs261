@@ -1,3 +1,5 @@
+/* eslint-disable react/sort-comp */
+
 import React from 'react'
 import { connect } from 'react-redux'
 
@@ -37,7 +39,32 @@ class App extends React.Component {
             })
     }
 
+    static addClass(el, className) {
+        if (el.classList) {
+            el.classList.add(className)
+        } else {
+            el.className += ` ${className}` // eslint-disable-line
+        }
+    }
+
+    static removeClass(el, className) {
+        if (el.classList) {
+            el.classList.remove(className);
+        } else {
+            /* eslint-disable */
+            el.className = el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
+            /* eslint-enable */
+        }
+    }
+
     render() {
+        /* toggle invert colours */
+        if (this.props.inverse) {
+            App.addClass(document.documentElement, 'inverse-setting') // eslint-disable-line no-undef
+        } else {
+            App.removeClass(document.documentElement, 'inverse-setting') // eslint-disable-line
+        }
+
         return (
             <div>
                 <Notification />
@@ -53,6 +80,7 @@ export default connect(
         notifications: state.db.notifications,
         notificationsystem: state.notifications.notificationsystem,
         settings: state.db.settings,
+        inverse: state.settings.inverse,
     }),
     dispatch => ({
         updateSettings: (settings) => {

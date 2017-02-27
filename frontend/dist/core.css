@@ -6,6 +6,11 @@ body {
     padding-top: 51.42px;
 }
 
+.inverse-setting {
+    -webkit-filter: invert(100%);
+			filter: invert(100%);
+}
+
 .mainmenu {
     background-color: #24292e !important;
 }
