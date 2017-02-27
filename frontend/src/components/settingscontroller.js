@@ -53,10 +53,6 @@ class SettingsController extends React.Component {
                 <Grid.Row columns={1}>
                     <Grid.Column>
                         <div style={this.panelStyle}>
-                            <Header size='small'>General</Header>
-                            <Checkbox toggle label='Invert colours' />
-                        </div>
-                        <div style={this.panelStyle}>
                             <Header size='small'>Analysis</Header>
                             <Container textAlign='center'>
                                 <Button.Group basic>
@@ -77,6 +73,10 @@ class SettingsController extends React.Component {
                                 </Button.Group>
                             </Container>
                             <SettingsAnalysisPanel />
+                        </div>
+                        <div style={this.panelStyle}>
+                            <Header size='small'>Accessibility</Header>
+                            <Checkbox toggle label='Invert colours' />
                         </div>
                         <Divider />
                         <div style={this.panelStyle}>
