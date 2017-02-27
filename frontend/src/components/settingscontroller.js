@@ -114,18 +114,15 @@ class SettingsController extends React.Component {
                 <Grid.Row columns={1}>
                     <Grid.Column>
                         <div style={this.panelStyle}>
-                            <Header size='small'>Analysis</Header>
                             <Container textAlign='center'>
                                 <Button.Group basic>
                                     <Button
-                                        toggle
                                         active={this.props.mode === 'static'}
                                         onClick={this.onStaticBtnClick}
                                     >
                                         Static file
                                     </Button>
                                     <Button
-                                        toggle
                                         active={this.props.mode === 'live'}
                                         onClick={this.onLiveBtnClick}
                                     >
