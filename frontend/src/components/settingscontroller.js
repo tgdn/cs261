@@ -33,7 +33,7 @@ class SettingsController extends React.Component {
         this.props.settings.upsert({
             id: k,
             value: v
-        })//.subscribe()
+        }).subscribe()
     }
 
     onStaticBtnClick(e) {
