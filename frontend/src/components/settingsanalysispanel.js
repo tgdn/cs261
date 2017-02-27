@@ -17,11 +17,21 @@ import {
 import UploadButton from './uploadbutton'
 
 class SettingsAnalysisPanel extends React.Component {
-    liveStyle = {
+    liveStyle = {
         width: '40%',
-        margin: '1rem auto',
+        margin: '2rem auto',
         textAlign: 'center',
     }
+    uploadBtnStyle = {
+        cursor: 'pointer',
+        margin: '2.3rem 2rem',
+        display: 'block',
+        padding: '3rem 2rem',
+        backgroundColor: 'transparent',
+        border: '4px dashed #aaa',
+        textAlign: 'center',
+    }
+
     constructor(props) {
         super(props)
         this.handleOpen = this.handleOpen.bind(this)
@@ -123,8 +133,9 @@ class SettingsAnalysisPanel extends React.Component {
                 handleSuccess={this.handleUploadSuccess}
                 name='file'
                 acceptedTypes={['text/csv']}
+                style={this.uploadBtnStyle}
             >
-                <Icon name='cloud upload' />
+                <Icon name='cloud upload' size='big' />
                 Select file...
             </UploadButton>
         )

@@ -101,6 +101,7 @@ class UploadButton extends React.Component {
             multiple,
             uploadingContent,
             children,
+            style = {},
         } = this.props
 
         return (
@@ -109,6 +110,7 @@ class UploadButton extends React.Component {
                 class={className + (this.state.uploading ? ' disabled' : '')}
                 htmlFor={id}
                 size='big'
+                style={style}
             >
                 <input
                     id={id}
