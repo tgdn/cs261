@@ -105,6 +105,17 @@ app.post('/setstream', (req, res) => {
     })
 })
 
+/*
+ * Reset the db from client
+ */
+app.post('/resetdb', (req, res) => {
+    spawn('python', ['../main.py', '--reset-db', '--init-db'], {
+        stdio: 'inherit'
+    }).on('close', (code) => {
+        res.json({ success: true, code })
+    })
+})
+
 app.get(['/', '*'], (req, res) => {
     res.sendFile('index.html', { root: distPath });
 })

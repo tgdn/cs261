@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import os
+import pytz
 import fcntl
 import socket
 import hashlib
+from datetime import datetime
+from threading import Timer
 
 from purple import db
+from purple.realtime import NotificationManager
 from purple.finance import Trade
 from purple.analysis import TradesAnalyser
 
+tz = pytz.timezone('Europe/London')
 
 class App:
     def __init__(self, args):
@@ -19,10 +24,11 @@ class App:
         -f trades.csv              -> import trades from file
         -s cs261.warw.ac.uk -p 80  -> import trades from live stream
         '''
+        # initialise notification manager early
+        self.notification_manager = NotificationManager()
 
         if args.reset_db:
             db.drop_tables()
-            print 'Database dropped successfully.'
         if args.init_db:
             db.create_tables()
         if args.file:

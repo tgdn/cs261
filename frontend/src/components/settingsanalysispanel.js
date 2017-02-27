@@ -91,8 +91,12 @@ class SettingsAnalysisPanel extends React.Component {
                 throw err
             }).then(() => {
                 this.setState({ sendingStream: false, })
-            }).catch(() => {
-                console.log('Request failed')
+            }).catch((err) => {
+                console.log(err);
+                this.props.notificationsystem.addNotification({
+                    level: 'error',
+                    message: 'An unexpected error occurred, please try again'
+                })
             })
             /* eslint-enable */
         }

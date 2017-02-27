@@ -78,8 +78,9 @@ def create_tables():
     # Rethinkdb
     with get_reql_connection() as conn:
         try:
+             # Database
             r.db_create(PURPLE_DB).run(conn)
-            # r.db(PURPLE_DB).table_create('trades').run(conn)
+            # Tables
             r.db(PURPLE_DB).table_create('alerts').run(conn)
             r.db(PURPLE_DB).table_create('notifications').run(conn)
             r.db(PURPLE_DB).table_create('settings').run(conn)
@@ -117,6 +118,9 @@ def set_default_settings():
             'value': 'live', # 'live' or 'static'
         }, {
             'id': 'inverse',
+            'value': False
+        }, {
+            'id': 'largetext',
             'value': False
         }], conflict='replace').run(conn)
 
