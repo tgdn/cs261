@@ -6,9 +6,14 @@ body {
     padding-top: 51.42px;
 }
 
+/* settings */
 .inverse-setting {
     -webkit-filter: invert(100%);
 			filter: invert(100%);
+}
+
+.largetext-setting {
+    font-size: 110%;
 }
 
 .mainmenu {
