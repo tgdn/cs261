@@ -63,14 +63,24 @@ class App extends React.Component {
         }
     }
 
-    render() {
+    componentDidUpdate() {
+        /* eslint-disable */
         /* toggle invert colours */
         if (this.props.inverse) {
-            App.addClass(document.documentElement, 'inverse-setting') // eslint-disable-line no-undef
+            App.addClass(document.documentElement, 'inverse-setting')
         } else {
-            App.removeClass(document.documentElement, 'inverse-setting') // eslint-disable-line
+            App.removeClass(document.documentElement, 'inverse-setting')
         }
 
+        if (this.props.largetext) {
+            App.addClass(document.documentElement, 'largetext-setting')
+        } else {
+            App.removeClass(document.documentElement, 'largetext-setting')
+        }
+        /* eslint-enable */
+    }
+
+    render() {
         return (
             <div>
                 <Dimmer
@@ -93,6 +103,7 @@ export default connect(
         notificationsystem: state.notifications.notificationsystem,
         settings: state.db.settings,
         inverse: state.settings.inverse,
+        largetext: state.settings.largetext
     }),
     dispatch => ({
         updateSettings: (settings) => {
