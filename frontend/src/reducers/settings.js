@@ -12,14 +12,14 @@ function settings(state = initialState, action) {
         case 'SET_SETTING': {
             return {
                 ...state,
-                [action.data.key]: action.data.value,
+                [action.data.id]: action.data.value,
             }
         }
         case 'UPDATE_SETTINGS': {
             const prefs = action.data.settings
             const newState = {}
             forEach(prefs, (setting) => {
-                newState[setting.key] = setting.value
+                newState[setting.id] = setting.value
             })
             return {
                 ...state,

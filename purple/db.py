@@ -82,7 +82,7 @@ def create_tables():
             # r.db(PURPLE_DB).table_create('trades').run(conn)
             r.db(PURPLE_DB).table_create('alerts').run(conn)
             r.db(PURPLE_DB).table_create('notifications').run(conn)
-            r.db(PURPLE_DB).table_create('settings', primary_key='key').run(conn)
+            r.db(PURPLE_DB).table_create('settings').run(conn)
             # default settings
             set_default_settings()
         except RqlRuntimeError:
@@ -113,10 +113,10 @@ def set_default_settings():
     '''
     with get_reql_connection(db=True) as conn:
         r.table('settings').insert([{
-            'key': 'mode',
+            'id': 'mode',
             'value': 'live', # 'live' or 'static'
         }, {
-            'key': 'inverse',
+            'id': 'inverse',
             'value': False
         }], conflict='replace').run(conn)
 
