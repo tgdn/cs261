@@ -3,10 +3,15 @@
 import React from 'react'
 import { connect } from 'react-redux'
 
+import { Loader, Dimmer } from 'semantic-ui-react'
 import Notification from './notification'
 import HeaderNav from './header'
 
 class App extends React.Component {
+    state = {
+        loaded: false,
+    }
+
     componentDidMount() {
         this.initialSubscribe = true;
         this.subscribeNotifications()
@@ -35,6 +40,7 @@ class App extends React.Component {
             .order('id')
             .watch()
             .subscribe((settings) => {
+                this.setState({ loaded: true, })
                 this.props.updateSettings(settings)
             })
     }
@@ -58,6 +64,8 @@ class App extends React.Component {
     }
 
     render() {
+        console.log('render app');
+        console.log(`invert: ${this.props.inverse}`)
         /* toggle invert colours */
         if (this.props.inverse) {
             App.addClass(document.documentElement, 'inverse-setting') // eslint-disable-line no-undef
@@ -67,6 +75,12 @@ class App extends React.Component {
 
         return (
             <div>
+                <Dimmer
+                    active={!this.state.loaded}
+                    page
+                >
+                    <Loader size='large'>Loading settings</Loader>
+                </Dimmer>
                 <Notification />
                 <HeaderNav />
                 {this.props.children}
