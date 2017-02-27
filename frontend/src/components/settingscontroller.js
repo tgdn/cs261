@@ -29,7 +29,7 @@ class SettingsController extends React.Component {
         this.onStaticBtnClick = this.onStaticBtnClick.bind(this)
     }
 
-    updateValue(k,v) {
+    updateValue(k, v) {
         this.props.settings.upsert({
             id: k,
             value: v
@@ -104,7 +104,7 @@ export default connect(
         inverse: state.settings.inverse,
     }),
     dispatch => ({
-        updateSetting: (k,v) => {
+        updateSetting: (k, v) => {
             dispatch({
                 type: 'SET_SETTING',
                 data: {
