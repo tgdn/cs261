@@ -32,7 +32,7 @@ class App extends React.Component {
 
     subscribeSettings() {
         this.props.settings
-            .order('key')
+            .order('id')
             .watch()
             .subscribe((settings) => {
                 this.props.updateSettings(settings)
