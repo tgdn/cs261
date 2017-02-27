@@ -64,8 +64,6 @@ class App extends React.Component {
     }
 
     render() {
-        console.log('render app');
-        console.log(`invert: ${this.props.inverse}`)
         /* toggle invert colours */
         if (this.props.inverse) {
             App.addClass(document.documentElement, 'inverse-setting') // eslint-disable-line no-undef
