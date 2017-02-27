@@ -16,6 +16,7 @@ import {
 } from 'semantic-ui-react'
 
 import SettingsAnalysisPanel from './settingsanalysispanel'
+import SettingsAccessibilityPanel from './settingsaccessibilitypanel'
 
 class SettingsController extends React.Component {
 
@@ -23,26 +24,29 @@ class SettingsController extends React.Component {
 
     constructor(props) {
         super(props)
+        this.updateValue = this.updateValue.bind(this)
         this.onLiveBtnClick = this.onLiveBtnClick.bind(this)
         this.onStaticBtnClick = this.onStaticBtnClick.bind(this)
     }
 
     updateValue(k,v) {
         this.props.settings.upsert({
-            key: [k],
-            value: [v]
-        }).subscribe()
+            id: k,
+            value: v
+        })//.subscribe()
     }
 
     onStaticBtnClick(e) {
         if (this.props.mode == 'live') {
             this.props.updateSetting('mode', 'static')
+            this.updateValue('mode', 'static')
         }
     }
 
     onLiveBtnClick(e) {
         if (this.props.mode == 'static') {
             this.props.updateSetting('mode', 'live')
+            this.updateValue('mode', 'live')
         }
     }
 
@@ -76,7 +80,10 @@ class SettingsController extends React.Component {
                         </div>
                         <div style={this.panelStyle}>
                             <Header size='small'>Accessibility</Header>
-                            <Checkbox toggle label='Invert colours' />
+                            <SettingsAccessibilityPanel
+                                updateSetting={this.props.updateSetting}
+                                updateValue={this.updateValue}
+                            />
                         </div>
                         <Divider />
                         <div style={this.panelStyle}>
@@ -101,7 +108,7 @@ export default connect(
             dispatch({
                 type: 'SET_SETTING',
                 data: {
-                    key: k,
+                    id: k,
                     value: v,
                 }
             })
