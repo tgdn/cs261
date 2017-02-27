@@ -12,6 +12,10 @@ body {
 			filter: invert(100%);
 }
 
+.inverse-setting body {
+    background-color: #000 !important;
+}
+
 .largetext-setting {
     font-size: 110%;
 }
