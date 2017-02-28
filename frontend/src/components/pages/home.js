@@ -69,7 +69,7 @@ class HomePage extends React.Component {
                     </Grid.Column>
                     <Grid.Column width={12}>
                         <Container textAlign='center'>
-                            <Icon color='green' name='check circle' size='massive' />
+                            <Icon color='green' name='check circle' size='massive' class='pulsate' />
                             <Header as='h2' color='green'>No issues</Header>
                         </Container>
                     </Grid.Column>
