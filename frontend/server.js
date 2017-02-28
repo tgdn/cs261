@@ -6,6 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const r = require('rethinkdb');
+const process = require('process');
 const spawn = require('child_process').spawn;
 
 const app = express();
@@ -62,14 +63,17 @@ app.post('/upload', (req, res) => {
          * spawn python process that does analysis in the background
          * docs from: nodejs.org/api/child_process.html#child_process_child_process
         */
-        // spawn('python', ['../main.py', '-f', req.file.path], {
-        //     //detached: true,
-        //     stdio: 'inherit'
-        // }).on('close', (code) => {
-        //     console.log(`process exit code: ${code}`)
-        // })
+        const child = spawn('python', ['../main.py', '-f', req.file.path], {
+            stdio: 'inherit'
+        })
+        child.on('close', (code) => {
+            console.log(`process exit code: ${code}`)
+            // maybe notify user
+        })
+        const pid = child.pid
 
         res.json({
+            pid,
             success: true,
             filename: req.file.originalname,
             size: req.file.size,
@@ -82,8 +86,6 @@ app.post('/setstream', (req, res) => {
     const port = req.body.port || 80
 
     if (streamUrl && port) {
-        console.log(streamUrl);
-        console.log(port);
         /* At this point, start analysing stream:
          * spawn python process that does analysis in the background
         */
@@ -109,6 +111,37 @@ app.post('/setstream', (req, res) => {
     })
 })
 
+r.connect({
+    host: 'localhost',
+    port: 28015,
+    db: 'purple'
+})
+.then((conn) => {
+    // Kill process endpoint
+    app.post('/killprocess', (req, res) => {
+        const id = req.body.id
+        if (id) {
+            r.table('tasks').get(id).run(conn, (err, task) => {
+                if (!err) {
+                    /* verify the task isnt finished and kill process */
+                    if (!task.terminated) {
+                        process.kill(task.pid)
+                    }
+                }
+            })
+            res.json({ success: true })
+            return
+        }
+        res.json({ success: false })
+    })
+})
+.error((error) => {
+    /* eslint-disable no-console */
+    console.log(`Connection to db could not be established:\n${error}`)
+    process.exit(1)
+    /* eslint-enable */
+})
+
 /*
  * Reset the db from client
  */
@@ -125,28 +158,28 @@ app.get(['/', '*'], (req, res) => {
 })
 
 
-r.connect({
-    host: 'localhost',
-    port: 28015,
-    db: 'purple'
-})
-.then((conn) => {
-    global.db = conn
-
-    io.on('connection', (socket) => {
-        r.table('trades')
-            .pluck('price', 'symbol')
-            .changes({ squash: 4, includeInitial: true }).run(global.db)
-            .then((cursor) => {
-                cursor.each((err, item) => {
-                    socket.emit('tradechange', item)
-                })
-            })
-    })
-})
-.error((error) => {
-    /* eslint-disable no-console */
-    console.log(`Connection to db could not be established:\n${error}`)
-    process.exit(1)
-    /* eslint-enable */
-})
+// r.connect({
+//     host: 'localhost',
+//     port: 28015,
+//     db: 'purple'
+// })
+// .then((conn) => {
+//     global.db = conn
+//
+//     io.on('connection', (socket) => {
+//         r.table('trades')
+//             .pluck('price', 'symbol')
+//             .changes({ squash: 4, includeInitial: true }).run(global.db)
+//             .then((cursor) => {
+//                 cursor.each((err, item) => {
+//                     socket.emit('tradechange', item)
+//                 })
+//             })
+//     })
+// })
+// .error((error) => {
+//     /* eslint-disable no-console */
+//     console.log(`Connection to db could not be established:\n${error}`)
+//     process.exit(1)
+//     /* eslint-enable */
+// })

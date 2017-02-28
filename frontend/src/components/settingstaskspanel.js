@@ -1,9 +1,35 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import {
-    Icon,
-    Table
-} from 'semantic-ui-react'
+import { Table } from 'semantic-ui-react'
+
+import SettingsTasksPanelRow from './settingstaskspanelrow'
+
+const killProcess = (id, notificationsystem) => {
+    /* eslint-disable no-undef */
+    fetch('/killprocess', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id })
+    })
+    .then((res) => {
+        if (res.status >= 200 && res.status < 300) {
+            return res.json()
+        }
+        const err = new Error(res.statusText)
+        err.response = res
+        throw err
+    }).then((res) => {
+        console.log(res);
+    }).catch(() => {
+        notificationsystem.addNotification({
+            level: 'error',
+            message: 'An error occurred while processing your request, please try again'
+        })
+    })
+    /* eslint-enable */
+}
 
 const SettingsTasksPanel = ({ tasks }) => (
     <Table compact='very' size='small' inverted selectable>
@@ -18,21 +44,7 @@ const SettingsTasksPanel = ({ tasks }) => (
         </Table.Header>
         <Table.Body>
             {tasks.map(task => (
-                <Table.Row key={task.id}>
-                    <Table.Cell>
-                        <Icon name='disk outline' />
-                        {`${task.task.charAt(0).toUpperCase()}${task.task.slice(1)}`}
-                    </Table.Cell>
-                    <Table.Cell>{task.type}</Table.Cell>
-                    <Table.Cell>{task.pid}</Table.Cell>
-                    <Table.Cell>{task.created_at.toUTCString()}</Table.Cell>
-                    <Table.Cell selectable collapsing textAlign='center'>
-                        <a href='#'>
-                            <Icon name='remove circle' />
-                            Kill task
-                        </a>
-                    </Table.Cell>
-                </Table.Row>
+                <SettingsTasksPanelRow key={task.id} task={task} killProcess={killProcess} />
             ))}
         </Table.Body>
     </Table>
