@@ -25,8 +25,7 @@ class App extends React.Component {
 
     subscribeNotifications() {
         this.props.notifications
-            .order('datetime')
-            .limit(10)
+            .order('datetime', 'descending')
             .watch({ rawChanges: true })
             .subscribe((notifChange) => {
                 if (notifChange.type === 'add') {
