@@ -87,16 +87,20 @@ app.post('/setstream', (req, res) => {
         /* At this point, start analysing stream:
          * spawn python process that does analysis in the background
         */
-        // spawn('python', ['../main.py', '-s', streamUrl, '-p', port], {
-        //     stdio: 'inherit'
-        // }).on('close', (code) => {
-        //     console.log(`process exit code: ${code}`)
-        // })
+        const child = spawn('python', ['../main.py', '-s', streamUrl, '-p', port], {
+            stdio: 'inherit'
+        })
+        child.on('close', (code) => {
+            console.log(`process exit code: ${code}`)
+            // maybe notify user
+        })
+        const pid = child.pid
 
         res.json({
             success: true,
             streamUrl: req.body.streamUrl,
-            port: req.body.port
+            port: req.body.port,
+            pid
         })
         return
     }
