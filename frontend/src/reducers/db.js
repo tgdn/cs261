@@ -2,10 +2,13 @@
 import Horizon from '@horizon/client'
 
 const onStatusChange = ({ type }) => {
+    /* eslint-disable no-undef */
     /* reload the page on error */
     if (type === 'error') {
-        window.location = window.location.href // eslint-disable-line
+        window.location = window.location.href // can fail
+        window.location.reload() // if page didnt reload yet, hopefully its not post
     }
+    /* eslint-enable */
 }
 
 const horizon = Horizon({ secure: false })
