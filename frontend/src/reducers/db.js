@@ -16,6 +16,7 @@ const initialState = {
     trades: horizon('trades'),
     settings: horizon('settings'),
     notifications: horizon('notifications'),
+    tasks: horizon('tasks'),
 }
 
 function db(state = initialState, action) {

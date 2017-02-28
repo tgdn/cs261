@@ -81,9 +81,10 @@ def create_tables():
              # Database
             r.db_create(PURPLE_DB).run(conn)
             # Tables
-            r.db(PURPLE_DB).table_create('alerts').run(conn)
-            r.db(PURPLE_DB).table_create('notifications').run(conn)
-            r.db(PURPLE_DB).table_create('settings').run(conn)
+            r.db(PURPLE_DB).table_create('alerts').run(conn) # holds financial alerts
+            r.db(PURPLE_DB).table_create('notifications').run(conn) # holds realtime notifications
+            r.db(PURPLE_DB).table_create('settings').run(conn) # holds webapp settings
+            r.db(PURPLE_DB).table_create('tasks').run(conn) # holds current bg tasks
             # default settings
             set_default_settings()
         except RqlRuntimeError:

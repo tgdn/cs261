@@ -20,6 +20,7 @@ class App extends React.Component {
 
         this.subscribeNotifications()
         this.subscribeSettings()
+        this.subscribeTasks()
     }
 
     subscribeNotifications() {
@@ -46,6 +47,16 @@ class App extends React.Component {
             .subscribe((settings) => {
                 this.setState({ loaded: true, })
                 this.props.updateSettings(settings)
+            })
+    }
+
+    subscribeTasks() {
+        this.props.tasks
+            .order('created_at')
+            .findAll({ terminated: false })
+            .watch()
+            .subscribe((tasks) => {
+                this.props.updateTasks(tasks)
             })
     }
 
@@ -106,8 +117,9 @@ class App extends React.Component {
 export default connect(
     state => ({
         notifications: state.db.notifications,
-        notificationsystem: state.notifications.notificationsystem,
         settings: state.db.settings,
+        tasks: state.db.tasks,
+        notificationsystem: state.notifications.notificationsystem,
         inverse: state.settings.inverse,
         largetext: state.settings.largetext
     }),
@@ -117,6 +129,14 @@ export default connect(
                 type: 'UPDATE_SETTINGS',
                 data: {
                     settings
+                }
+            })
+        },
+        updateTasks: (tasks) => {
+            dispatch({
+                type: 'UPDATE_TASKS',
+                data: {
+                    tasks
                 }
             })
         }

@@ -20,6 +20,7 @@ import {
 
 import SettingsAnalysisPanel from './settingsanalysispanel'
 import SettingsAccessibilityPanel from './settingsaccessibilitypanel'
+import SettingsTasksPanel from './settingstaskspanel'
 
 class SettingsController extends React.Component {
 
@@ -131,6 +132,10 @@ class SettingsController extends React.Component {
                                 </Button.Group>
                             </Container>
                             <SettingsAnalysisPanel />
+                        </div>
+                        <div style={this.panelStyle}>
+                            <Header size='small'>Current tasks</Header>
+                            <SettingsTasksPanel />
                         </div>
                         <div style={this.panelStyle}>
                             <Header size='small'>Accessibility</Header>

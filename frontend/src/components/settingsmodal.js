@@ -31,7 +31,6 @@ class SettingsModal extends React.Component {
                     <Button
                         inverted
                         icon='setting'
-                        color='grey'
                         onClick={this.handleOpen}
                         circular
                     />

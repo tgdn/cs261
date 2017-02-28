@@ -3,17 +3,46 @@
 import os
 import pytz
 import fcntl
+import signal
 import socket
 import hashlib
+import atexit
 from datetime import datetime
 from threading import Timer
 
 from purple import db
-from purple.realtime import NotificationManager
+from purple.realtime import NotificationManager, TaskManager
 from purple.finance import Trade
 from purple.analysis import TradesAnalyser
 
 tz = pytz.timezone('Europe/London')
+
+# process globals
+TASK_PK = None
+TASK_ENDED = False
+notification_manager = NotificationManager()
+task_manager = TaskManager()
+
+def before_exit():
+    '''
+    Will store the tasks exit in rethinkdb
+    '''
+    global TASK_PK
+    global TASK_ENDED
+
+    if TASK_PK and not TASK_ENDED:
+        task_manager.end(TASK_PK)
+        print '\nNow notifying'
+        notification_manager.add(
+            level='info',
+            message='Background task ended',
+            datetime=tz.localize(datetime.now())
+        )
+
+# register exit handlers
+atexit.register(before_exit)
+signal.signal(signal.SIGTERM, before_exit)
+
 
 class App:
     def __init__(self, args):
@@ -24,18 +53,22 @@ class App:
         -f trades.csv              -> import trades from file
         -s cs261.warw.ac.uk -p 80  -> import trades from live stream
         '''
-        # initialise notification manager early
-        self.notification_manager = NotificationManager()
+        global TASK_ENDED
+        global TASK_PK
 
         if args.reset_db:
             db.drop_tables()
         if args.init_db:
             db.create_tables()
         if args.file:
+            TASK_PK = task_manager.store(task='analysis', type='file')
             self.from_file(args.file)
         if args.stream_url:
             port = args.port or 80
+            TASK_PK = task_manager.store(task='analysis', type='stream')
             self.from_stream(url=args.stream_url, port=port)
+
+        # Task will be ended before_exit
 
     def from_file(self, f):
         '''
@@ -97,9 +130,6 @@ class App:
         '''
         # Open socket with given paramaters
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print url
-        print port
-        return
         sock.connect((url, port))
 
         line = ''
