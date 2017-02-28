@@ -9,6 +9,7 @@ import hashlib
 import atexit
 from datetime import datetime
 from threading import Timer
+import rethinkdb as r
 
 from purple import db
 from purple.realtime import NotificationManager, TaskManager
@@ -60,6 +61,19 @@ class App:
             db.drop_tables()
         if args.init_db:
             db.create_tables()
+
+        # check whether there is no analysis happening currently
+        if args.file or args.stream_url:
+            with db.get_reql_connection(db=True) as conn:
+                task_count = r.table('tasks').filter(r.row['terminated'] == False).count().run(conn)
+                if task_count:
+                    notification_manager.add(
+                        level='warning',
+                        message='End current task before you can start new analysis',
+                        datetime=tz.localize(datetime.now())
+                    )
+                    return
+
         if args.file:
             TASK_PK = task_manager.store(task='analysis', type='file')
             self.from_file(args.file)
