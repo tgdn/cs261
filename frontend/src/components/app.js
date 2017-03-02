@@ -33,7 +33,8 @@ class App extends React.Component {
                     this.props.notificationsystem.addNotification({
                         allowHTML: true,
                         level: notif.level,
-                        message: notif.message,
+                        message: notif.message || null,
+                        title: notif.title || null,
                     })
                 }
             })

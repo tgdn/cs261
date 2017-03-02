@@ -41,9 +41,9 @@ class TradesAnalyser:
         self.current_pk = getattr(last_item, 'id', 0)
 
         self.notification_manager.add(
-            level='info',
-            message='Started analysing file...',
-            datetime=tz.localize(datetime.now())
+            level = 'info',
+            message = 'Started analysis',
+            datetime = tz.localize(datetime.now())
         )
 
     def add(self, t, sha1_hash, commit=False):

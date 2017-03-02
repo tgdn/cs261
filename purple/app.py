@@ -33,11 +33,11 @@ def before_exit():
 
     if TASK_PK and not TASK_ENDED:
         task_manager.end(TASK_PK)
-        print '\nNow notifying'
+        # print '\nNow notifying'
         notification_manager.add(
-            level='info',
-            message='Background task ended',
-            datetime=tz.localize(datetime.now())
+            level = 'info',
+            message = 'Background task ended',
+            datetime = tz.localize(datetime.now())
         )
 
 # register exit handlers
@@ -68,9 +68,10 @@ class App:
                 task_count = r.table('tasks').filter(r.row['terminated'] == False).count().run(conn)
                 if task_count:
                     notification_manager.add(
-                        level='warning',
-                        message='End current task before you can start new analysis',
-                        datetime=tz.localize(datetime.now())
+                        level = 'warning',
+                        title = 'Cannot launch task',
+                        message = 'End current task before you can start new analysis',
+                        datetime = tz.localize(datetime.now())
                     )
                     return
 
@@ -143,8 +144,21 @@ class App:
         for better live statistics.
         '''
         # Open socket with given paramaters
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((url, port))
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((url, port))
+        except socket.error, e:
+            # Oopsy, couldn't connect
+            print e
+            notification_manager.add(
+                level = 'error',
+                title = 'Connection not established',
+                message = (
+                    'There was an issue while trying to connect to the host: {}'.format(str(e))
+                ),
+                datetime = tz.localize(datetime.now())
+            )
+            return
 
         line = ''
         firstline = True
