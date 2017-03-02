@@ -5,6 +5,7 @@ rethinkdb_data
 
 *.pyc
 .class
+*.db
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
