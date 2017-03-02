@@ -1,7 +1,7 @@
+pytest
 psycopg2
 sqlalchemy
 pytz
 rethinkdb
 numpy
 snakeviz
-pytest
