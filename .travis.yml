@@ -14,9 +14,9 @@ services:
 
 # create database, user and initialise db
 before_script:
-    - psql -c 'CREATE DATABASE cs261;' -U postgres
-    - psql -c 'CREATE USER purple WITH PASSWORD "purple123";' -U postgres
-    - psql -c 'GRANT ALL PRIVILEGES ON DATABASE cs261 TO purple;' -U postgres
+    - psql -c "CREATE DATABASE cs261;" -U postgres
+    - psql -c "CREATE USER purple WITH PASSWORD 'purple123';" -U postgres
+    - psql -c "GRANT ALL PRIVILEGES ON DATABASE cs261 TO purple;" -U postgres
     - python main.py --init-db
 
 script:
