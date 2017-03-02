@@ -11,9 +11,11 @@ tz = pytz.timezone('Europe/London')
 class Trade:
     def __init__(self, row):
         self.parse_err = False
-        split_row = row.split(',')
 
         try:
+            # try splitting
+            split_row = row.split(',')
+            
             # localize timezone
             self.time = tz.localize(datetime.strptime(split_row[0], '%Y-%m-%d %H:%M:%S.%f'))
             self.buyer = split_row[1]
