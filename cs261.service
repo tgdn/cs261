@@ -1,0 +1,10 @@
+[Unit]
+Description=Store live trading data in SQLite
+
+[Service]
+WorkingDirectory=/home/tgdn/cs261
+ExecStart=/home/tgdn/cs261/env/bin/python live_data_analysis.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
