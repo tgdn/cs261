@@ -12,10 +12,11 @@ const spawn = require('child_process').spawn;
 const app = express();
 const server = http.Server(app);
 
-const io = require('socket.io')(server);
+// const io = require('socket.io')(server);
 const horizon = require('@horizon/server');
+const db = require('./db');
 
-const httpServer = server.listen(8181)
+const httpServer = server.listen(8181);
 
 const options = {
     project_name: 'purple',
@@ -52,6 +53,11 @@ const upload = multer({
 })
 const uploadHandler = upload.single('file')
 
+/*
+ * API: calls to postgres
+ */
+app.get('/api/symbols', db.getSymbols)
+
 app.post('/upload', (req, res) => {
     uploadHandler(req, res, (err) => {
         if (err) {
@@ -65,10 +71,6 @@ app.post('/upload', (req, res) => {
         */
         const child = spawn('python', ['../main.py', '-f', req.file.path], {
             stdio: 'inherit'
-        })
-        child.on('close', (code) => {
-            console.log(`process exit code: ${code}`)
-            // maybe notify user
         })
         const pid = child.pid
 
@@ -91,10 +93,6 @@ app.post('/setstream', (req, res) => {
         */
         const child = spawn('python', ['../main.py', '-s', streamUrl, '-p', port], {
             stdio: 'inherit'
-        })
-        child.on('close', (code) => {
-            console.log(`process exit code: ${code}`)
-            // maybe notify user
         })
         const pid = child.pid
 
