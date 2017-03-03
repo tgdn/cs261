@@ -2,13 +2,13 @@
 
 import os
 import pytz
+import sys
 import fcntl
 import signal
 import socket
 import hashlib
 import atexit
 from datetime import datetime
-from threading import Timer
 import rethinkdb as r
 
 from purple import db
@@ -21,15 +21,22 @@ tz = pytz.timezone('Europe/London')
 # process globals
 TASK_PK = None
 TASK_ENDED = False
+FILE_HANDLE = None
 notification_manager = NotificationManager()
 task_manager = TaskManager()
 
-def before_exit():
+def before_exit(signum=None, frame=None):
     '''
     Will store the tasks exit in rethinkdb
     '''
-    global TASK_PK
-    global TASK_ENDED
+    global TASK_PK, TASK_ENDED, FILE_HANDLE
+
+     # close file
+    if FILE_HANDLE:
+        try:
+            f.close()
+        except:
+            pass
 
     if TASK_PK and not TASK_ENDED:
         task_manager.end(TASK_PK)
@@ -40,8 +47,12 @@ def before_exit():
             datetime = tz.localize(datetime.now())
         )
 
+    # Do quit
+    if signum:
+        sys.exit(0)
+
 # register exit handlers
-atexit.register(before_exit)
+# atexit.register(before_exit)
 signal.signal(signal.SIGTERM, before_exit)
 
 
@@ -95,6 +106,9 @@ class App:
         has been read. Cancelling command will
         leave database unchanged.
         '''
+        global FILE_HANDLE
+        FILE_HANDLE = f
+
         # set non blocking i/o
         fd = f.fileno()
         flag = fcntl.fcntl(fd, fcntl.F_GETFD)
@@ -112,7 +126,7 @@ class App:
 
         sha1_hash = hashlib.sha1().hexdigest()
 
-        #Return to beginning of file (after header)
+        # Return to beginning of file (after header)
         f.seek(1)
 
         # Tested this with less trades to store before commiting
@@ -130,7 +144,6 @@ class App:
 
         try:
             f.close()
-
         except:
             pass
 
