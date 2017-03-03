@@ -1,20 +1,16 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router'
 import {
     Container,
     Grid,
     Icon,
     Header,
-    Menu,
     Sidebar,
-    Segment
 } from 'semantic-ui-react'
 
-import groupBy from 'lodash/groupBy'
-import map from 'lodash/map'
+import SymbolSidebar from '../symbolsidebar'
 
-import io from 'socket.io-client'
+// import io from 'socket.io-client'
 
 class HomePage extends React.Component {
     // subscribeIo() {
@@ -25,6 +21,17 @@ class HomePage extends React.Component {
     //     // s.on('tradechange', (data) => { console.log(data) })
     // }
 
+    state = {
+        sidebarWidth: 0,
+    }
+
+    // componentDidMount() {
+    //     const sidebarWidth = this.sidebar.offsetWidth
+    //     if (this.state.sidebarWidth !== sidebarWidth) {
+    //         this.setState({ sidebarWidth })
+    //     }
+    // }
+
     render() {
         const style = {
             height: `calc(100vh - ${this.props.headerHeight}px)`
@@ -32,45 +39,30 @@ class HomePage extends React.Component {
         return (
             <div>
                 <Sidebar.Pushable as='div' style={style}>
-                    <Sidebar as={Menu} animation='push' width='thin' visible icon='labeled' vertical inverted>
-                        {map(this.props.symbols, symbol => (
-                            <Menu.Item key={symbol.name} name={symbol.name} />
-                        ))}
-                    </Sidebar>
+                    <SymbolSidebar symbols={this.props.symbols} />
                     <Sidebar.Pusher>
-                        <Segment basic>
-                            <Header as='h3'>HEllo</Header>
-                        </Segment>
+                        <Grid padded stackable>
+                            <Grid.Column width={16}>
+                                <Container fluid textAlign='center'>
+                                    <Icon color='green' name='check circle' size='massive' class='pulsate' />
+                                    <Header as='h2' color='green'>No issues</Header>
+                                </Container>
+                            </Grid.Column>
+                        </Grid>
                     </Sidebar.Pusher>
                 </Sidebar.Pushable>
             </div>
         )
-        //
-        //         <Grid padded stackable>
-        //             <Grid.Column width={4}>
-        //                 <Menu vertical fluid text>
-        //                     {/*map(this.props.symbols, symbol => (
-        //                         <Menu.Item key={symbol.name} name={symbol.name} />
-        //                     ))*/}
-        //                 </Menu>
-        //             </Grid.Column>
-        //             <Grid.Column width={12}>
-        //                 <Container textAlign='center'>
-        //                     <Icon color='green' name='check circle' size='massive' class='pulsate' />
-        //                     <Header as='h2' color='green'>No issues</Header>
-        //                 </Container>
-        //             </Grid.Column>
-        //         </Grid>
-        //     </div>
-        // )
     }
 }
 
 HomePage.propTypes = {
+    headerHeight: React.PropTypes.number,
     symbols: React.PropTypes.array, // eslint-disable-line
 }
 
 HomePage.defaultProps = {
+    headerHeight: 0,
     symbols: [],
 }
 

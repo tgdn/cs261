@@ -24,6 +24,10 @@ body {
     background-color: #24292e !important;
 }
 
+.symbolsidebar {
+    width: 190px !important;
+}
+
 .luxbar-menu-black-force {
     background: black !important;
 }

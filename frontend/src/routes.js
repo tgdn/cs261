@@ -1,5 +1,6 @@
 import App from './components/app'
 import HomePage from './components/pages/home'
+import SymbolPage from './components/pages/symbol'
 import PageDoesNotExist from './components/pages/404'
 
 export default [
@@ -10,6 +11,10 @@ export default [
             component: HomePage,
         },
         childRoutes: [
+            {
+                path: ':symbol',
+                component: SymbolPage,
+            },
             {
                 path: '*',
                 component: PageDoesNotExist,

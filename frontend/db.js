@@ -17,7 +17,7 @@ const handleException = (err, res) => {
 }
 
 const getSymbols = (req, res) => {
-    db.many('SELECT * FROM symbols ORDER BY name')
+    db.any('SELECT * FROM symbols ORDER BY name')
     .then((symbols) => {
         res.status(200)
             .json({
