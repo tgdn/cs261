@@ -46,7 +46,7 @@ class TradesAnalyser:
             datetime = tz.localize(datetime.now())
         )
 
-    def add(self, t, sha1_hash, commit=False):
+    def add(self, t, sha1_hash, firstday, commit=False):
         # increment current id
         self.current_pk = self.current_pk + 1
         # get symbol from memory or insert into db
@@ -68,16 +68,17 @@ class TradesAnalyser:
         self.tradecount = self.tradecount + 1
         self.tradeacc = self.tradeacc + 1
 
+        # If it's a csv file or we're on our firstday, store the trade for future analysis
+        if firstday:
+            self.anomaly_identifier.add(t, self.current_pk)
+        # Otherwise analyse one trade individually
+        else:
+            self.anomaly_identifier.calculate_anomalies_single_trade(t, self.current_pk)
+
         # inform user
         stdout_write('Trades: {} - ({} anomalies) (Ctrl-C to stop)'.format(self.tradecount, self.anomalies))
         reset_line()
-
-        # flag anomalous data
-
-        if self.anomaly_identifier.is_anomalous(t):
-            self.anomalies = self.anomalies + 1
-            self.flag(trade)
-
+        
         # flush database at accumulator limit
         if self.tradeacc == self.tradeacc_limit:
             self.save_load()
@@ -85,6 +86,7 @@ class TradesAnalyser:
                 db.session.commit()
             else:
                 db.session.flush()
+        
 
     def force_commit(self):
         self.save_load()
@@ -105,7 +107,7 @@ class TradesAnalyser:
             symbol = db.SymbolModel.get_or_create(s)
             self.symbols.add(s)
         return s
-
+    """
     def flag(self, trade):
         trade['flagged'] = True
         self.force_commit()
@@ -115,3 +117,23 @@ class TradesAnalyser:
                     'time': tz.localize(datetime.now()),
                     'trade_pk': trade['id'],
             }]).run(conn, durability='soft')
+    """
+    def alert(self, anomaly):
+        with db.get_reql_connection(db=True) as conn:
+            r.table('alerts').insert([{
+                'time': tz.localize(anomaly["time"]),
+                'trade_pk': anomaly["id"],
+                'description': anomaly["description"]
+            }]).run(conn, durability='soft')
+
+    def alert_stats(self, firstday):
+        if firstday:
+            anomalies = self.anomaly_identifier.calculate_anomalies_first_day()
+        else:
+            anomalies = self.anomaly_identifier.calculate_anomalies_end_of_day(datetime.now().strftime('%Y-%m-%d'))
+
+        for anomaly in anomalies:
+            self.alert(anomaly)
+            print "did it"
+
+        print 'Found ' + str(len(anomalies)) + ' anomalies'
