@@ -141,6 +141,7 @@ class App extends React.Component {
 
         /* update header height */
         const headerHeight = this.header.offsetHeight
+        this.props.setHeaderHeight(headerHeight) // update state
         this.container.style.paddingTop = `${headerHeight}px`
         /* eslint-enable */
     }
@@ -201,28 +202,28 @@ export default connect(
         largetext: state.settings.largetext,
     }),
     dispatch => ({
+        setHeaderHeight: (headerHeight) => {
+            dispatch({
+                type: 'UI_SET_HEADER_HEIGHT',
+                data: { headerHeight }
+            })
+        },
         updateSettings: (settings) => {
             dispatch({
                 type: 'UPDATE_SETTINGS',
-                data: {
-                    settings
-                }
+                data: { settings }
             })
         },
         updateTasks: (tasks) => {
             dispatch({
                 type: 'UPDATE_TASKS',
-                data: {
-                    tasks
-                }
+                data: { tasks }
             })
         },
         updateSymbols: (symbols) => {
             dispatch({
                 type: 'UPDATE_SYMBOLS',
-                data: {
-                    symbols
-                }
+                data: { symbols }
             })
         }
     })
