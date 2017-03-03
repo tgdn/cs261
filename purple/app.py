@@ -8,7 +8,8 @@ import signal
 import socket
 import hashlib
 import atexit
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 import rethinkdb as r
 
 from purple import db
@@ -167,6 +168,7 @@ class App:
         # Open socket with given paramaters
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(3)
             sock.connect((url, port))
         except socket.error, e:
             # Oopsy, couldn't connect
