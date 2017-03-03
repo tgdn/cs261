@@ -21,10 +21,6 @@ class HomePage extends React.Component {
     //     // s.on('tradechange', (data) => { console.log(data) })
     // }
 
-    state = {
-        sidebarWidth: 0,
-    }
-
     // componentDidMount() {
     //     const sidebarWidth = this.sidebar.offsetWidth
     //     if (this.state.sidebarWidth !== sidebarWidth) {

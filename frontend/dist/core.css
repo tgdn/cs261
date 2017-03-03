@@ -28,13 +28,15 @@ body {
     width: 190px !important;
 }
 
-.luxbar-menu-black-force {
-    background: black !important;
+.symbolsidebar~.pusher {
+    width: calc(100% - 190px) !important;
+    -webkit-transform: translate3d(190px, 0, 0) !important;
+    transform: translate3d(190px, 0, 0) !important;
 }
 
 .pulsate {
-	-webkit-animation: pulse 3s infinite;
-    animation: pulse 3s infinite;
+	-webkit-animation: pulse 3s infinite !important;
+    animation: pulse 3s infinite !important;
 }
 
 /* animations */
