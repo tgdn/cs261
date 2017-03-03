@@ -20,10 +20,17 @@ const initialState = {
     settings: horizon('settings'),
     notifications: horizon('notifications'),
     tasks: horizon('tasks'),
+    symbols: [],
 }
 
 function db(state = initialState, action) {
     switch (action.type) {
+    case 'UPDATE_SYMBOLS': {
+        return {
+            ...state,
+            symbols: action.data.symbols || [],
+        }
+    }
     default:
         return state
     }

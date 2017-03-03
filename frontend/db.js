@@ -21,7 +21,7 @@ const getSymbols = (req, res) => {
     .then((symbols) => {
         res.status(200)
             .json({
-                status: 'success',
+                success: true,
                 symbols
             })
     })

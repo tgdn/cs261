@@ -1,6 +1,6 @@
-/* eslint-disable react/sort-comp */
+/* eslint-disable react/sort-comp, react/forbid-prop-types */
 
-import React from 'react'
+import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
 
 import { Loader, Dimmer } from 'semantic-ui-react'
@@ -10,6 +10,12 @@ import HeaderNav from './header'
 class App extends React.Component {
     state = {
         loaded: false,
+        symbolsIntervalID: null,
+    }
+
+    constructor(props) {
+        super(props)
+        this.getSymbols = this.getSymbols.bind(this)
     }
 
     componentDidMount() {
@@ -21,6 +27,7 @@ class App extends React.Component {
         this.subscribeNotifications()
         this.subscribeSettings()
         this.subscribeTasks()
+        this.subscribeSymbols()
     }
 
     subscribeNotifications() {
@@ -60,6 +67,44 @@ class App extends React.Component {
             })
     }
 
+    subscribeSymbols() {
+        /* get symbols every 5 seconds until we got all symbols.
+         * There are 101 symbols, once reached, clear interval
+        **/
+        this.getSymbols() // load initial symbols
+        if (this.state.symbolsIntervalID === null) {
+            const symbolsIntervalID = setInterval(this.getSymbols, 5000)
+            this.setState({ symbolsIntervalID })
+        }
+    }
+
+    getSymbols() {
+        /* check if we reached the maximum amount of symbols and return */
+        if (this.props.symbols.length === 101 && this.state.symbolsIntervalID !== null) {
+            clearInterval(this.state.symbolsIntervalID)
+            return
+        }
+
+        fetch('/api/symbols') // eslint-disable-line
+        .then((res) => {
+            if (res.status >= 200 && res.status < 300) {
+                return res.json()
+            }
+            const err = new Error(res.statusText)
+            err.response = res
+            throw err
+        })
+        .then((res) => {
+            console.log(res)
+            if (res.success && res.symbols) {
+                this.props.updateSymbols(res.symbols)
+            }
+        })
+        .catch((err) => {
+            console.error(err)
+        })
+    }
+
     static addClass(el, className) {
         if (el.classList) {
             el.classList.add(className)
@@ -87,14 +132,17 @@ class App extends React.Component {
             App.removeClass(document.documentElement, 'inverse-setting')
         }
 
+        /* toggle large text */
         if (this.props.largetext) {
             App.addClass(document.documentElement, 'largetext-setting')
         } else {
             App.removeClass(document.documentElement, 'largetext-setting')
         }
-        /* eslint-enable */
+
+        /* update header height */
         const headerHeight = this.header.offsetHeight
         this.container.style.paddingTop = `${headerHeight}px`
+        /* eslint-enable */
     }
 
     render() {
@@ -114,14 +162,43 @@ class App extends React.Component {
     }
 }
 
+App.propTypes = {
+    children: PropTypes.node,
+    notifications: PropTypes.object,
+    settings: PropTypes.object,
+    tasks: PropTypes.object,
+    symbols: PropTypes.array,
+    notificationsystem: PropTypes.any,
+    inverse: PropTypes.bool,
+    largetext: PropTypes.bool,
+    updateSettings: PropTypes.func,
+    updateTasks: PropTypes.func,
+    updateSymbols: PropTypes.func,
+}
+
+App.defaultProps = {
+    children: null,
+    notifications: null,
+    settings: null,
+    tasks: null,
+    symbols: [],
+    notificationsystem: null,
+    inverse: false,
+    largetext: false,
+    updateSettings: () => {},
+    updateTasks: () => {},
+    updateSymbols: () => {}
+}
+
 export default connect(
     state => ({
         notifications: state.db.notifications,
         settings: state.db.settings,
         tasks: state.db.tasks,
+        symbols: state.db.symbols,
         notificationsystem: state.notifications.notificationsystem,
         inverse: state.settings.inverse,
-        largetext: state.settings.largetext
+        largetext: state.settings.largetext,
     }),
     dispatch => ({
         updateSettings: (settings) => {
@@ -137,6 +214,14 @@ export default connect(
                 type: 'UPDATE_TASKS',
                 data: {
                     tasks
+                }
+            })
+        },
+        updateSymbols: (symbols) => {
+            dispatch({
+                type: 'UPDATE_SYMBOLS',
+                data: {
+                    symbols
                 }
             })
         }
