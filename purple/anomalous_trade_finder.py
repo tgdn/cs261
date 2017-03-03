@@ -7,7 +7,6 @@ from collections import deque
 from numpy import std, mean
 from datetime import datetime, timedelta
 from purple import db
-from decimal import Decimal
 import math
 
 class AnomalousTradeFinder:
