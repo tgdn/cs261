@@ -4,6 +4,8 @@ import os
 import fcntl
 import socket
 import hashlib
+import time
+from datetime import datetime, timedelta
 
 from purple import db
 from purple.finance import Trade
@@ -17,7 +19,7 @@ class App:
         --init-db                  -> initialise db (tables etc)
         --reset-db                 -> delete tables and data
         -f trades.csv              -> import trades from file
-        -s cs261.warw.ac.uk -p 80  -> import trades from live stream
+        -s cs261.dcs.warwick.ac.uk -p 80  -> import trades from live stream
         '''
 
         if args.reset_db:
@@ -67,16 +69,21 @@ class App:
 
         trades_analyser = TradesAnalyser(tradeacc_limit=1000)
         # read line by line
+        print "Adding lines for analysis"
         for line in f:
             # continue if row is parsed correctly
             t = Trade(line)
             if not t.parse_err:
-                trades_analyser.add(t,sha1_hash)
+                trades_analyser.add(t, sha1_hash, True)
+
         trades_analyser.force_commit()
+        print "Lines added to memory, beginning anomaly detection"
+
+        #Calculate delta_mean, delta_stdev, vol_mean, vol_stdev for file analysed
+        trades_analyser.alert_stats(True)
 
         try:
             f.close()
-
         except:
             pass
 
@@ -89,11 +96,12 @@ class App:
         commited every 50 trades
         for better live statistics.
         '''
+        firstday = True
+
         # Open socket with given paramaters
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print url
-        print port
-        return
+        # If the connection times out after 30 seconds, the feed has turned off
+        sock.settimeout(3)
         sock.connect((url, port))
 
         line = ''
@@ -104,14 +112,41 @@ class App:
         # is found. Parse line at that time and continue.
         while 1:
             # read character
-            char = sock.recv(1)
-            if char == '\n':
-                if firstline:
-                    firstline = False
+            try:
+                char = sock.recv(1)
+                if char == '\n':
+                    if firstline:
+                        firstline = False
+                    else:
+                        t = Trade(line)
+                        if not t.parse_err:
+                            trades_analyser.add(t, None, firstday, commit=True)
+                    line = ''
                 else:
-                    t = Trade(line)
-                    if not t.parse_err:
-                        trades_analyser.add(t, None, commit=True)
-                line = ''
-            else:
-                line = line + char
+                    line = line + char
+            #The feed is down, we've got to analyse then reconnect
+            except socket.timeout:
+                print "Connection lost, attempting to reconnect"
+                disconnected = True
+                #Only analyse if the day of trades is over
+                if datetime.now().strftime('%H') == '01':
+                    print "Beginning analysis"
+                    trades_analyser.alert_stats(firstday)
+                    firstday = False
+                    time.sleep(300)
+                else:
+                    #Do we want to send a notification to frontend here?
+                    print "Feed appears to be down"
+
+                #Wait for 5 minutes until the feed is accepting connections again
+                
+                while disconnected:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    try:
+                        sock.connect((url,port))
+                        sock.settimeout(3)
+                        disconnected  = False
+                        print "Reconnected to the feed!"
+                    except:
+                        pass
+
