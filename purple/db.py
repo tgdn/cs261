@@ -15,6 +15,7 @@ from sqlalchemy import (
     Boolean,
     ForeignKey,
     Date,
+    DateTime,
     Binary
 )
 from sqlalchemy.ext.declarative import declarative_base
@@ -162,6 +163,7 @@ class TradeModel(BaseModel):
     symbol_name = Column(String, ForeignKey('symbols.name'))
     analysis_date = Column(Date)
     csv_hash = Column(Binary, default=None)
+    datetime = Column(DateTime)
 
     symbol = relationship('SymbolModel', back_populates='trades')
 

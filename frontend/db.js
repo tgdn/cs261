@@ -32,7 +32,7 @@ const getSymbol = (req, res) => {
     const symbol = req.params.symbol || null
     if (symbol !== null) {
         db.any(
-            `SELECT id, price, size, flagged
+            `SELECT id, price, size, flagged, datetime
             FROM trades
             WHERE symbol_name = $1
             ORDER BY id DESC

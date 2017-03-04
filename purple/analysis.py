@@ -61,7 +61,8 @@ class TradesAnalyser:
             'flagged': False,
             #Using default postgres date formatting of m/d/y
             'analysis_date': datetime.now().strftime('%m/%d/%Y'),
-            'csv_hash': sha1_hash
+            'csv_hash': sha1_hash,
+            'datetime': tz.localize(datetime.now())
         }
 
         self.trades_objs.append(trade)
@@ -78,7 +79,7 @@ class TradesAnalyser:
         # inform user
         stdout_write('Trades: {} - ({} anomalies) (Ctrl-C to stop)'.format(self.tradecount, self.anomalies))
         reset_line()
-        
+
         # flush database at accumulator limit
         if self.tradeacc == self.tradeacc_limit:
             self.save_load()
@@ -86,7 +87,7 @@ class TradesAnalyser:
                 db.session.commit()
             else:
                 db.session.flush()
-        
+
 
     def force_commit(self):
         self.save_load()
