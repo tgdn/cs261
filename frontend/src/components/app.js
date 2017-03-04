@@ -95,7 +95,6 @@ class App extends React.Component {
             throw err
         })
         .then((res) => {
-            console.log(res)
             if (res.success && res.symbols) {
                 this.props.updateSymbols(res.symbols)
             }
@@ -157,7 +156,9 @@ class App extends React.Component {
                 </Dimmer>
                 <Notification />
                 <HeaderNav />
-                {this.props.children}
+                {this.state.loaded && (
+                    this.props.children
+                )}
             </div>
         )
     }
