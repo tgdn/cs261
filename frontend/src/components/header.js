@@ -13,7 +13,7 @@ const MainHeader = ({ tasks }) => {
                 <Menu.Item>
                     {tasks.length !== 0 && (
                         <small>
-                            <Loader active inverted inline size='small' />
+                            <Loader active inverted inline indeterminate size='small' />
                             <span style={{ marginLeft: '10px' }}>analysing</span>
                         </small>
                     )}
