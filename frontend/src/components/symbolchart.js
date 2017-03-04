@@ -1,7 +1,7 @@
 /* eslint-disable react/forbid-prop-types */
 
 import React, { PropTypes } from 'react'
-import { utcParse } from 'd3-time-format'
+import { utcParse, timeFormat } from 'd3-time-format'
 import { format } from 'd3-format'
 import { ChartCanvas, Chart, series, scale, coordinates, tooltip, axes, helper } from 'react-stockcharts'
 
@@ -27,27 +27,54 @@ class SymbolChart extends React.Component {
             <ChartCanvas
                 ratio={ratio}
                 width={width}
-                height={370}
-                margin={{ left: 70, right: 70, top: 20, bottom: 30 }}
-                type='svg'
+                height={400}
+                margin={{ left: 50, right: 70, top: 20, bottom: 50 }}
+                type='hybrid'
                 pointsPerPxThreshold={1}
                 seriesName={symbol}
                 data={trades}
                 xAccessor={d => d.datetime}
                 xScaleProvider={discontinuousTimeScaleProvider}
             >
-                <Chart id={0} yExtents={d => d.price}>
-                    <XAxis axisAt='bottom' orient='bottom' ticks={10} tickStroke='#EEEEEE' />
-                    <YAxis axisAt='left' orient='left' ticket={6} tickStroke='#EEEEEE' />
+                <Chart
+                    id={1}
+                    yExtents={d => d.price}
+                    height={400}
+                    padding={{ top: 30, bottom: 30 }}
+                >
+                    <XAxis axisAt='bottom' orient='bottom' ticks={5} tickStroke='#EEEEEE' />
+                    <YAxis axisAt='right' orient='right' ticks={6} tickStroke='#EEEEEE' />
+                    <MouseCoordinateX
+                        at="bottom"
+                        orient="bottom"
+                        displayFormat={timeFormat("%H:%M:%S.%L")}
+                    />
+                    <MouseCoordinateY
+                        at="right"
+                        orient="right"
+                        displayFormat={format(".2f")}
+                    />
                     <LineSeries
                         yAccessor={d => d.price}
-                        stroke='#74d400'
-                        strokeDasharray='Dot'
+                        stroke='#DB0000'
+                        strokeDasharray='Solid'
                     />
                     <ScatterSeries
                         yAccessor={d => d.price}
                         marker={CircleMarker}
-                        markerProps={{ width: 6, stroke: "#4c8a02", fill: "#74d100" }}
+                        markerProps={{ r: 3, stroke: "#4c8a02", fill: "#74d100" }}
+                    />
+                </Chart>
+                <Chart
+                    id={2}
+                    yExtents={d => d.size}
+                    height={200}
+                    origin={(w, h) => [0, 170]}
+                >
+                    <YAxis axisAt='left' orient='left' ticks={5} tickStroke='#EEEEEE' tickFormat={format(".0s")} />
+                    <BarSeries
+                        yAccessor={d => d.size}
+                        fill='#74d400'
                     />
                 </Chart>
             </ChartCanvas>

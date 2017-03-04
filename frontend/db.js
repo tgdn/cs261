@@ -36,7 +36,7 @@ const getSymbol = (req, res) => {
             FROM trades
             WHERE symbol_name = $1
             ORDER BY id DESC
-            LIMIT 100`, symbol)
+            LIMIT 200`, symbol)
         .then((trades) => {
             res.status(200)
                 .json({
