@@ -53,7 +53,7 @@ def before_exit(signum=None, frame=None):
         sys.exit(0)
 
 # register exit handlers
-# atexit.register(before_exit)
+atexit.register(before_exit)
 signal.signal(signal.SIGTERM, before_exit)
 
 
@@ -218,7 +218,7 @@ class App:
                     print "Feed appears to be down"
 
                 #Wait for 5 minutes until the feed is accepting connections again
-                
+
                 while disconnected:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     try:
@@ -228,4 +228,3 @@ class App:
                         print "Reconnected to the feed!"
                     except:
                         pass
-
