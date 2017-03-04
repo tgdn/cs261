@@ -6,8 +6,11 @@ import {
     Grid,
     Header,
     Menu,
-    Icon
+    Icon,
+    Loader
 } from 'semantic-ui-react'
+
+import SymbolDashboard from '../symboldashboard'
 
 import groupBy from 'lodash/groupBy'
 import map from 'lodash/map'
@@ -17,16 +20,49 @@ class SymbolPage extends React.Component {
         super(props)
         this.state = {
             loading: true,
+            loadingError: false,
             doesNotExist: false,
-            symbols: this.props.symbols || []
+            symbols: this.props.symbols || [],
+            trades: [],
         }
     }
 
+    componentDidMount() {
+        this.getTrades()
+    }
+
     componentWillReceiveProps(newProps) {
-        console.log(newProps.symbols);
         this.setState({
             symbols: newProps.symbols || []
         }, this.checkSymbol)
+    }
+
+    getTrades() {
+        fetch(`/api/symbol/${this.props.params.symbol}`) // eslint-disable-line
+        .then((res) => {
+            if (res.status >= 200 && res.status < 300) {
+                return res.json()
+            }
+            const err = new Error(res.statusText)
+            err.response = res
+            throw err
+        })
+        .then((res) => {
+            if (res.success) {
+                this.setState({
+                    loadingError: false,
+                    loading: false,
+                    trades: res.trades
+                })
+            }
+        })
+        .catch((err) => {
+            this.setState({
+                loadingError: true,
+                loading: false,
+            })
+            console.error(err);
+        })
     }
 
     checkSymbol() {
@@ -63,13 +99,26 @@ class SymbolPage extends React.Component {
                 <Grid padded stackable>
                     <Grid.Column width={16}>
                         <Container fluid>
-                            <Menu size='huge'>
+                            <Menu size='huge' borderless>
                                 <Menu.Item as={Link} to='/'>
                                     <Icon name='arrow left' />
                                     Return
                                 </Menu.Item>
+                                <Menu.Item header>
+                                    {this.props.params.symbol}
+                                </Menu.Item>
                             </Menu>
-                            <Header as='h2'>{this.props.params.symbol}</Header>
+                            {this.state.loading ? (
+                                <Loader size='large' active inline='centered'>
+                                    Getting latest stock data
+                                </Loader>
+                            ) : (
+                                <SymbolDashboard
+                                    symbol={this.props.params.symbol}
+                                    trades={this.state.trades}
+                                    loadingError={this.state.loadingError}
+                                />
+                            )}
                         </Container>
                     </Grid.Column>
                 </Grid>
