@@ -1,14 +1,23 @@
 import React from 'react'
+import { connect } from 'react-redux'
 import { Link } from 'react-router'
-import { Menu } from 'semantic-ui-react'
+import { Menu, Loader } from 'semantic-ui-react'
 
 import SettingsModal from './settingsmodal'
 
-export default function MainHeader() {
+const MainHeader = ({ tasks }) => {
     return (
         <Menu inverted stackable borderless fixed='top' size='huge' className='mainmenu' id='mainmenu'>
             <Menu.Item header as={Link} to='/'>Purple</Menu.Item>
             <Menu.Menu position='right'>
+                <Menu.Item>
+                    {tasks.length !== 0 && (
+                        <small>
+                            <Loader active inverted inline size='small' />
+                            <span style={{ marginLeft: '10px' }}>analysing</span>
+                        </small>
+                    )}
+                </Menu.Item>
                 <Menu.Item>
                     <SettingsModal />
                 </Menu.Item>
@@ -16,3 +25,9 @@ export default function MainHeader() {
         </Menu>
     )
 }
+
+export default connect(
+    state => ({
+        tasks: state.tasks.tasks,
+    }),
+)(MainHeader)

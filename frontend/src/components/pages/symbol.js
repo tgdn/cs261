@@ -15,16 +15,29 @@ import map from 'lodash/map'
 class SymbolPage extends React.Component {
     constructor(props) {
         super(props)
+        this.state = {
+            loading: true,
+            doesNotExist: false,
+            symbols: this.props.symbols || []
+        }
+    }
+
+    componentWillReceiveProps(newProps) {
+        console.log(newProps.symbols);
+        this.setState({
+            symbols: newProps.symbols || []
+        }, this.checkSymbol)
+    }
+
+    checkSymbol() {
         const symbol = this.props.params.symbol
-        const symbols = this.props.symbols
-        for (let i = 0; i < symbols.length; i++) { // eslint-disable-line
-            console.log(symbols[i].name);
-            console.log(symbol);
-            if (symbols[i].name === symbol) {
+        for (let i = 0; i < this.state.symbols.length; i++) { // eslint-disable-line
+            if (this.state.symbols[i].name === symbol) {
+                this.setState({ doesNotExist: false })
                 return
             }
         }
-        this.doesNotExist = true
+        this.setState({ doesNotExist: true })
     }
 
     renderDoesNotExist() {
@@ -32,7 +45,9 @@ class SymbolPage extends React.Component {
             <Grid padded stackable>
                 <Grid.Column width={16}>
                     <Container fluid>
-                        <Header as='h2'>Symbol does not exist</Header>
+                        <Header as='h2'>
+                            <strong>{this.props.params.symbol}</strong> does not exist
+                        </Header>
                     </Container>
                 </Grid.Column>
             </Grid>
@@ -40,6 +55,9 @@ class SymbolPage extends React.Component {
     }
 
     render() {
+        if (this.state.doesNotExist) {
+            return this.renderDoesNotExist()
+        }
         return (
             <div>
                 <Grid padded stackable>
