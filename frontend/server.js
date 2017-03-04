@@ -57,6 +57,7 @@ const uploadHandler = upload.single('file')
  * API: calls to postgres
  */
 app.get('/api/symbols', db.getSymbols)
+app.get('/api/symbol/:symbol', db.getSymbol)
 
 app.post('/upload', (req, res) => {
     uploadHandler(req, res, (err) => {
