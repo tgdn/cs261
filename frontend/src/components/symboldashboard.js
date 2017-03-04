@@ -1,17 +1,17 @@
 /* eslint-disable react/forbid-prop-types */
 
 import React, { PropTypes } from 'react'
+import { Segment } from 'semantic-ui-react'
+import SymbolChart from './symbolchart'
 
 class SymbolDashboard extends React.Component {
     render() {
+        const { symbol, trades } = this.props
         return (
             <div>
-                <div>
-                    Chart
-                </div>
-                <div>
-                    info
-                </div>
+                <Segment inverted attached='bottom'>
+                    <SymbolChart symbol={symbol} trades={trades} />
+                </Segment>
             </div>
         )
     }
