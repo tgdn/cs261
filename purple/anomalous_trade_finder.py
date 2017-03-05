@@ -22,6 +22,7 @@ class AnomalousTradeFinder:
     def add(self, trade, identifier):
         if trade.symbol not in self.trade_history:
             self.trade_history[trade.symbol] = [{
+                'time': trade.time,
                 'id': identifier,
                 'price': trade.price,
                 'price_delta': 0,
@@ -30,6 +31,7 @@ class AnomalousTradeFinder:
         else:
             price_delta = trade.price - self.trade_history[trade.symbol][-1]["price"]
             self.trade_history[trade.symbol].append({
+                'time': trade.time,
                 'id': identifier,
                 'price': trade.price,
                 'price_delta': price_delta,
@@ -43,6 +45,7 @@ class AnomalousTradeFinder:
             volumes = [x["volume"] for x in self.trade_history[key]]
             deltas = [x["price_delta"] for x in self.trade_history[key]]
             ids = [x["id"] for x in self.trade_history[key]]
+            times = [x["time"] for x in self.trade_history[key]]
 
             #So here we want to add something that stores the total delta for the day, the total volume for day
             #and their mean and stdevs. work out how to handle vol spikes and pump and dump
@@ -59,15 +62,13 @@ class AnomalousTradeFinder:
                 'day_count': 1
             }
 
-            deltas = [x["price_delta"] for x in self.trade_history[key]]
-            volumes = [x["volume"] for x in self.trade_history[key]]
-
-            self.calculate_fat_finger(volumes, deltas, ids, key)
+            self.calculate_fat_finger(volumes, deltas, ids, times, key)
 
             #Decide how to handle vol spikes and pump and dump for one day/csv
 
             #Get the price of the last added trade for that symbol
             self.prev_trades[key] = self.trade_history[key][-1]["price"]
+        self.trade_history = {}
 
         return self.anomalous_trades
 
@@ -93,7 +94,7 @@ class AnomalousTradeFinder:
             print "Found a fat finger on price on individual trade"
             self.anomalous_trades.append({
                     'id': identifier,
-                    'time': datetime.now(),
+                    'time': trade.time,
                     'description': 'Fat finger error on price for ' + trade.symbol
             })
         vol_values = self.welford(trade_count, vol_stdev, vol_mean, new_vol_to_add)
@@ -102,7 +103,7 @@ class AnomalousTradeFinder:
             print "Found a fat finger on volume on individual trade"
             self.anomalous_trades.append({
                     'id': identifier,
-                    'time': datetime.now(),
+                    'time': trade.time,
                     'description': 'Fat finger error on volume for ' + trade.symbol
             })
 
@@ -194,13 +195,13 @@ class AnomalousTradeFinder:
         return self.anomalous_trades
 
     #Calculate fat finger errors on volume and price, add every one to anomalous_trades
-    def calculate_fat_finger(self, volumes, deltas, ids, key):
+    def calculate_fat_finger(self, volumes, deltas, ids, times, key):
         counter = 0
         for value in deltas:
             if value >= self.stats[key]["delta_mean"] + 3 * self.stats[key]["delta_stdev"] or value <= (self.stats[key]["delta_mean"] - 3 * self.stats[key]["delta_stdev"]):
                 self.anomalous_trades.append({
                     'id': ids[counter],
-                    'time': datetime.now(),
+                    'time': times[counter],
                     'description': 'Fat finger error on price for ' + key 
                 })
             counter += 1
@@ -209,7 +210,7 @@ class AnomalousTradeFinder:
             if volume >= self.stats[key]["vol_mean"] + 3 * self.stats[key]["vol_stdev"] or volume <= (self.stats[key]["vol_mean"] - 3 * self.stats[key]["vol_stdev"]):
                 self.anomalous_trades.append({
                     'id': ids[counter],
-                    'time': datetime.now(),
+                    'time': times[counter],
                     'description': 'Fat finger error on volume ' + key
                 })
             counter += 1
