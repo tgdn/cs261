@@ -13,7 +13,10 @@ class SymbolDashboard extends React.Component {
                     {trades.length === 0 ? (
                         <Header inverted as='h2'>No data to work with</Header>
                     ) : (
-                        <SymbolChart symbol={symbol} trades={trades} />
+                        <SymbolChart
+                            symbol={symbol}
+                            trades={trades}
+                        />
                     )}
                 </Segment>
             </div>
