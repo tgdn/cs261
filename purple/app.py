@@ -141,7 +141,7 @@ class App:
             # continue if row is parsed correctly
             t = Trade(line)
             if not t.parse_err:
-                trades_analyser.add(t, sha1_hash, True)
+                trades_analyser.add(t, sha1_hash, True, commit=True)
 
         trades_analyser.force_commit()
         print "Lines added to memory, beginning anomaly detection"
