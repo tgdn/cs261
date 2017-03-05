@@ -122,7 +122,7 @@ class TradesAnalyser:
     def alert(self, anomaly):
         with db.get_reql_connection(db=True) as conn:
             r.table('alerts').insert([{
-                'time': tz.localize(anomaly["time"]),
+                'time': anomaly["time"],
                 'trade_pk': anomaly["id"],
                 'description': anomaly["description"]
             }]).run(conn, durability='soft')
@@ -135,6 +135,5 @@ class TradesAnalyser:
 
         for anomaly in anomalies:
             self.alert(anomaly)
-            print "did it"
 
         print 'Found ' + str(len(anomalies)) + ' anomalies'

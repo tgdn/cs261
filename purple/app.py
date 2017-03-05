@@ -208,7 +208,7 @@ class App:
                 print "Connection lost, attempting to reconnect"
                 disconnected = True
                 #Only analyse if the day of trades is over
-                if datetime.now().strftime('%H') == '01':
+                if datetime.now().strftime('%H') == '00':
                     print "Beginning analysis"
                     trades_analyser.alert_stats(firstday)
                     firstday = False
