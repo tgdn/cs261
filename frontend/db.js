@@ -35,8 +35,8 @@ const getSymbol = (req, res) => {
             `SELECT id, price, size, flagged, datetime
             FROM trades
             WHERE symbol_name = $1
-            ORDER BY id DESC
-            LIMIT 200`, symbol)
+            ORDER BY datetime ASC
+            LIMIT 1000`, symbol)
         .then((trades) => {
             res.status(200)
                 .json({
