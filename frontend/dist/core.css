@@ -43,6 +43,28 @@ body {
     background: #303030 !important;
 }
 
+i.indicator-green {
+    height: 5px;
+    width: 5px;
+    vertical-align: middle;
+    margin-left: 7px;
+    display: inline-block;
+    border-radius: 100px;
+    background: #35ba43;
+    box-shadow: 0 0 3px #35ba43;
+}
+
+i.indicator-red {
+    height: 5px;
+    width: 5px;
+    vertical-align: middle;
+    margin-left: 7px;
+    display: inline-block;
+    border-radius: 100px;
+    background: #d62f2f;
+    box-shadow: 0 0 3px #d62f2f;
+}
+
 /* animations */
 @-webkit-keyframes pulse{
 	0% {font-size: 8em;}

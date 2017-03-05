@@ -29,6 +29,7 @@ class SymbolPage extends React.Component {
             pollIntervalID: null,
             liveTrades: true,
         }
+        this.toggleLive = this.toggleLive.bind(this)
         this.getTrades = this.getTrades.bind(this)
     }
 
@@ -55,8 +56,15 @@ class SymbolPage extends React.Component {
         }
     }
 
-    enableLiveTrades = () => this.setState({ liveTrades: true })
-    disableLiveTrades = () => this.setState({ liveTrades: false })
+    toggleLive() {
+        if (this.state.liveTrades && this.state.pollIntervalID) {
+            clearInterval(this.state.pollIntervalID)
+            this.setState({ pollIntervalID: null })
+        } else if (!this.state.liveTrades) {
+            this.subscribeTrades()
+        }
+        this.setState({ liveTrades: !this.state.liveTrades })
+    }
 
     getTrades() {
         fetch(`/api/symbol/${this.props.params.symbol}`) // eslint-disable-line
@@ -115,6 +123,7 @@ class SymbolPage extends React.Component {
         if (this.state.doesNotExist) {
             return this.renderDoesNotExist()
         }
+        const live = this.state.liveTrades
         return (
             <div>
                 <Grid padded stackable>
@@ -128,6 +137,22 @@ class SymbolPage extends React.Component {
                                 <Menu.Item header>
                                     {this.props.params.symbol}
                                 </Menu.Item>
+                                <Menu.Menu position='right'>
+                                    <Menu.Item onClick={this.toggleLive}>
+                                        {live ? 'pause' : 'resume'}
+                                    </Menu.Item>
+                                    <Menu.Item>
+                                        {live ? (
+                                            <span>
+                                                live <i class='indicator-green' />
+                                            </span>
+                                        ) : (
+                                            <span>
+                                                stopped <i class='indicator-red' />
+                                            </span>
+                                        )}
+                                    </Menu.Item>
+                                </Menu.Menu>
                             </Menu>
                             {this.state.loading ? (
                                 <Loader size='large' active inline='centered'>

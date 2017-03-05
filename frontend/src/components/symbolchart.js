@@ -27,6 +27,15 @@ class SymbolChart extends React.Component {
         }
     }
 
+    shouldComponentUpdate(newProps, newState) {
+        const latestTrade = this.state.trades[this.state.trades.length - 1].id
+        const newLatestTrade = newState.trades[newState.trades.length - 1].id
+        if (latestTrade !== newLatestTrade) {
+            return true
+        }
+        return false
+    }
+
     parseData(trades) {
         trades.forEach((d) => {
             d.datetime = new Date(parseDatetime(d.datetime)) // eslint-disable-line
