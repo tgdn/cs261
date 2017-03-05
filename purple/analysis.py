@@ -74,7 +74,10 @@ class TradesAnalyser:
             self.anomaly_identifier.add(t, self.current_pk)
         # Otherwise analyse one trade individually
         else:
-            self.anomaly_identifier.calculate_anomalies_single_trade(t, self.current_pk)
+            anomalies = self.anomaly_identifier.calculate_anomalies_single_trade(t, self.current_pk)
+            if anomalies:
+                for anomaly in anomalies:
+                    self.alert(anomaly)
 
         # inform user
         stdout_write('Trades: {} - ({} anomalies) (Ctrl-C to stop)'.format(self.tradecount, self.anomalies))

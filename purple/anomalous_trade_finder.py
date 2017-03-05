@@ -113,6 +113,8 @@ class AnomalousTradeFinder:
         self.stats[trade.symbol]['vol_mean'] = vol_values['mean']
         self.stats[trade.symbol]['vol_stdev'] = vol_values['stdev']
         self.stats[trade.symbol]['trade_count'] = trade_count + 1
+
+        return self.anomalous_trades
         
     #Recalculates an existing standard deviation with another added point using Welford's method
     def welford(self, count, stdev, mean, to_add):
