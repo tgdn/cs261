@@ -9,7 +9,8 @@ import {
     Header,
     Menu,
     Icon,
-    Loader
+    Loader,
+    Segment
 } from 'semantic-ui-react'
 
 import SymbolDashboard from '../symboldashboard'
@@ -148,16 +149,20 @@ class SymbolPage extends React.Component {
                                             </span>
                                         ) : (
                                             <span>
-                                                stopped <i class='indicator-red' />
+                                                paused <i class='indicator-red' />
                                             </span>
                                         )}
                                     </Menu.Item>
                                 </Menu.Menu>
                             </Menu>
                             {this.state.loading ? (
-                                <Loader size='large' active inline='centered'>
-                                    Getting latest stock data
-                                </Loader>
+                                <div>
+                                    <Segment inverted attached='bottom'>
+                                        <Loader active inverted size='large' inline='centered'>
+                                            Getting latest stock data
+                                        </Loader>
+                                    </Segment>
+                                </div>
                             ) : (
                                 <SymbolDashboard
                                     symbol={this.props.params.symbol}
