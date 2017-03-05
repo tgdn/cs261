@@ -24,8 +24,8 @@ class SymbolChart extends React.Component {
             d.datetime = new Date(parseDatetime(d.datetime)) // eslint-disable-line
         })
         let minDatetime = trades[0].datetime
-        if (trades.length >= 28) {
-            minDatetime = trades[trades.length - 27].datetime
+        if (trades.length >= 40) {
+            minDatetime = trades[trades.length - 40].datetime
         }
         this.state = {
             trades,
@@ -37,11 +37,11 @@ class SymbolChart extends React.Component {
     render() {
         const { symbol, width, ratio } = this.props
         const { trades, initialMinDatetime, initialMaxDatetime } = this.state
-        // const maxDatetime = trades[trades.length - 1].datetime
-        // let minDatetime = trades[0].datetime
-        // if (trades.length >= 28) {
-        //     minDatetime = trades[trades.length - 27].datetime
-        // }
+        // <ScatterSeries
+        //     yAccessor={d => d.price}
+        //     marker={CircleMarker}
+        //     markerProps={{ r: 3, stroke: '#878712', fill: '#C1C11F' }}
+        // />
         return (
             <div>
                 <ChartCanvas
@@ -49,7 +49,7 @@ class SymbolChart extends React.Component {
                     width={width}
                     height={600}
                     margin={{ left: 70, right: 70, top: 20, bottom: 50 }}
-                    type='svg'
+                    type='hybrid'
                     pointsPerPxThreshold={1}
                     seriesName={symbol}
                     data={trades}
@@ -88,11 +88,6 @@ class SymbolChart extends React.Component {
                             yAccessor={d => d.price}
                             stroke='#F4F42E'
                             strokeDasharray='Solid'
-                        />
-                        <ScatterSeries
-                            yAccessor={d => d.price}
-                            marker={CircleMarker}
-                            markerProps={{ r: 3, stroke: '#878712', fill: '#C1C11F' }}
                         />
                     </Chart>
                     <Chart

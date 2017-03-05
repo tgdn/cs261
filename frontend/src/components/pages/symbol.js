@@ -98,7 +98,7 @@ class SymbolPage extends React.Component {
             <div>
                 <Grid padded stackable>
                     <Grid.Column width={16}>
-                        <Container fluid>
+                        <Container fluid className='chartContainer'>
                             <Menu size='huge' borderless attached='top' inverted>
                                 <Menu.Item as={Link} to='/'>
                                     <Icon name='arrow left' />
