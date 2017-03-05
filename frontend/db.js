@@ -31,12 +31,15 @@ const getSymbols = (req, res) => {
 const getSymbol = (req, res) => {
     const symbol = req.params.symbol || null
     if (symbol !== null) {
+        // Get latest 1000 trades
+        // Nest query to reorder trades by datetime ASC
         db.any(
-            `SELECT id, price, size, flagged, datetime
-            FROM trades
-            WHERE symbol_name = $1
-            ORDER BY datetime ASC
-            LIMIT 1000`, symbol)
+            `SELECT * FROM (
+                SELECT id, price, size, flagged, datetime
+                FROM trades WHERE symbol_name = $1
+                ORDER BY datetime DESC
+                LIMIT 1000
+            ) AS derivedTable ORDER BY datetime ASC`, symbol)
         .then((trades) => {
             res.status(200)
                 .json({
