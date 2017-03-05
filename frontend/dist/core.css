@@ -39,6 +39,10 @@ body {
     animation: pulse 3s infinite !important;
 }
 
+.chartContainer .inverted {
+    background: #303030 !important;
+}
+
 /* animations */
 @-webkit-keyframes pulse{
 	0% {font-size: 8em;}
