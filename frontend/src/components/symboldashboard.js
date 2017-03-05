@@ -1,7 +1,7 @@
 /* eslint-disable react/forbid-prop-types */
 
 import React, { PropTypes } from 'react'
-import { Segment } from 'semantic-ui-react'
+import { Segment, Header } from 'semantic-ui-react'
 import SymbolChart from './symbolchart'
 
 class SymbolDashboard extends React.Component {
@@ -10,7 +10,11 @@ class SymbolDashboard extends React.Component {
         return (
             <div>
                 <Segment inverted attached='bottom'>
-                    <SymbolChart symbol={symbol} trades={trades} />
+                    {trades.length === 0 ? (
+                        <Header inverted as='h2'>No data to work with</Header>
+                    ) : (
+                        <SymbolChart symbol={symbol} trades={trades} />
+                    )}
                 </Segment>
             </div>
         )

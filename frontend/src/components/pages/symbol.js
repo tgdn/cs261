@@ -1,3 +1,5 @@
+/* eslint-disable react/sort-comp */
+
 import React from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router'
@@ -24,11 +26,19 @@ class SymbolPage extends React.Component {
             doesNotExist: false,
             symbols: this.props.symbols || [],
             trades: [],
+            pollIntervalID: null,
+            liveTrades: true,
         }
+        this.getTrades = this.getTrades.bind(this)
     }
 
-    componentDidMount() {
-        this.getTrades()
+    componentDidMount = () => this.subscribeTrades()
+
+    componentWillUnmount() {
+        // stop polling once unmounted
+        if (this.state.pollIntervalID !== null) {
+            clearInterval(this.state.pollIntervalID)
+        }
     }
 
     componentWillReceiveProps(newProps) {
@@ -36,6 +46,17 @@ class SymbolPage extends React.Component {
             symbols: newProps.symbols || []
         }, this.checkSymbol)
     }
+
+    subscribeTrades() {
+        this.getTrades()
+        if (this.state.pollIntervalID === null) {
+            const pollIntervalID = setInterval(this.getTrades, 1000)
+            this.setState({ pollIntervalID })
+        }
+    }
+
+    enableLiveTrades = () => this.setState({ liveTrades: true })
+    disableLiveTrades = () => this.setState({ liveTrades: false })
 
     getTrades() {
         fetch(`/api/symbol/${this.props.params.symbol}`) // eslint-disable-line

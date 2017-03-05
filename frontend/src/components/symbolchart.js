@@ -19,19 +19,33 @@ const parseDatetime = utcParse('%Y-%m-%dT%H:%M:%S.%LZ')
 class SymbolChart extends React.Component {
     constructor(props) {
         super(props)
-        const trades = this.props.trades
+        const { trades, minDatetime, maxDatetime } = this.parseData(this.props.trades)
+        this.state = {
+            trades,
+            initialMinDatetime: minDatetime,
+            initialMaxDatetime: maxDatetime
+        }
+    }
+
+    parseData(trades) {
         trades.forEach((d) => {
             d.datetime = new Date(parseDatetime(d.datetime)) // eslint-disable-line
         })
+        const maxDatetime = trades[trades.length - 1].datetime
         let minDatetime = trades[0].datetime
         if (trades.length >= 40) {
             minDatetime = trades[trades.length - 40].datetime
         }
-        this.state = {
+        return { trades, minDatetime, maxDatetime }
+    }
+
+    componentWillReceiveProps(newProps) {
+        const { trades, minDatetime, maxDatetime } = this.parseData(newProps.trades)
+        this.setState({
             trades,
             initialMinDatetime: minDatetime,
-            initialMaxDatetime: trades[trades.length - 1].datetime
-        }
+            initialMaxDatetime: maxDatetime
+        })
     }
 
     render() {
