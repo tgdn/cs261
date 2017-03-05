@@ -212,12 +212,18 @@ class App:
                     print "Beginning analysis"
                     trades_analyser.alert_stats(firstday)
                     firstday = False
+                    #Wait for 5 minutes until the feed is accepting connections again
                     time.sleep(300)
                 else:
-                    #Do we want to send a notification to frontend here?
                     print "Feed appears to be down"
-
-                #Wait for 5 minutes until the feed is accepting connections again
+                    notification_manager.add(
+                        level = 'error',
+                        title = 'Feed appears to be down',
+                        message = (
+                            'The data feed that we are trying to connect to is currently down. Attempting to reconnect.'
+                        ),
+                        datetime = tz.localize(datetime.now())
+                    )
 
                 while disconnected:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
