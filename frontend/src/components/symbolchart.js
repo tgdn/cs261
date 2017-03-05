@@ -142,7 +142,7 @@ class SymbolChart extends React.Component {
                         <MouseCoordinateY
                             at="right"
                             orient="right"
-                            displayFormat={format('.0f')}
+                            displayFormat={format('.4s')}
                         />
                         <BarSeries
                             yAccessor={d => d.size}
