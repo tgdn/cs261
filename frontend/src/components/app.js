@@ -74,7 +74,7 @@ class App extends React.Component {
         this.props.horizon('alerts')
             .order('time')
             .findAll({ reviewed: false, })
-            .limit(100)
+            .limit(20)
             .watch()
             .subscribe((alerts) => {
                 this.props.updateAlerts(alerts)
