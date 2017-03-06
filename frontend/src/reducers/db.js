@@ -18,6 +18,7 @@ const initialState = {
     horizon,
     trades: horizon('trades'),
     settings: horizon('settings'),
+    alerts: [],
     notifications: horizon('notifications'),
     tasks: horizon('tasks'),
     symbols: [],
@@ -29,6 +30,12 @@ function db(state = initialState, action) {
         return {
             ...state,
             symbols: action.data.symbols || [],
+        }
+    }
+    case 'UPDATE_ALERTS': {
+        return {
+            ...state,
+            alerts: action.data.alerts || [],
         }
     }
     default:

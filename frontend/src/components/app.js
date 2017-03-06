@@ -24,8 +24,10 @@ class App extends React.Component {
         this.header = document.getElementById('mainmenu')
         /* eslint-enable */
 
+        /* realtime stuff */
         this.subscribeNotifications()
         this.subscribeSettings()
+        this.subscribeAlerts()
         this.subscribeTasks()
         this.subscribeSymbols()
     }
@@ -64,6 +66,18 @@ class App extends React.Component {
             .watch()
             .subscribe((tasks) => {
                 this.props.updateTasks(tasks)
+            })
+    }
+
+    subscribeAlerts() {
+        /* limit to 100 otherwise client will stall */
+        this.props.horizon('alerts')
+            .order('time')
+            .findAll({ reviewed: false, })
+            .limit(100)
+            .watch()
+            .subscribe((alerts) => {
+                this.props.updateAlerts(alerts)
             })
     }
 
@@ -194,6 +208,7 @@ App.defaultProps = {
 
 export default connect(
     state => ({
+        horizon: state.db.horizon,
         notifications: state.db.notifications,
         settings: state.db.settings,
         tasks: state.db.tasks,
@@ -213,6 +228,12 @@ export default connect(
             dispatch({
                 type: 'UPDATE_SETTINGS',
                 data: { settings }
+            })
+        },
+        updateAlerts: (alerts) => {
+            dispatch({
+                type: 'UPDATE_ALERTS',
+                data: { alerts }
             })
         },
         updateTasks: (tasks) => {

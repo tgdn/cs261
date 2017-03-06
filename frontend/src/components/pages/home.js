@@ -32,6 +32,7 @@ class HomePage extends React.Component {
         const style = {
             height: `calc(100vh - ${this.props.headerHeight}px)`
         }
+        const alerts = this.props.alerts
         return (
             <div>
                 <Sidebar.Pushable as='div' style={style}>
@@ -40,8 +41,17 @@ class HomePage extends React.Component {
                         <Grid padded stackable>
                             <Grid.Column width={16}>
                                 <Container fluid textAlign='center'>
-                                    <Icon color='green' name='check circle' size='massive' class='pulsate' />
-                                    <Header as='h2' color='green'>No issues</Header>
+                                    {alerts.length === 0 ? (
+                                        <div>
+                                            <Icon color='green' name='check circle' size='massive' class='pulsate' />
+                                            <Header as='h2' color='green'>No issues</Header>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <Icon color='red' name='remove circle' size='massive' class='pulsate' />
+                                            <Header as='h2' color='red'>There are issues to review</Header>
+                                        </div>
+                                    )}
                                 </Container>
                             </Grid.Column>
                         </Grid>
@@ -54,16 +64,19 @@ class HomePage extends React.Component {
 
 HomePage.propTypes = {
     headerHeight: React.PropTypes.number,
+    alerts: React.PropTypes.array, // eslint-disable-line
     symbols: React.PropTypes.array, // eslint-disable-line
 }
 
 HomePage.defaultProps = {
     headerHeight: 0,
+    alerts: [],
     symbols: [],
 }
 
 export default connect(
     state => ({
+        alerts: state.db.alerts,
         symbols: state.db.symbols,
         headerHeight: state.ui.headerHeight,
     }),
