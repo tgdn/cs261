@@ -30,23 +30,6 @@ export default [
                 path: '*',
                 component: PageDoesNotExist,
             }
-        //     {
-        //         path: 'dashboard',
-        //         component: null,
-        //         indexRoute: {
-        //             component: null
-        //         },
-        //         childRoutes: [
-        //             {
-        //                 path: 'events',
-        //                 component: null
-        //             },
-        //             {
-        //                 path: 'billing',
-        //                 component: null
-        //             }
-        //         ]
-        //     },
         ]
     }
 ]
