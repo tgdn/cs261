@@ -1,16 +1,15 @@
-/* eslint-disable react/forbid-prop-types */
+/* eslint-disable react/forbid-prop-types react/sort-comp */
 
 import React, { PropTypes } from 'react'
 import { utcParse, timeFormat, scaleTime } from 'd3-time-format'
 import { format, formatDefaultLocale } from 'd3-format'
 import { ChartCanvas, Chart, series, scale, coordinates, tooltip, axes, helper } from 'react-stockcharts'
 
-const { BarSeries, LineSeries, ScatterSeries, CircleMarker, SquareMarker, TriangleMarker } = series
+const { BarSeries, LineSeries, AreaSeries } = series
 const { discontinuousTimeScaleProvider } = scale
 
-const { CrossHairCursor, MouseCoordinateX, MouseCoordinateY, CurrentCoordinate } = coordinates
+const { CrossHairCursor, MouseCoordinateX, MouseCoordinateY, CurrentCoordinate, EdgeIndicator } = coordinates
 
-const { MovingAverageTooltip } = tooltip
 const { XAxis, YAxis } = axes
 const { fitWidth } = helper
 
@@ -74,27 +73,26 @@ class SymbolChart extends React.Component {
         const { symbol, width, ratio } = this.props
         const { trades, initialMinDatetime, initialMaxDatetime } = this.state
 
+        /* chart settings */
         const margin = { left: 70, right: 80, top: 20, bottom: 50 }
-        const height = 600
+        const height = 500
         const gridHeight = height - margin.top - margin.bottom
         const gridWidth = width - margin.left - margin.right
+
+        /* define grid */
         const yGrid = {
             innerTickSize: -1 * gridWidth,
             tickStrokeDasharray: 'Solid',
-            tickStrokeOpacity: 0.2,
+            tickStrokeOpacity: 0.1,
             tickStrokeWidth: 0.2
         }
         const xGrid = {
             innerTickSize: -1 * gridHeight,
             tickStrokeDasharray: 'Solid',
-            tickStrokeOpacity: 0.2,
+            tickStrokeOpacity: 0.1,
             tickStrokeWidth: 0.2
         }
-        // <ScatterSeries
-        //     yAccessor={d => d.price}
-        //     marker={CircleMarker}
-        //     markerProps={{ r: 3, stroke: '#878712', fill: '#C1C11F' }}
-        // />
+
         return (
             <div>
                 <ChartCanvas
@@ -111,10 +109,11 @@ class SymbolChart extends React.Component {
                     xExtents={[initialMinDatetime, initialMaxDatetime]}
                 >
                     <Chart
+                        yPan
                         id={1}
                         yExtents={d => d.price}
-                        padding={{ top: 10, bottom: 20 }}
-                        height={430}
+                        padding={{ top: 10, bottom: 0 }}
+                        height={330}
                     >
                         <XAxis
                             axisAt='bottom'
@@ -124,44 +123,63 @@ class SymbolChart extends React.Component {
                             outerTickSize={0}
                             tickStroke='#FFFFFF'
                             stroke='#FFFFFF'
+                            {...xGrid}
                         />
                         <YAxis
                             axisAt='right'
-                            orient='right'
+                            orient='left'
                             ticks={6}
+                            fontSize={11}
+                            tickFormat={format('.2f')}
                             tickStroke='#FFFFFF'
                             stroke='#FFFFFF'
+                            {...yGrid}
                         />
                         <MouseCoordinateY
                             at="right"
                             orient="right"
-                            displayFormat={format('$.2f')}
+                            displayFormat={format('$.2s')}
                         />
-                        <LineSeries
+                        <AreaSeries
                             yAccessor={d => d.price}
-                            stroke='#F4F42E'
+                            stroke='#4e91fc'
+                            opacity={0.3}
                             strokeDasharray='Solid'
                         />
-                        <CurrentCoordinate yAccessor={d => d.price} stroke='#F4F42E' />
+                        <CurrentCoordinate
+                            yAccessor={d => d.price}
+                            stroke='#4e91fc'
+                        />
+                        <EdgeIndicator
+                            itemType="last"
+                            orient="right"
+                            edgeAt="right"
+                            yAccessor={d => d.size}
+                            displayFormat={format('$.2s')}
+                            fill="#4e91fc"
+                        />
                     </Chart>
                     <Chart
                         id={2}
                         height={100}
-                        yExtents={d => [0, this.state.maxVolume * 10]}
+                        yExtents={() => [0, this.state.maxVolume * 10]}
                         origin={(w, h) => [0, h - 100]}
                     >
                         <XAxis
                             showGrid
                             axisAt='bottom'
                             orient='bottom'
+                            fontSize={11}
                             tickStroke='#FFFFFF'
                             stroke='#FFFFFF'
+                            flexTicks
                         />
                         <YAxis
                             axisAt='left'
                             orient='left'
                             ticks={5}
                             tickFormat={format('.0s')}
+                            fontSize={11}
                             tickStroke='#FFFFFF'
                             stroke='#FFFFFF'
                         />
@@ -177,8 +195,7 @@ class SymbolChart extends React.Component {
                         />
                         <BarSeries
                             yAccessor={d => d.size}
-                            fill='#6BA583'
-                            clip={false}
+                            fill='#f9fc4e'
                         />
                     </Chart>
                     <CrossHairCursor stroke='#BBBBBB' />

@@ -40,7 +40,8 @@ body {
 }
 
 .chartContainer .inverted {
-    background: #303030 !important;
+    /*background: #303030 !important;*/
+    background: #3e3e3e !important;
 }
 
 i.indicator-green {
