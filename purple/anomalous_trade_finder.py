@@ -152,7 +152,7 @@ class AnomalousTradeFinder:
     def calculate_anomalies_end_of_day(self, date):
         self.anomalous_trades = []
         for key in self.prev_trades:
-            #date = (datetime.strptime(date,'%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
+            date = (datetime.strptime(date,'%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
             vol_query = "SELECT SUM(size) FROM trades WHERE symbol_name=\'" + key + "\' AND analysis_date=\'" + date + "\'"
             volume = db.engine.execute(vol_query)
 

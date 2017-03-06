@@ -78,6 +78,8 @@ class TradesAnalyser:
             if anomalies:
                 for anomaly in anomalies:
                     self.alert(anomaly)
+                    self.flag(anomaly)
+                db.session.commit()
 
         # inform user
         stdout_write('Trades: {} (Ctrl-C to stop)'.format(self.tradecount))
@@ -90,7 +92,6 @@ class TradesAnalyser:
                 db.session.commit()
             else:
                 db.session.flush()
-
 
     def force_commit(self):
         self.save_load()
@@ -111,17 +112,12 @@ class TradesAnalyser:
             symbol = db.SymbolModel.get_or_create(s)
             self.symbols.add(s)
         return s
-    """
-    def flag(self, trade):
-        trade['flagged'] = True
-        self.force_commit()
-        # insert alert in rethinkdb
-        with db.get_reql_connection(db=True) as conn:
-            r.table('alerts').insert([{
-                    'time': tz.localize(datetime.now()),
-                    'trade_pk': trade['id'],
-            }]).run(conn, durability='soft')
-    """
+
+    def flag(self, anomaly):
+        #Sometimes our id is a date of the anomaly, rather than a trade id
+        if isinstance(anomaly["id"], ( int, long )):
+            db.session.query(db.TradeModel).filter_by(id=anomaly["id"]).update({"flagged": True})
+
     def alert(self, anomaly):
         with db.get_reql_connection(db=True) as conn:
             r.table('alerts').insert([{
@@ -138,5 +134,8 @@ class TradesAnalyser:
 
         for anomaly in anomalies:
             self.alert(anomaly)
+            self.flag(anomaly)
+
+        db.session.commit()
 
         print 'Found ' + str(len(anomalies)) + ' anomalies'
