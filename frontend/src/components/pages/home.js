@@ -1,11 +1,13 @@
 import React from 'react'
 import { connect } from 'react-redux'
+import { Link } from 'react-router'
 import {
     Container,
     Grid,
     Icon,
     Header,
     Sidebar,
+    Button,
 } from 'semantic-ui-react'
 
 import SymbolSidebar from '../symbolsidebar'
@@ -50,6 +52,9 @@ class HomePage extends React.Component {
                                         <div>
                                             <Icon color='red' name='remove circle' size='massive' class='pulsate' />
                                             <Header as='h2' color='red'>There are issues to review</Header>
+                                            <Button as={Link} to='/flagged' secondary>
+                                                Get to zero now
+                                            </Button>
                                         </div>
                                     )}
                                 </Container>
