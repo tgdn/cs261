@@ -203,7 +203,7 @@ class SymbolChart extends React.Component {
                         />
                         <BarSeries
                             yAccessor={d => d.size}
-                            fill='#f9fc4e'
+                            fill={d => (d.flagged ? '#e54444' : '#f9fc4e')}
                         />
                     </Chart>
                     <CrossHairCursor stroke='#BBBBBB' />
