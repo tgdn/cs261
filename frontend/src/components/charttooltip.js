@@ -138,6 +138,7 @@ class ChartTooltip extends React.Component {
                     id={3}
                     displayName='Flag'
                     value={flagged}
+                    forChart={chartId}
                     fontFamily={fontFamily}
                     fontSize={fontSize}
                 />
