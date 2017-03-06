@@ -147,7 +147,7 @@ class App:
         print "Lines added to memory, beginning anomaly detection"
 
         #Calculate delta_mean, delta_stdev, vol_mean, vol_stdev for file analysed
-        trades_analyser.alert_stats(True)
+        trades_analyser.alert_stats(True, True)
 
         try:
             f.close()
@@ -210,7 +210,7 @@ class App:
                 #Only analyse if the day of trades is over
                 if datetime.now().strftime('%H') == '00':
                     print "Beginning analysis"
-                    trades_analyser.alert_stats(firstday)
+                    trades_analyser.alert_stats(firstday, False)
                     firstday = False
                     #Wait for 5 minutes until the feed is accepting connections again
                     time.sleep(300)

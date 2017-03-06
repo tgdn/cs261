@@ -78,9 +78,11 @@ class TradesAnalyser:
             if anomalies:
                 for anomaly in anomalies:
                     self.alert(anomaly)
+                    self.flag(anomaly)
+                db.session.commit()
 
         # inform user
-        stdout_write('Trades: {} - ({} anomalies) (Ctrl-C to stop)'.format(self.tradecount, self.anomalies))
+        stdout_write('Trades: {} (Ctrl-C to stop)'.format(self.tradecount))
         reset_line()
 
         # flush database at accumulator limit
@@ -90,7 +92,6 @@ class TradesAnalyser:
                 db.session.commit()
             else:
                 db.session.flush()
-
 
     def force_commit(self):
         self.save_load()
@@ -111,17 +112,12 @@ class TradesAnalyser:
             symbol = db.SymbolModel.get_or_create(s)
             self.symbols.add(s)
         return s
-    """
-    def flag(self, trade):
-        trade['flagged'] = True
-        self.force_commit()
-        # insert alert in rethinkdb
-        with db.get_reql_connection(db=True) as conn:
-            r.table('alerts').insert([{
-                    'time': tz.localize(datetime.now()),
-                    'trade_pk': trade['id'],
-            }]).run(conn, durability='soft')
-    """
+
+    def flag(self, anomaly):
+        #Sometimes our id is a date of the anomaly, rather than a trade id
+        if isinstance(anomaly["id"], ( int, long )):
+            db.session.query(db.TradeModel).filter_by(id=anomaly["id"]).update({"flagged": True})
+
     def alert(self, anomaly):
         with db.get_reql_connection(db=True) as conn:
             r.table('alerts').insert([{
@@ -130,13 +126,16 @@ class TradesAnalyser:
                 'description': anomaly["description"]
             }]).run(conn, durability='soft')
 
-    def alert_stats(self, firstday):
-        if firstday:
-            anomalies = self.anomaly_identifier.calculate_anomalies_first_day()
+    def alert_stats(self, firstday, csv):
+        if firstday or csv:
+            anomalies = self.anomaly_identifier.calculate_anomalies_first_day(csv)
         else:
             anomalies = self.anomaly_identifier.calculate_anomalies_end_of_day(datetime.now().strftime('%Y-%m-%d'))
 
         for anomaly in anomalies:
             self.alert(anomaly)
+            self.flag(anomaly)
+
+        db.session.commit()
 
         print 'Found ' + str(len(anomalies)) + ' anomalies'

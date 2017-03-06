@@ -8,6 +8,9 @@ from numpy import std, mean
 from datetime import datetime, timedelta
 from purple import db
 import math
+import pytz
+
+tz = pytz.timezone('Europe/London')
 
 class AnomalousTradeFinder:
     def __init__(self):
@@ -17,6 +20,7 @@ class AnomalousTradeFinder:
         self.stats = {}
         #store the previous trade for each symbol so we can get price deltas
         self.prev_trades = {}
+        self.update_characteristics_count = 0
 
     # Stores relevant information about trades in a dictionary of a list of dictionaries
     def add(self, trade, identifier):
@@ -39,7 +43,7 @@ class AnomalousTradeFinder:
             })
 
     #This calculates the values after a CSV or the first day of stream data
-    def calculate_anomalies_first_day(self):
+    def calculate_anomalies_first_day(self, csv):
         self.anomalous_trades = []
         for key in self.trade_history:
             volumes = [x["volume"] for x in self.trade_history[key]]
@@ -68,6 +72,14 @@ class AnomalousTradeFinder:
 
             #Get the price of the last added trade for that symbol
             self.prev_trades[key] = self.trade_history[key][-1]["price"]
+
+            #We only want to update the characteristics if we're looking at feed data
+            if not csv:
+                self.update_characteristics(key)
+
+        if not csv:
+            db.session.commit()
+
         self.trade_history = {}
 
         return self.anomalous_trades
@@ -113,6 +125,13 @@ class AnomalousTradeFinder:
         self.stats[trade.symbol]['vol_mean'] = vol_values['mean']
         self.stats[trade.symbol]['vol_stdev'] = vol_values['stdev']
         self.stats[trade.symbol]['trade_count'] = trade_count + 1
+
+        self.update_characteristics(trade.symbol)
+        self.update_characteristics_count += 1
+
+        if self.update_characteristics_count == 50:
+            db.session.commit()
+            self.update_characteristics_count = 0
 
         return self.anomalous_trades
         
@@ -194,6 +213,9 @@ class AnomalousTradeFinder:
             self.stats[key]['day_price_change_stdev'] = new_day_change_mean_stdev['stdev']
             self.stats[key]['day_count'] = self.stats[key]['day_count'] + 1
 
+            self.update_characteristics(key)
+
+        db.session.commit()
         return self.anomalous_trades
 
     #Calculate fat finger errors on volume and price, add every one to anomalous_trades
@@ -217,7 +239,16 @@ class AnomalousTradeFinder:
                 })
             counter += 1
 
-            
+    def update_characteristics(self, symbol):
+        to_insert = {
+            'average_volume': self.stats[symbol]["vol_mean"],
+            'average_daily_volume': self.stats[symbol]["total_vol_mean"],
+            'average_price_change_daily': self.stats[symbol]["day_price_change_mean"],
+            'average_price_change': self.stats[symbol]["delta_mean"],
+            'timestamp': tz.localize(datetime.now())
+        }
+
+        db.session.query(db.SymbolModel).filter_by(name=symbol).update(to_insert)
         
 
 
