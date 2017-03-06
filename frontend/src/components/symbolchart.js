@@ -5,6 +5,8 @@ import { utcParse, timeFormat, scaleTime } from 'd3-time-format'
 import { format, formatDefaultLocale } from 'd3-format'
 import { ChartCanvas, Chart, series, scale, coordinates, tooltip, axes, helper } from 'react-stockcharts'
 
+import ChartTooltip from './charttooltip'
+
 const { BarSeries, LineSeries, AreaSeries } = series
 const { discontinuousTimeScaleProvider } = scale
 
@@ -158,6 +160,7 @@ class SymbolChart extends React.Component {
                             displayFormat={format('$.2s')}
                             fill="#4e91fc"
                         />
+                        <ChartTooltip />
                     </Chart>
                     <Chart
                         id={2}
