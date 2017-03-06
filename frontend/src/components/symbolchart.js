@@ -2,26 +2,34 @@
 
 import React, { PropTypes } from 'react'
 import { utcParse, timeFormat, scaleTime } from 'd3-time-format'
-import { format } from 'd3-format'
+import { format, formatDefaultLocale } from 'd3-format'
 import { ChartCanvas, Chart, series, scale, coordinates, tooltip, axes, helper } from 'react-stockcharts'
 
-const { BarSeries, LineSeries, AreaSeries, ScatterSeries, CircleMarker, SquareMarker, TriangleMarker } = series
+const { BarSeries, LineSeries, ScatterSeries, CircleMarker, SquareMarker, TriangleMarker } = series
 const { discontinuousTimeScaleProvider } = scale
 
-const { CrossHairCursor, MouseCoordinateX, MouseCoordinateY } = coordinates
+const { CrossHairCursor, MouseCoordinateX, MouseCoordinateY, CurrentCoordinate } = coordinates
 
-const { HoverTooltip } = tooltip
+const { MovingAverageTooltip } = tooltip
 const { XAxis, YAxis } = axes
 const { fitWidth } = helper
 
 const parseDatetime = utcParse('%Y-%m-%dT%H:%M:%S.%LZ')
 
+formatDefaultLocale({
+    decimal: '.',
+    thousands: ',',
+    grouping: [3],
+    currency: ['£', '']
+})
+
 class SymbolChart extends React.Component {
     constructor(props) {
         super(props)
-        const { trades, minDatetime, maxDatetime } = this.parseData(this.props.trades)
+        const { trades, minDatetime, maxDatetime, maxVolume } = this.parseData(this.props.trades)
         this.state = {
             trades,
+            maxVolume,
             initialMinDatetime: minDatetime,
             initialMaxDatetime: maxDatetime
         }
@@ -37,29 +45,51 @@ class SymbolChart extends React.Component {
     }
 
     parseData(trades) {
+        let maxVolume = 0
         trades.forEach((d) => {
             d.datetime = new Date(parseDatetime(d.datetime)) // eslint-disable-line
+            if (d.size > maxVolume) {
+                maxVolume = d.size
+            }
         })
         const maxDatetime = trades[trades.length - 1].datetime
         let minDatetime = trades[0].datetime
         if (trades.length >= 40) {
             minDatetime = trades[trades.length - 40].datetime
         }
-        return { trades, minDatetime, maxDatetime }
+        return { trades, minDatetime, maxDatetime, maxVolume }
     }
 
     componentWillReceiveProps(newProps) {
-        const { trades, minDatetime, maxDatetime } = this.parseData(newProps.trades)
+        const { trades, minDatetime, maxDatetime, maxVolume } = this.parseData(newProps.trades)
         this.setState({
             trades,
+            maxVolume,
             initialMinDatetime: minDatetime,
-            initialMaxDatetime: maxDatetime
+            initialMaxDatetime: maxDatetime,
         })
     }
 
     render() {
         const { symbol, width, ratio } = this.props
         const { trades, initialMinDatetime, initialMaxDatetime } = this.state
+
+        const margin = { left: 70, right: 80, top: 20, bottom: 50 }
+        const height = 600
+        const gridHeight = height - margin.top - margin.bottom
+        const gridWidth = width - margin.left - margin.right
+        const yGrid = {
+            innerTickSize: -1 * gridWidth,
+            tickStrokeDasharray: 'Solid',
+            tickStrokeOpacity: 0.2,
+            tickStrokeWidth: 0.2
+        }
+        const xGrid = {
+            innerTickSize: -1 * gridHeight,
+            tickStrokeDasharray: 'Solid',
+            tickStrokeOpacity: 0.2,
+            tickStrokeWidth: 0.2
+        }
         // <ScatterSeries
         //     yAccessor={d => d.price}
         //     marker={CircleMarker}
@@ -70,9 +100,9 @@ class SymbolChart extends React.Component {
                 <ChartCanvas
                     ratio={ratio}
                     width={width}
-                    height={600}
-                    margin={{ left: 70, right: 70, top: 20, bottom: 50 }}
-                    type='hybrid'
+                    height={height}
+                    margin={margin}
+                    type='svg'
                     pointsPerPxThreshold={1}
                     seriesName={symbol}
                     data={trades}
@@ -105,18 +135,19 @@ class SymbolChart extends React.Component {
                         <MouseCoordinateY
                             at="right"
                             orient="right"
-                            displayFormat={format('.2f')}
+                            displayFormat={format('$.2f')}
                         />
                         <LineSeries
                             yAccessor={d => d.price}
                             stroke='#F4F42E'
                             strokeDasharray='Solid'
                         />
+                        <CurrentCoordinate yAccessor={d => d.price} stroke='#F4F42E' />
                     </Chart>
                     <Chart
                         id={2}
                         height={100}
-                        yExtents={d => d.size}
+                        yExtents={d => [0, this.state.maxVolume * 10]}
                         origin={(w, h) => [0, h - 100]}
                     >
                         <XAxis
@@ -147,8 +178,10 @@ class SymbolChart extends React.Component {
                         <BarSeries
                             yAccessor={d => d.size}
                             fill='#6BA583'
+                            clip={false}
                         />
                     </Chart>
+                    <CrossHairCursor stroke='#BBBBBB' />
                 </ChartCanvas>
             </div>
         )
