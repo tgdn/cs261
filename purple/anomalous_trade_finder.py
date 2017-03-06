@@ -42,6 +42,16 @@ class AnomalousTradeFinder:
                 'volume': trade.size
             })
 
+        if trade.symbol not in self.stats:
+            self.stats[trade.symbol] = {
+                'trade_count_per_min': 1,
+                'minutes': 1,
+                'prev_minutes_total_trades': 0,
+                'current_minute': trade.time.strftime("%M")
+            }
+        else:
+            self.stats[trade.symbol]["trade_count_per_min"] += 1
+
     #This calculates the values after a CSV or the first day of stream data
     def calculate_anomalies_first_day(self, csv):
         self.anomalous_trades = []
@@ -51,9 +61,16 @@ class AnomalousTradeFinder:
             ids = [x["id"] for x in self.trade_history[key]]
             times = [x["time"] for x in self.trade_history[key]]
 
+            #Get the price of the last added trade for that symbol
+            self.prev_trades[key] = self.trade_history[key][-1]["price"]
+
             #So here we want to add something that stores the total delta for the day, the total volume for day
             #and their mean and stdevs. work out how to handle vol spikes and pump and dump
             self.stats[key] = {
+                'trade_count_per_min': self.stats[key]["trade_count_per_min"],
+                'minutes': self.stats[key]["minutes"],
+                'prev_minutes_total_trades': self.stats[key]["prev_minutes_total_trades"],
+                'current_minute': self.stats[key]["current_minute"],
                 'delta_mean': mean(deltas),
                 'delta_stdev': std(deltas),
                 'vol_mean': mean(volumes),
@@ -63,18 +80,21 @@ class AnomalousTradeFinder:
                 'total_vol_mean': sum(volumes),
                 'day_price_change_mean': self.trade_history[key][-1]["price"] - self.trade_history[key][0]["price"],
                 'day_price_change_stdev': 0,
-                'day_count': 1
+                'day_count': 1,
+                'price_change_percentage': (self.trade_history[key][-1]["price"] / float(self.trade_history[key][-2]["price"])) - 100
             }
 
             self.calculate_fat_finger(volumes, deltas, ids, times, key)
 
             #Decide how to handle vol spikes and pump and dump for one day/csv
 
-            #Get the price of the last added trade for that symbol
-            self.prev_trades[key] = self.trade_history[key][-1]["price"]
-
             #We only want to update the characteristics if we're looking at feed data
             if not csv:
+                current_minute = times[0].strftime("%M")
+                trade_count = 1
+                for time in times:
+                    self._calculate_trades_per_min(time, trade_count, key)
+                    trade_count += 1
                 self.update_characteristics(key)
 
         if not csv:
@@ -83,6 +103,13 @@ class AnomalousTradeFinder:
         self.trade_history = {}
 
         return self.anomalous_trades
+    def _calculate_trades_per_min(self, time, trade_count, key):
+        if time.strftime("%M") != self.stats[key]["current_minute"]:
+            self.stats[key]["trade_count_per_min"] = (self.stats[key]["prev_minutes_total_trades"] + trade_count) / float(self.stats[key]["minutes"])
+            self.stats[key]["minutes"] += 1
+            self.stats[key]["prev_minutes_total_trades"] += trade_count
+            trade_count = 0
+            self.stats[key]["current_minute"] = time.strftime("%M")
 
     #We call this when analysing a trade from the stream that isn't from the first day
     def calculate_anomalies_single_trade(self, trade, identifier):
@@ -120,18 +147,23 @@ class AnomalousTradeFinder:
             })
 
         #Update stats with new statistical values
+        self.stats[trade.symbol]["trade_count_per_min"] += 1
         self.stats[trade.symbol]['delta_mean'] = delta_values['mean']
         self.stats[trade.symbol]['delta_stdev'] = delta_values['stdev']
         self.stats[trade.symbol]['vol_mean'] = vol_values['mean']
         self.stats[trade.symbol]['vol_stdev'] = vol_values['stdev']
         self.stats[trade.symbol]['trade_count'] = trade_count + 1
+        self.stats[trade.symbol]['price_change_percentage'] = (trade.price / float(self.prev_trades[trade.symbol]))
 
+        self._calculate_trades_per_min(trade.time, self.stats[trade.symbol]["trade_count_per_min"], trade.symbol)
         self.update_characteristics(trade.symbol)
         self.update_characteristics_count += 1
 
         if self.update_characteristics_count == 50:
             db.session.commit()
             self.update_characteristics_count = 0
+
+        self.prev_trades[trade.symbol] = trade.price
 
         return self.anomalous_trades
         
@@ -245,6 +277,8 @@ class AnomalousTradeFinder:
             'average_daily_volume': self.stats[symbol]["total_vol_mean"],
             'average_price_change_daily': self.stats[symbol]["day_price_change_mean"],
             'average_price_change': self.stats[symbol]["delta_mean"],
+            'average_trades_per_minute': self.stats[symbol]["trade_count_per_min"],
+            'last_price_change_percentage': self.stats[symbol]["price_change_percentage"],
             'timestamp': tz.localize(datetime.now())
         }
 

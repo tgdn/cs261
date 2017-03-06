@@ -141,6 +141,8 @@ class SymbolModel(Base):
     average_daily_volume = Column(BigInteger)
     average_price_change_daily = Column(Float(precision=7))
     average_price_change = Column(Float(precision=7))
+    average_trades_per_minute = Column(Integer)
+    last_price_change_percentage = Column(Float(precision=7))
     timestamp = Column(DateTime)
 
     trades = relationship('TradeModel', back_populates='symbol')
