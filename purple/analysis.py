@@ -123,7 +123,8 @@ class TradesAnalyser:
             r.table('alerts').insert([{
                 'time': anomaly["time"],
                 'trade_pk': anomaly["id"],
-                'description': anomaly["description"]
+                'description': anomaly["description"],
+                'reviewed': False,
             }]).run(conn, durability='soft')
 
     def alert_stats(self, firstday, csv):
