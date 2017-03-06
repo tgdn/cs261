@@ -53,9 +53,14 @@ class SymbolChart extends React.Component {
                 maxVolume = d.size
             }
         })
+        /* try and get best minimum datetime */
         const maxDatetime = trades[trades.length - 1].datetime
         let minDatetime = trades[0].datetime
-        if (trades.length >= 40) {
+        if (trades.length >= 100) {
+            minDatetime = trades[trades.length - 100].datetime
+        } else if (trades.length >= 70) {
+            minDatetime = trades[trades.length - 70].datetime
+        } else if (trades.length >= 40) {
             minDatetime = trades[trades.length - 40].datetime
         }
         return { trades, minDatetime, maxDatetime, maxVolume }
