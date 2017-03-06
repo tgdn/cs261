@@ -15,7 +15,7 @@ class Trade:
         try:
             # try splitting
             split_row = row.split(',')
-            
+
             # localize timezone
             self.time = tz.localize(datetime.strptime(split_row[0], '%Y-%m-%d %H:%M:%S.%f'))
             self.buyer = split_row[1]
@@ -29,24 +29,3 @@ class Trade:
             self.ask = float(split_row[9])
         except:
             self.parse_err = True
-
-    def save(self, conn):
-        if self.parse_err:
-            return self
-
-        r.table('trades').insert([
-            {
-                'time': self.time,
-                'price': self.price,
-                'size': self.size,
-                'symbol': self.symbol,
-                'sector': self.sector,
-                'bid': self.bid,
-                'ask': self.ask,
-                'buyer': self.buyer,
-                'seller': self.seller
-            }
-        #]).run(conn, durability='soft', noreply=True)
-        ]).run(conn, durability='soft')
-
-        return self

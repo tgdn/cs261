@@ -62,7 +62,7 @@ class TradesAnalyser:
             #Using default postgres date formatting of m/d/y
             'analysis_date': datetime.now().strftime('%m/%d/%Y'),
             'csv_hash': sha1_hash,
-            'datetime': tz.localize(datetime.now())
+            'datetime': t.time
         }
 
         self.trades_objs.append(trade)
