@@ -9,8 +9,33 @@ const { functor } = utils
 
 class ChartTooltipElement extends React.Component {
     render() {
-        
+        const { fontFamily, fontSize, displayName, value } = this.props
+        const [x, y] = this.props.origin
+        const translate = `translate(${x}, ${y})`
+        return (
+            <g translate={translate}>
+                <ToolTipText
+                    x={5} y={11}
+                    fontFamily={fontFamily}
+                    fontSize={fontSize}
+                >
+                    <ToolTipTSpanLabel>{displayName}</ToolTipTSpanLabel>
+                    <tspan x='5' dy='15'>{value}</tspan>
+                </ToolTipText>
+            </g>
+        )
     }
+}
+
+ChartTooltipElement.propTypes = {
+    origin: PropTypes.array.isRequired,
+    color: PropTypes.string.isRequired,
+    displayName: PropTypes.string.isRequired,
+    value: PropTypes.string.isRequired,
+    fontFamily: PropTypes.string,
+    fontSize: PropTypes.number,
+    forChart: PropTypes.number.isRequired,
+    options: PropTypes.object.isRequired,
 }
 
 class ChartTooltip extends React.Component {
