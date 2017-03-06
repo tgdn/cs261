@@ -118,7 +118,7 @@ class SymbolChart extends React.Component {
                         <XAxis
                             axisAt='bottom'
                             orient='bottom'
-                            opacity={0.5}
+                            opacity={0.4}
                             showTicks={false}
                             outerTickSize={0}
                             tickStroke='#FFFFFF'
