@@ -9,7 +9,7 @@ const { functor } = utils
 
 /* tooltip text components */
 const TooltipTSpanLabel = props => (
-    <tspan className='purplechart-tooltip-label' text-anchor='right' fill='#999999' {...props}>{props.children}</tspan>
+    <tspan className='purplechart-tooltip-label' textAnchor='end' fill='#999999' {...props}>{props.children}</tspan>
 )
 
 TooltipTSpanLabel.propTypes = {
@@ -27,9 +27,8 @@ TooltipTSpanValue.propTypes = {
 
 class ChartTooltipElement extends React.Component {
     render() {
-        const { fontFamily, fontSize, displayName, value } = this.props
-        const [x, y] = this.props.origin
-        const translate = `translate(${x}, ${y})`
+        const { fontFamily, fontSize, displayName, value, id, height, x } = this.props
+        const translate = `translate(${x}, ${id * height})`
         return (
             <g transform={translate}>
                 <ToolTipText
@@ -38,7 +37,7 @@ class ChartTooltipElement extends React.Component {
                     fontSize={fontSize}
                 >
                     <TooltipTSpanLabel>{displayName}</TooltipTSpanLabel>
-                    <TooltipTSpanValue x='40' dy='0'>{value}</TooltipTSpanValue>
+                    <TooltipTSpanValue x='28' dy='0'>{value}</TooltipTSpanValue>
                 </ToolTipText>
             </g>
         )
@@ -46,7 +45,9 @@ class ChartTooltipElement extends React.Component {
 }
 
 ChartTooltipElement.propTypes = {
-    origin: PropTypes.array.isRequired,
+    id: PropTypes.number.isRequired,
+    height: PropTypes.number,
+    x: PropTypes.number,
     displayName: PropTypes.string.isRequired,
     value: PropTypes.string.isRequired,
     fontFamily: PropTypes.string,
@@ -56,7 +57,9 @@ ChartTooltipElement.propTypes = {
 }
 
 ChartTooltipElement.defaultProps = {
-    options: {}
+    height: 17,
+    options: {},
+    x: 15
 }
 
 class ChartTooltip extends React.Component {
@@ -77,17 +80,38 @@ class ChartTooltip extends React.Component {
         const [x, y] = origin(width, height)
         const [ox, oy] = config.origin
 
-        const price = currentItem ? currentItem.price.toString() : 'n/a'
-        const volume = currentItem ? currentItem.size.toString() : 'n/a'
+        /* small hack to get background height */
+        const elCount = 4
+        const elHeight = 15
+        const elMargin = 2
+        const bgMinHeight = 18
+
+        const rectHeight = (elCount * elHeight) + (elCount - 1) * elMargin + bgMinHeight // eslint-disable-line
+
+        const price = currentItem ? format('.2f')(currentItem.price).toString() : 'n/a'
+        const volume = currentItem ? format('.4s')(currentItem.size).toString() : 'n/a'
+        const change = 'n/a' // TODO : implement
+        const flagged = currentItem ? currentItem.flagged.toString() : 'n/a'
 
         return (
             <g
-                transform={`translate(${ ox + x }, ${ oy + y })`}
+                transform={`translate(${ox + x}, ${oy + y})`}
                 className={className}
-                fill='#FFFFFF'
+                ref={(el) => { this.tooltipGroup = el }}
             >
+                <rect
+                    x={-33}
+                    y={-20}
+                    rx='4'
+                    ry='4'
+                    width={140}
+                    height={rectHeight}
+                    fill='#FFFFFF'
+                    stroke='#555'
+                    opacity='0.9'
+                />
                 <ChartTooltipElement
-                    origin={[0, 0]}
+                    id={0}
                     displayName='Price'
                     value={price}
                     forChart={chartId}
@@ -95,10 +119,25 @@ class ChartTooltip extends React.Component {
                     fontSize={fontSize}
                 />
                 <ChartTooltipElement
-                    origin={[0, 15]}
+                    id={1}
                     displayName='Vol'
                     value={volume}
                     forChart={chartId}
+                    fontFamily={fontFamily}
+                    fontSize={fontSize}
+                />
+                <ChartTooltipElement
+                    id={2}
+                    displayName='% Chg'
+                    value={change}
+                    forChart={chartId}
+                    fontFamily={fontFamily}
+                    fontSize={fontSize}
+                />
+                <ChartTooltipElement
+                    id={3}
+                    displayName='Flag'
+                    value={flagged}
                     fontFamily={fontFamily}
                     fontSize={fontSize}
                 />
@@ -129,6 +168,7 @@ ChartTooltip.defaultProps = {
     displayFormat: format('.2f'),
     origin: [0, 10],
     width: 65,
+    fontSize: 13,
 }
 
 export default ChartTooltip
