@@ -80,7 +80,7 @@ class TradesAnalyser:
                     self.alert(anomaly)
 
         # inform user
-        stdout_write('Trades: {} - ({} anomalies) (Ctrl-C to stop)'.format(self.tradecount, self.anomalies))
+        stdout_write('Trades: {} (Ctrl-C to stop)'.format(self.tradecount))
         reset_line()
 
         # flush database at accumulator limit
@@ -130,9 +130,9 @@ class TradesAnalyser:
                 'description': anomaly["description"]
             }]).run(conn, durability='soft')
 
-    def alert_stats(self, firstday):
-        if firstday:
-            anomalies = self.anomaly_identifier.calculate_anomalies_first_day()
+    def alert_stats(self, firstday, csv):
+        if firstday or csv:
+            anomalies = self.anomaly_identifier.calculate_anomalies_first_day(csv)
         else:
             anomalies = self.anomaly_identifier.calculate_anomalies_end_of_day(datetime.now().strftime('%Y-%m-%d'))
 

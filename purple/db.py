@@ -137,6 +137,12 @@ class BaseModel(Base):
 class SymbolModel(Base):
     __tablename__ = 'symbols'
     name = Column(String, primary_key=True)
+    average_volume = Column(BigInteger)
+    average_daily_volume = Column(BigInteger)
+    average_price_change_daily = Column(Float(precision=7))
+    average_price_change = Column(Float(precision=7))
+    timestamp = Column(DateTime)
+
     trades = relationship('TradeModel', back_populates='symbol')
 
     @classmethod
