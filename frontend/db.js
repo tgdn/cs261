@@ -55,7 +55,7 @@ const getFlaggedTrades = (req, res) => {
     const tradeid = req.params.tradeid
     if (tradeid != null) {
         // try and get initial trade
-        db.oneOrNone('SELECT symbol_name FROM trades WHERE id = $1', tradeid)
+        db.oneOrNone('SELECT id, symbol_name FROM trades WHERE id = $1', tradeid)
         .then((trade) => {
             if (trade != null) {
                 // get 100 trades on each side of flagged trade
@@ -64,18 +64,20 @@ const getFlaggedTrades = (req, res) => {
                         (
                             SELECT id, price, size, flagged, datetime
                             FROM trades
-                            WHERE id <= $1 AND symbol_name = $2
+                            WHERE id <= $(tradeid) AND symbol_name = $(symbol_name)
                             ORDER BY datetime DESC LIMIT 101
-
                         )
                         UNION ALL
                         (
                             SELECT id, price, size, flagged, datetime
-                            FROM trades WHERE id > $1 AND symbol_name = $2
-                            ORDER BY datetime ASC LIMIT 100
+                            FROM trades WHERE id > $(tradeid) AND symbol_name = $(symbol_name)
+                            ORDER BY datetime ASC LIMIT 30
                         )
                     ) AS sbq ORDER BY datetime ASC`,
-                    trade.id, trade.symbol_name
+                    {
+                        tradeid: trade.id,
+                        symbol_name: trade.symbol_name
+                    }
                 )
                 .then((trades) => {
                     res.status(200)
@@ -88,7 +90,7 @@ const getFlaggedTrades = (req, res) => {
                 res.status(404)
                     .json({
                         success: true,
-                        trade: null
+                        trades: []
                     })
             }
         })
