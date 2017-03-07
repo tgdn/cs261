@@ -6,6 +6,7 @@ import { connect } from 'react-redux'
 import { Loader, Dimmer } from 'semantic-ui-react'
 import Notification from './notification'
 import HeaderNav from './header'
+import NoDataComponent from './pages/nodata'
 
 class App extends React.Component {
     state = {
@@ -160,6 +161,7 @@ class App extends React.Component {
     }
 
     render() {
+        const nodata = this.props.symbols.length === 0
         return (
             <div>
                 <Dimmer
@@ -170,7 +172,10 @@ class App extends React.Component {
                 </Dimmer>
                 <Notification />
                 <HeaderNav />
-                {this.state.loaded && (
+                {(this.state.loaded && nodata) && (
+                    <NoDataComponent />
+                )}
+                {(this.state.loaded && !nodata) && (
                     this.props.children
                 )}
             </div>

@@ -33,6 +33,7 @@ class SettingsModal extends React.Component {
                         icon='setting'
                         onClick={this.handleOpen}
                         circular
+                        id='settings-btn'
                     />
                 }
                 open={this.state.opened}
