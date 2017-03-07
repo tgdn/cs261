@@ -12,24 +12,7 @@ import {
 
 import SymbolSidebar from '../symbolsidebar'
 
-// import io from 'socket.io-client'
-
 class HomePage extends React.Component {
-    // subscribeIo() {
-    //     this.s = io(`ws://${window.location.host}`) // eslint-disable-line no-undef
-    //     this.s.on('connect', () => { console.log('connection open') })
-    //
-    //     // s.on('disconnect', () => { console.log('disconnect') })
-    //     // s.on('tradechange', (data) => { console.log(data) })
-    // }
-
-    // componentDidMount() {
-    //     const sidebarWidth = this.sidebar.offsetWidth
-    //     if (this.state.sidebarWidth !== sidebarWidth) {
-    //         this.setState({ sidebarWidth })
-    //     }
-    // }
-
     render() {
         const style = {
             height: `calc(100vh - ${this.props.headerHeight}px)`
