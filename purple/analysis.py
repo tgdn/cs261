@@ -125,6 +125,7 @@ class TradesAnalyser:
                 'trade_pk': anomaly["id"],
                 'description': anomaly["description"],
                 'reviewed': False,
+                'error_code': anomaly["error_code"]
             }]).run(conn, durability='soft')
 
     def alert_stats(self, firstday, csv):
