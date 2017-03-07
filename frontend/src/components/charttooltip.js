@@ -81,7 +81,7 @@ class ChartTooltip extends React.Component {
         const [ox, oy] = config.origin
 
         /* small hack to get background height */
-        const elCount = 4
+        const elCount = 3
         const elHeight = 15
         const elMargin = 2
         const bgMinHeight = 18
@@ -90,7 +90,6 @@ class ChartTooltip extends React.Component {
 
         const price = currentItem ? format('.2f')(currentItem.price).toString() : 'n/a'
         const volume = currentItem ? format('.4s')(currentItem.size).toString() : 'n/a'
-        const change = 'n/a' // TODO : implement
         const flagged = currentItem ? currentItem.flagged.toString() : 'n/a'
 
         return (
@@ -128,14 +127,6 @@ class ChartTooltip extends React.Component {
                 />
                 <ChartTooltipElement
                     id={2}
-                    displayName='% Chg'
-                    value={change}
-                    forChart={chartId}
-                    fontFamily={fontFamily}
-                    fontSize={fontSize}
-                />
-                <ChartTooltipElement
-                    id={3}
                     displayName='Flag'
                     value={flagged}
                     forChart={chartId}
