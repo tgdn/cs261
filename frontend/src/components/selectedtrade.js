@@ -4,7 +4,9 @@ import { format } from 'd3-format'
 import { Link } from 'react-router'
 
 const attrOrNa = (obj, attr, frmt) => {
-    if (obj == null || obj[attr] == undefined) {
+    /* return 'n/a' if obj is undefined of if attr is unefined.
+    -> format if required */
+    if (obj == null || obj[attr] == undefined) { // eslint-disable-line
         return 'n/a'
     }
     return frmt ? format(frmt)(obj[attr]) : obj[attr]
