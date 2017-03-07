@@ -98,6 +98,54 @@ const getFlaggedTrades = (req, res) => {
     }
 }
 
+const tradesBefore = (req, res) => {
+    const before = req.params.before
+    const symbol = req.params.symbol
+    const count = req.params.count || 50
+    if (before != null && symbol != null) { // eslint-disable-line
+        db.any(
+            `SELECT * FROM (
+                SELECT id, price, size, flagged, datetime
+                FROM trades
+                WHERE id < $(before) AND symbol_name = $(symbol)
+                ORDER BY datetime DESC LIMIT $(count)
+            ) AS sbq ORDER BY datetime ASC`,
+            { before, symbol, count }
+        )
+        .then((trades) => {
+            res.status(200)
+                .json({
+                    success: true,
+                    trades
+                })
+        })
+        .catch(err => handleException(err, res))
+    }
+}
+
+const tradesAfter = (req, res) => {
+    const after = req.params.after
+    const symbol = req.params.symbol
+    const count = req.param.count || 50
+    if (after != null && symbol != null) { // eslint-disable-line
+        db.any(
+            `SELECT id, price, size, flagged, datetime
+            FROM trades
+            WHERE id > $(after) AND symbol_name = $(symbol)
+            ORDER BY datetime ASC LIMIT $(count)`,
+            { after, symbol, count }
+        )
+        .then((trades) => {
+            res.status(200)
+                .json({
+                    success: true,
+                    trades
+                })
+        })
+        .catch(err => handleException(err, res))
+    }
+}
+
 const getTrade = (req, res) => {
     const tradeid = parseInt(req.body.tradeid, 10)
     db.one('SELECT * FROM trades WHERE id = $1', tradeid)
@@ -112,5 +160,7 @@ module.exports = {
     getSymbols,
     getSymbol,
     getFlaggedTrades,
-    getTrade
+    getTrade,
+    tradesBefore,
+    tradesAfter,
 }
