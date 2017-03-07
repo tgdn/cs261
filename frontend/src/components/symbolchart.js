@@ -93,7 +93,7 @@ class SymbolChart extends React.Component {
     }
 
     render() {
-        const { symbol, width, ratio } = this.props
+        const { symbol, width, ratio, flagAnomalies, flagOne } = this.props
         const { trades, initialMinDatetime, initialMaxDatetime } = this.state
 
         /* chart settings */
@@ -161,7 +161,7 @@ class SymbolChart extends React.Component {
                         <MouseCoordinateY
                             at="right"
                             orient="right"
-                            displayFormat={format('$.2s')}
+                            displayFormat={format('.2f')}
                         />
                         <AreaSeries
                             yAccessor={d => d.price}
@@ -220,7 +220,14 @@ class SymbolChart extends React.Component {
                         />
                         <BarSeries
                             yAccessor={d => d.size}
-                            fill={d => (d.flagged ? '#e54444' : '#f9fc4e')}
+                            fill={d => {
+                                if (flagAnomalies) {
+                                    return d.flagged ? '#e54444' : '#f9fc4e'
+                                } else if (flagOne !== null) {
+                                    return (d.id === flagOne) ? '#d942f4' : '#f9fc4e'
+                                }
+                                return '#f9fc4e'
+                            }}
                         />
                     </Chart>
                     <CrossHairCursor stroke='#BBBBBB' />
@@ -236,11 +243,14 @@ SymbolChart.propTypes = {
     ratio: PropTypes.number,
     handleClick: PropTypes.func.isRequired,
     trades: PropTypes.array,
+    flagAnomalies: PropTypes.bool,
+    flagOne: PropTypes.number,
 }
 
 SymbolChart.defaultProps = {
     handleClick: () => {},
     trades: [],
+    flagAnomalies: true,
 }
 
 
