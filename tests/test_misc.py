@@ -17,3 +17,4 @@ def test_trade_parse_attr():
     # check number is correctly parsed (float)
     t = Trade(TRADE_ROW)
     assert t.price == 469.74
+    
