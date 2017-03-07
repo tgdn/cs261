@@ -43,10 +43,14 @@ class SymbolPage extends React.Component {
         }
     }
 
-    componentDidMount = () => this.subscribeTrades()
+    componentDidMount() {
+        this.mounted = true
+        this.subscribeTrades()
+    }
 
     componentWillUnmount() {
         // stop polling once unmounted
+        this.mounted = false
         if (this.state.pollIntervalID !== null) {
             clearInterval(this.state.pollIntervalID)
         }
@@ -96,18 +100,22 @@ class SymbolPage extends React.Component {
         })
         .then((res) => {
             if (res.success) {
-                this.setState({
-                    loadingError: false,
-                    loading: false,
-                    trades: res.trades
-                })
+                if (this.mounted) {
+                    this.setState({
+                        loadingError: false,
+                        loading: false,
+                        trades: res.trades
+                    })
+                }
             }
         })
         .catch((err) => {
-            this.setState({
-                loadingError: true,
-                loading: false,
-            })
+            if (this.mounted) {
+                this.setState({
+                    loadingError: true,
+                    loading: false,
+                })
+            }
             console.error(err);
         })
     }
