@@ -41,7 +41,6 @@ def before_exit(signum=None, frame=None):
 
     if TASK_PK and not TASK_ENDED:
         task_manager.end(TASK_PK)
-        # print '\nNow notifying'
         notification_manager.add(
             level = 'info',
             message = 'Background task ended',

@@ -38,7 +38,8 @@ class AnomalousTradeFinder:
                 'time': trade.time,
                 'id': identifier,
                 'price': trade.price,
-                'price_delta': price_delta,
+                # Round to stop float errors
+                'price_delta': round(price_delta,3),
                 'volume': trade.size
             })
 
