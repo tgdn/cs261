@@ -6,6 +6,16 @@ body {
     padding-top: 51.42px;
 }
 
+#header-logo-link {
+    width: calc(2*1.14285714em + 60px);
+}
+
+#header-logo-link > img {
+    position: absolute;
+    width: 60px;
+    top: 15px;
+}
+
 /* settings */
 .inverse-setting {
     -webkit-filter: invert(100%);

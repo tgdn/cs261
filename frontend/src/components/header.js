@@ -8,7 +8,9 @@ import SettingsModal from './settingsmodal'
 const MainHeader = ({ tasks }) => {
     return (
         <Menu inverted stackable borderless fixed='top' size='huge' className='mainmenu' id='mainmenu'>
-            <Menu.Item header as={Link} to='/'>Purple</Menu.Item>
+            <Menu.Item header as={Link} to='/' id='header-logo-link'>
+                <img src='/logo.png' />
+            </Menu.Item>
             <Menu.Menu position='right'>
                 <Menu.Item>
                     {tasks.length !== 0 && (
