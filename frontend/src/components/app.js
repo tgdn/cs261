@@ -70,7 +70,7 @@ class App extends React.Component {
     }
 
     subscribeAlerts() {
-        /* limit to 100 otherwise client will stall */
+        /* limit to 20 otherwise client will stall */
         this.props.horizon('alerts')
             .order('time')
             .findAll({ reviewed: false, })

@@ -32,7 +32,7 @@ class FlaggedPage extends React.Component {
         return (
             <div>
                 <Sidebar.Pushable as='div' style={style}>
-                    <AlertsSidebar alerts={this.props.alerts} />
+                    <AlertsSidebar alerts={this.props.alerts} params={this.props.params} />
                     <Sidebar.Pusher>
                         {this.props.children === null ? (
                             this.renderNoChildren()
@@ -48,20 +48,17 @@ FlaggedPage.propTypes = {
     children: React.PropTypes.node,
     headerHeight: React.PropTypes.number,
     alerts: React.PropTypes.array, // eslint-disable-line
-    symbols: React.PropTypes.array, // eslint-disable-line
 }
 
 FlaggedPage.defaultProps = {
     children: null,
     headerHeight: 0,
     alerts: [],
-    symbols: [],
 }
 
 export default connect(
     state => ({
         alerts: state.db.alerts,
-        symbols: state.db.symbols,
         headerHeight: state.ui.headerHeight,
     }),
 )(FlaggedPage)

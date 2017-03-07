@@ -15,6 +15,7 @@ class AlertsSidebar extends React.Component {
     }
 
     render() {
+        const { alertid = -1 } = this.props.params
         const alerts = this.props.alerts
         return (
             <Sidebar
@@ -29,6 +30,7 @@ class AlertsSidebar extends React.Component {
                     <Menu.Item
                         key={alert.id}
                         as={Link}
+                        active={alertid === alert.id}
                         to={`/flagged/${alert.id}`}
                     >
                         {alert.description}
@@ -40,10 +42,12 @@ class AlertsSidebar extends React.Component {
 }
 
 AlertsSidebar.propTypes = {
+    params: React.PropTypes.object, // eslint-disable-line
     alerts: React.PropTypes.array, // eslint-disable-line
 }
 
 AlertsSidebar.defaultProps = {
+    params: {},
     alerts: [],
 }
 
