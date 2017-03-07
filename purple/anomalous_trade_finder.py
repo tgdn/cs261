@@ -66,7 +66,7 @@ class AnomalousTradeFinder:
             self.prev_trades[key] = self.trade_history[key][-1]["price"]
 
             #So here we want to add something that stores the total delta for the day, the total volume for day
-            #and their mean and stdevs. work out how to handle vol spikes and pump and dump
+            #and their mean and stdevs.
             self.stats[key] = {
                 'trade_count_per_min': self.stats[key]["trade_count_per_min"],
                 'minutes': self.stats[key]["minutes"],
@@ -82,7 +82,7 @@ class AnomalousTradeFinder:
                 'day_price_change_mean': self.trade_history[key][-1]["price"] - self.trade_history[key][0]["price"],
                 'day_price_change_stdev': 0,
                 'day_count': 1,
-                'price_change_percentage': (self.trade_history[key][-1]["price"] / float(self.trade_history[key][-2]["price"])) - 100
+                'price_change_percentage': (self.trade_history[key][-1]["price"] / float(self.trade_history[key][-2]["price"]))
             }
 
             self.calculate_fat_finger(volumes, deltas, ids, times, key)
@@ -90,27 +90,28 @@ class AnomalousTradeFinder:
             #Decide how to handle vol spikes and pump and dump for one day/csv
 
             #We only want to update the characteristics if we're looking at feed data
-            if not csv:
-                current_minute = times[0].strftime("%M")
-                trade_count = 1
-                for time in times:
-                    self._calculate_trades_per_min(time, trade_count, key)
-                    trade_count += 1
-                self.update_characteristics(key)
+            current_minute = times[0]
+            trade_count = 1
+            for time in times:
+                if self._calculate_trades_per_min(time, trade_count, key):
+                    trade_count = 0
+                trade_count += 1
+            self.update_characteristics(key)
 
-        if not csv:
             db.session.commit()
 
         self.trade_history = {}
 
         return self.anomalous_trades
+
     def _calculate_trades_per_min(self, time, trade_count, key):
         if time.strftime("%M") != self.stats[key]["current_minute"]:
             self.stats[key]["trade_count_per_min"] = (self.stats[key]["prev_minutes_total_trades"] + trade_count) / float(self.stats[key]["minutes"])
             self.stats[key]["minutes"] += 1
             self.stats[key]["prev_minutes_total_trades"] += trade_count
-            trade_count = 0
             self.stats[key]["current_minute"] = time.strftime("%M")
+            return True
+        return False
 
     #We call this when analysing a trade from the stream that isn't from the first day
     def calculate_anomalies_single_trade(self, trade, identifier):
@@ -135,7 +136,8 @@ class AnomalousTradeFinder:
             self.anomalous_trades.append({
                     'id': identifier,
                     'time': trade.time,
-                    'description': 'Fat finger error on price for ' + trade.symbol
+                    'description': 'Fat finger error on price for ' + trade.symbol,
+                    'error_code': 'FFP'
             })
         vol_values = self.welford(trade_count, vol_stdev, vol_mean, new_vol_to_add)
         if new_vol_to_add >= vol_values["stdev"] * 3 + vol_values["mean"]:
@@ -144,7 +146,8 @@ class AnomalousTradeFinder:
             self.anomalous_trades.append({
                     'id': identifier,
                     'time': trade.time,
-                    'description': 'Fat finger error on volume for ' + trade.symbol
+                    'description': 'Fat finger error on volume for ' + trade.symbol,
+                    'error_code': 'FFV'
             })
 
         #Update stats with new statistical values
@@ -220,7 +223,8 @@ class AnomalousTradeFinder:
                 self.anomalous_trades.append({
                     'id': date,
                     'time': -1,
-                    'description': 'Volume spike over past day for ' + key 
+                    'description': 'Volume spike over past day for ' + key,
+                    'error_code': 'VS'
                 })
                 
                 #Pump and dump if price change is outside of 3stdev + mean
@@ -228,7 +232,8 @@ class AnomalousTradeFinder:
                     self.anomalous_trades.append({
                         'id': date,
                         'time': -1,
-                        'description': 'Pump and dump over past day for ' + key
+                        'description': 'Pump and dump over past day for ' + key,
+                        'error_code': 'PD'
                     })
 
                 #Bear raid if price change is outside of 3stdev + mean
@@ -236,7 +241,8 @@ class AnomalousTradeFinder:
                     self.anomalous_trades.append({
                         'id': date,
                         'time': -1,
-                        'description': 'Bear raid over past day for ' + key
+                        'description': 'Bear raid over past day for ' + key,
+                        'error_code': 'BR'
                     })
 
             #Update stats with new total vol stdev and mean, and new count of days
@@ -259,7 +265,8 @@ class AnomalousTradeFinder:
                 self.anomalous_trades.append({
                     'id': ids[counter],
                     'time': times[counter],
-                    'description': 'Fat finger error on price for ' + key 
+                    'description': 'Fat finger error on price for ' + key,
+                    'error_code': 'FFP'
                 })
             counter += 1
         counter = 0
@@ -268,7 +275,8 @@ class AnomalousTradeFinder:
                 self.anomalous_trades.append({
                     'id': ids[counter],
                     'time': times[counter],
-                    'description': 'Fat finger error on volume ' + key
+                    'description': 'Fat finger error on volume ' + key,
+                    'error_code': 'FFV'
                 })
             counter += 1
 
@@ -282,7 +290,6 @@ class AnomalousTradeFinder:
             'last_price_change_percentage': self.stats[symbol]["price_change_percentage"],
             'timestamp': tz.localize(datetime.now())
         }
-
         db.session.query(db.SymbolModel).filter_by(name=symbol).update(to_insert)
         
 
