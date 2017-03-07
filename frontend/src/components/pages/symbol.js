@@ -34,6 +34,15 @@ class SymbolPage extends React.Component {
         this.getTrades = this.getTrades.bind(this)
     }
 
+    componentWillMount() {
+        /* trades are live as soon as we mount,
+        check whether there arent any tasks,
+        as in this case we can disable live trades. */
+        if (this.props.tasks.length === 0 && this.state.liveTrades) {
+            this.toggleLive()
+        }
+    }
+
     componentDidMount = () => this.subscribeTrades()
 
     componentWillUnmount() {
@@ -44,6 +53,14 @@ class SymbolPage extends React.Component {
     }
 
     componentWillReceiveProps(newProps) {
+        const tasks = newProps.tasks
+        /* disable live feed when there is no analysis -> and vice-versa */
+        if (tasks.length === 0 && this.state.liveTrades) {
+            this.toggleLive()
+        } else if (tasks.length !== 0 && !this.state.liveTrades) {
+            this.toggleLive()
+        }
+
         this.setState({
             symbols: newProps.symbols || []
         }, this.checkSymbol)
@@ -187,5 +204,6 @@ SymbolPage.defaultProps = {
 export default connect(
     state => ({
         symbols: state.db.symbols,
+        tasks: state.tasks.tasks,
     }),
 )(SymbolPage)
