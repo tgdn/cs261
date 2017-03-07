@@ -1,5 +1,5 @@
-import math
-#from purple.finance import Trade
+import math,datetime, time
+from purple.finance import Trade
 
 #symbol is a list of trades
 def predict(symbol):
@@ -10,14 +10,16 @@ def predict(symbol):
     priceAvg = 0.0
     numTrades = 0
     for trade in symbol:
-        times.append(trade[0])
-        prices.append(trade[1])
-        timeAvg += trade[0]
-        priceAvg += trade[1]
+        time = time.mktime(trade.time.timetuple())
+        times.append(time)
+        prices.append(trade.price)
+        timeAvg += time
+        priceAvg += trade.price
         numTrades += 1
     timeAvg /= numTrades
     priceAvg /= numTrades
 
+    #calculate average time gap and standard deviation
     timeGap = 0.0
     priceGap = 0.0
     for i in range(1,numTrades):
@@ -46,19 +48,22 @@ def predict(symbol):
     #Find co-ordinates for each prediction line
     DISTANCE = 10
     xVal = times[numTrades-1] + timeGap
-    yVal = m*xVal+c
     xValLast = xVal + timeGap*DISTANCE
     yValLast = m*xValLast+c
-
-   ##DISTANCE *= (1-r2)         UNCOMMENT FOR R2 REFINEMENT
-    
-    predictionLines = [[(times[0],m*times[0]+c),(times[numTrades-1],m*times[numTrades-1]+c)],
-        [(xVal,yVal + 1*stDev),(xValLast,yValLast + DISTANCE*(1*stDev))],
-        [(xVal,yVal + 2*stDev),(xValLast,yValLast + DISTANCE*(2*stDev))],
-        [(xVal,yVal + 3*stDev),(xValLast,yValLast + DISTANCE*(3*stDev))],
-        [(xVal,yVal - 1*stDev),(xValLast,yValLast - DISTANCE*(1*stDev))],
-        [(xVal,yVal - 2*stDev),(xValLast,yValLast - DISTANCE*(2*stDev))],
-        [(xVal,yVal - 3*stDev),(xValLast,yValLast - DISTANCE*(3*stDev))]
+    #datetime conversion
+    startTime = datetime.datetime.fromtimestamp(times[numTrades-1])
+    initialTime = datetime.datetime.fromtimestamp(times[0])
+    xValLast = datetime.datetime.fromtimestamp(xValLast)
+    startPoint = (startTime,m*times[numTrades-1]+c)
+    ##DISTANCE *= (1-r2)         UNCOMMENT FOR R2 REFINEMENT
+    #compile together into list of points
+    predictionLines = [[(initialTime,m*times[0]+c),startPoint],
+        [startPoint,(xValLast,yValLast + DISTANCE*(1*stDev))],
+        [startPoint,(xValLast,yValLast + DISTANCE*(2*stDev))],
+        [startPoint,(xValLast,yValLast + DISTANCE*(3*stDev))],
+        [startPoint,(xValLast,yValLast - DISTANCE*(1*stDev))],
+        [startPoint,(xValLast,yValLast - DISTANCE*(2*stDev))],
+        [startPoint,(xValLast,yValLast - DISTANCE*(3*stDev))]
     ]
     
     return (predictionLines)
