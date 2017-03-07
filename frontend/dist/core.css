@@ -7,13 +7,12 @@ body {
 }
 
 #header-logo-link {
-    width: calc(2*1.14285714em + 60px);
+    /*width: calc(2*1.14285714em + 60px);*/
 }
 
 #header-logo-link > img {
-    position: absolute;
-    width: 60px;
-    top: 15px;
+    width: 32px;
+    margin-right: 10px;
 }
 
 /* settings */
@@ -49,7 +48,7 @@ body {
     animation: pulse 3s infinite !important;
 }
 
-.chartContainer .inverted {
+.chartContainer .segment.inverted:not(.statistics) {
     /*background: #303030 !important;*/
     background: #3e3e3e !important;
 }
