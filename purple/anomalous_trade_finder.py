@@ -11,6 +11,7 @@ import math
 import pytz
 
 tz = pytz.timezone('Europe/London')
+VOLUME_SPIKE_PERCENTAGE = 1.1
 
 class AnomalousTradeFinder:
     def __init__(self):
@@ -48,7 +49,10 @@ class AnomalousTradeFinder:
                 'trade_count_per_min': 1,
                 'minutes': 1,
                 'prev_minutes_total_trades': 0,
-                'current_minute': trade.time.strftime("%M")
+                'current_minute': trade.time.strftime("%M"),
+                'current_hour': trade.time.strftime("%H"),
+                'current_hour_vol_sum': trade.size,
+                'prev_hour_vol_sum': 0
             }
         else:
             self.stats[trade.symbol]["trade_count_per_min"] += 1
@@ -72,6 +76,9 @@ class AnomalousTradeFinder:
                 'minutes': self.stats[key]["minutes"],
                 'prev_minutes_total_trades': self.stats[key]["prev_minutes_total_trades"],
                 'current_minute': self.stats[key]["current_minute"],
+                'current_hour': self.stats[key]["current_hour"],
+                'current_hour_vol_sum': self.stats[key]["current_hour_vol_sum"],
+                'prev_hour_vol_sum': self.stats[key]["prev_hour_vol_sum"],
                 'delta_mean': mean(deltas),
                 'delta_stdev': std(deltas),
                 'vol_mean': mean(volumes),
@@ -87,15 +94,29 @@ class AnomalousTradeFinder:
 
             self.calculate_fat_finger(volumes, deltas, ids, times, key)
 
-            #Decide how to handle vol spikes and pump and dump for one day/csv
+            #Decide how to handle pump and dump for one day/csv
 
             #We only want to update the characteristics if we're looking at feed data
             current_minute = times[0]
             trade_count = 1
+            index_pointer = 0
+
             for time in times:
+                #Calculate statistics
                 if self._calculate_trades_per_min(time, trade_count, key):
                     trade_count = 0
                 trade_count += 1
+
+                #Check for volume spikes in past hour
+                if self._calculate_vol_spike_per_hour(time, volumes, index_pointer, key):
+                    self.anomalous_trades.append({
+                        'id': index_pointer,
+                        'time': times[index_pointer],
+                        'description': 'Volume spike for ' + key,
+                        'error_code': 'VS'
+                    })
+                index_pointer += 1
+
             self.update_characteristics(key)
 
             db.session.commit()
@@ -111,6 +132,22 @@ class AnomalousTradeFinder:
             self.stats[key]["prev_minutes_total_trades"] += trade_count
             self.stats[key]["current_minute"] = time.strftime("%M")
             return True
+        return False
+
+    def _calculate_vol_spike_per_hour(self, time, volumes, count, key):
+        self.stats[key]["current_hour_vol_sum"] += volumes[count]
+        current_hour_vol_sum = self.stats[key]["current_hour_vol_sum"]
+        current_hour = self.stats[key]["current_hour"]
+        prev_hour_vol_sum = self.stats[key]["prev_hour_vol_sum"]
+
+        #Update values
+        self.stats[key]["prev_hour_vol_sum"] = self.stats[key]["current_hour_vol_sum"]
+        self.stats[key]["current_hour_vol_sum"] = 0
+        self.stats[key]["current_hour"] = time.strftime("%H")
+
+        if time.strftime("%H") != current_hour:
+            if prev_hour_vol_sum:
+                return prev_hour_vol_sum * VOLUME_SPIKE_PERCENTAGE <= current_hour_vol_sum
         return False
 
     #We call this when analysing a trade from the stream that isn't from the first day
