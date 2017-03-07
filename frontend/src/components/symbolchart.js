@@ -1,17 +1,33 @@
-/* eslint-disable react/forbid-prop-types react/sort-comp */
+/* eslint-disable react/forbid-prop-types, react/sort-comp, react/require-default-props */
 
 import React, { PropTypes } from 'react'
-import { utcParse, timeFormat, scaleTime } from 'd3-time-format'
+import { utcParse, timeFormat } from 'd3-time-format'
 import { format, formatDefaultLocale } from 'd3-format'
-import { ChartCanvas, Chart, series, scale, coordinates, tooltip, axes, helper } from 'react-stockcharts'
+import {
+    ChartCanvas,
+    Chart,
+    series,
+    scale,
+    coordinates,
+    interactive,
+    axes,
+    helper
+} from 'react-stockcharts'
 
 import ChartTooltip from './charttooltip'
 
-const { BarSeries, LineSeries, AreaSeries } = series
+const { BarSeries, AreaSeries } = series
 const { discontinuousTimeScaleProvider } = scale
 
-const { CrossHairCursor, MouseCoordinateX, MouseCoordinateY, CurrentCoordinate, EdgeIndicator } = coordinates
+const {
+    CrossHairCursor,
+    MouseCoordinateX,
+    MouseCoordinateY,
+    CurrentCoordinate,
+    EdgeIndicator
+} = coordinates
 
+const { ClickCallback } = interactive
 const { XAxis, YAxis } = axes
 const { fitWidth } = helper
 
@@ -45,7 +61,7 @@ class SymbolChart extends React.Component {
         return false
     }
 
-    parseData(trades) {
+    parseData(trades) { // eslint-disable-line
         let maxVolume = 0
         trades.forEach((d) => {
             d.datetime = new Date(parseDatetime(d.datetime)) // eslint-disable-line
@@ -82,7 +98,7 @@ class SymbolChart extends React.Component {
 
         /* chart settings */
         const margin = { left: 70, right: 80, top: 20, bottom: 50 }
-        const height = 500
+        const height = 430
         const gridHeight = height - margin.top - margin.bottom
         const gridWidth = width - margin.left - margin.right
 
@@ -108,7 +124,7 @@ class SymbolChart extends React.Component {
                     height={height}
                     margin={margin}
                     type='svg'
-                    pointsPerPxThreshold={1}
+                    pointsPerPxThreshold={4}
                     seriesName={symbol}
                     data={trades}
                     xAccessor={d => d.datetime}
@@ -120,7 +136,7 @@ class SymbolChart extends React.Component {
                         id={1}
                         yExtents={d => d.price}
                         padding={{ top: 10, bottom: 0 }}
-                        height={330}
+                        height={290}
                     >
                         <XAxis
                             axisAt='bottom'
@@ -165,13 +181,14 @@ class SymbolChart extends React.Component {
                             displayFormat={format('$.2s')}
                             fill="#4e91fc"
                         />
+                        <ClickCallback enabled onClick={this.props.handleClick} />
                         <ChartTooltip />
                     </Chart>
                     <Chart
                         id={2}
                         height={100}
                         yExtents={() => [0, this.state.maxVolume * 10]}
-                        origin={(w, h) => [0, h - 100]}
+                        origin={(w, h) => [0, h - 70]}
                     >
                         <XAxis
                             showGrid
@@ -212,5 +229,19 @@ class SymbolChart extends React.Component {
         )
     }
 }
+
+SymbolChart.propTypes = {
+    symbol: PropTypes.string,
+    width: PropTypes.number,
+    ratio: PropTypes.number,
+    handleClick: PropTypes.func.isRequired,
+    trades: PropTypes.array,
+}
+
+SymbolChart.defaultProps = {
+    handleClick: () => {},
+    trades: [],
+}
+
 
 export default fitWidth(SymbolChart)
