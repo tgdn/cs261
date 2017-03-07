@@ -36,7 +36,7 @@ class HomePage extends React.Component {
                                             <Icon color='red' name='remove circle' size='massive' class='pulsate' />
                                             <Header as='h2' color='red'>There are issues to review</Header>
                                             <Button as={Link} to='/flagged' secondary>
-                                                Get to zero now
+                                                Review now
                                             </Button>
                                         </div>
                                     )}
