@@ -22,7 +22,7 @@ def test_history_add():
 def test_stats_add():
 	test_finder = AnomalousTradeFinder()
 	test_finder.add(t,1)
-	assert len(test_finder.stats[t.symbol]) == 4
+	assert len(test_finder.stats[t.symbol]) == 7
 
 def test_add_correct_delta():
 	test_finder = AnomalousTradeFinder()
