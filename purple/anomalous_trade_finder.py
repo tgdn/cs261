@@ -11,7 +11,6 @@ import math
 import pytz
 
 tz = pytz.timezone('Europe/London')
-VOLUME_SPIKE_PERCENTAGE = 1.1
 
 class AnomalousTradeFinder:
     def __init__(self):
@@ -51,7 +50,10 @@ class AnomalousTradeFinder:
                 'prev_minutes_total_trades': 0,
                 'current_minute': trade.time.strftime("%M"),
                 'current_hour': trade.time.strftime("%H"),
-                'hourly_vol': [0]
+                'hourly_vol': [0],
+                'hourly_max_change':[0],
+                'hourly_max': trade.price,
+                'hourly_min': trade.price
             }
         else:
             self.stats[trade.symbol]["trade_count_per_min"] += 1
@@ -64,6 +66,7 @@ class AnomalousTradeFinder:
             deltas = [x["price_delta"] for x in self.trade_history[key]]
             ids = [x["id"] for x in self.trade_history[key]]
             times = [x["time"] for x in self.trade_history[key]]
+            prices = [x["price"] for x in self.trade_history[key]]
 
             #Get the price of the last added trade for that symbol
             self.prev_trades[key] = self.trade_history[key][-1]["price"]
@@ -77,6 +80,9 @@ class AnomalousTradeFinder:
                 'current_minute': self.stats[key]["current_minute"],
                 'current_hour': self.stats[key]["current_hour"],
                 'hourly_vol': self.stats[key]["hourly_vol"],
+                'hourly_max_change': self.stats[key]["hourly_max_change"],
+                'hourly_max': self.stats[key]["hourly_max"],
+                'hourly_min': self.stats[key]["hourly_min"],
                 'delta_mean': mean(deltas),
                 'delta_stdev': std(deltas),
                 'vol_mean': mean(volumes),
@@ -107,15 +113,22 @@ class AnomalousTradeFinder:
                     trade_count = 0
                 trade_count += 1
 
-                current_min = volumes[trade_count]
-
                 #Calculate volumes for every hour
                 if self.stats[key]["current_hour"] != time.strftime("%H"):
                     self.stats[key]["current_hour"] = time.strftime("%H")
                     self.stats[key]["hourly_vol"].append(0)
+                    self.stats[key]["hourly_max_change"][index_pointer] = self.stats[key]["hourly_max"] - self.stats[key]["hourly_min"]
+                    self.stats[key]["hourly_max_change"].append(0)
+                    #Reset current min and max with first trade of new hour
+                    self.stats[key]["hourly_max"] = prices[vol_counter + 1]
+                    self.stats[key]["hourly_min"] = prices[vol_counter + 1]
                     index_pointer += 1
                 else:
                     self.stats[key]["hourly_vol"][index_pointer] += volumes[vol_counter]
+                    if prices[vol_counter] > self.stats[key]["hourly_max"]:
+                        self.stats[key]["hourly_max"] = prices[vol_counter]
+                    if prices[vol_counter] < self.stats[key]["hourly_min"]:
+                        self.stats[key]["hourly_min"] = prices[vol_counter]
                 vol_counter += 1
 
             #Check for volume spikes
@@ -142,43 +155,61 @@ class AnomalousTradeFinder:
         # First work out the mean and standard deviation for every hour of volume sums
         mean_vol = mean(self.stats[key]["hourly_vol"])
         vol_stdev = std(self.stats[key]["hourly_vol"])
+
+        # Work out mean and stdev of maximum hourly price change
+        mean_max_price_change = mean(self.stats[key]["hourly_max_change"])
+        max_price_change_stdev = std(self.stats[key]["hourly_max_change"])
+
         spike = False
         # Iterate through each hourly volume sum and check if it's outside of mean + n * stdev
         index = 0
+
+        sev = -1
+
         for volume in self.stats[key]["hourly_vol"]:
             if volume >= mean_vol + 5 * vol_stdev:
                 spike = True
                 self.anomalous_trades.append({
-                    'id': self.stats[key]["hourly_vol"][index],
-                    'time': self.stats[key]["hourly_vol"][index],
-                    'description': 'Hourly volume spike from ' + str(index) + ' to ' + str(index - 1) + ' for ' + key,
+                    'id': -1,
+                    'time': index,
+                    'description': 'Hourly volume spike from ' + str(index - 1) + ' to ' + str(index) + ' for ' + key,
                     'error_code': 'VS',
                     'severity': 1
                 })
+                sev = 1
             elif volume >= mean_vol + 4 * vol_stdev:
                 spike = True
                 self.anomalous_trades.append({
-                    'id': self.stats[key]["hourly_vol"][index],
-                    'time': self.stats[key]["hourly_vol"][index],
-                    'description': 'Hourly volume spike from ' + str(index) + ' to ' + str(index - 1) + ' for ' + key,
+                    'id': -1,
+                    'time': index,
+                    'description': 'Hourly volume spike from ' + str(index - 1) + ' to ' + str(index) + ' for ' + key,
                     'error_code': 'VS',
                     'severity': 2
                 })
+                sev = 2
             elif volume >= mean_vol + 3 * vol_stdev:
                 spike = True
                 self.anomalous_trades.append({
-                    'id': self.stats[key]["hourly_vol"][index],
-                    'time': self.stats[key]["hourly_vol"][index],
-                    'description': 'Hourly volume spike from ' + str(index) + ' to ' + str(index - 1) + ' for ' + key,
+                    'id': -1,
+                    'time': index,
+                    'description': 'Hourly volume spike from ' + str(index - 1) + ' to ' + str(index) + ' for ' + key,
                     'error_code': 'VS',
                     'severity': 3
                 })
-            #if spike:
-                #_calculate_pump_bear(key, index)
+                sev = 3
+            if spike:
+                self._calculate_pump_bear(key, index, mean_max_price_change, max_price_change_stdev, sev)
             index += 1
 
-    #def _calculate_pump_bear(self, key, hour):
-
+    def _calculate_pump_bear(self, key, hour, mean, stdev, sev):
+        if self.stats[key]["hourly_max_change"][hour] > mean +  2 * stdev:
+            self.anomalous_trades.append({
+                'id': -1,
+                'time': hour,
+                'description': 'Hourly pump and dump/bear raid from ' + str(hour - 1) + ' to ' + str(hour) + ' for ' + key,
+                'error_code': 'PDBR',
+                'severity': sev
+            })
 
     #We call this when analysing a trade from the stream that isn't from the first day
     def calculate_anomalies_single_trade(self, trade, identifier):
