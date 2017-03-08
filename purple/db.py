@@ -166,6 +166,8 @@ class TradeModel(BaseModel):
     __tablename__ = 'trades'
 
     price = Column(Float)
+    ask = Column(Float)
+    bid = Column(Float)
     size = Column(BigInteger)
     flagged = Column(Boolean, default=False)
     symbol_name = Column(String, ForeignKey('symbols.name'))

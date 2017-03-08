@@ -56,6 +56,8 @@ class TradesAnalyser:
         trade = {
             'id': self.current_pk,
             'price': t.price,
+            'bid': t.bid,
+            'ask': t.ask,
             'size': t.size,
             'symbol_name': symbol_name,
             'flagged': False,
