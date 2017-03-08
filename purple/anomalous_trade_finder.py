@@ -106,7 +106,7 @@ class AnomalousTradeFinder:
                 if self._calculate_trades_per_min(time, trade_count, key):
                     trade_count = 0
                 trade_count += 1
-
+                """
                 #Check for volume spikes in past hour
                 if self._calculate_vol_spike_per_hour(time, volumes, index_pointer, key):
                     self.anomalous_trades.append({
@@ -116,7 +116,7 @@ class AnomalousTradeFinder:
                         'error_code': 'VS'
                     })
                 index_pointer += 1
-
+                """
             self.update_characteristics(key)
 
             db.session.commit()
@@ -167,24 +167,26 @@ class AnomalousTradeFinder:
         #Calculate new stdev for price deltas
         delta_values = self.welford(trade_count, price_delta_stdev, price_delta_mean, new_delta_to_add)
 
-        if new_delta_to_add >= delta_values["stdev"] * 3 + delta_values["mean"]:
+        if new_delta_to_add >= delta_values["stdev"] * 6 + delta_values["mean"]:
             #Alert fat finger on price
             print "Found a fat finger on price on individual trade"
             self.anomalous_trades.append({
                     'id': identifier,
                     'time': trade.time,
                     'description': 'Fat finger error on price for ' + trade.symbol,
-                    'error_code': 'FFP'
+                    'error_code': 'FFP',
+                    'severity': 2
             })
         vol_values = self.welford(trade_count, vol_stdev, vol_mean, new_vol_to_add)
-        if new_vol_to_add >= vol_values["stdev"] * 3 + vol_values["mean"]:
+        if new_vol_to_add >= vol_values["stdev"] * 6 + vol_values["mean"]:
             #Alert fat finger on volume
             print "Found a fat finger on volume on individual trade"
             self.anomalous_trades.append({
                     'id': identifier,
                     'time': trade.time,
                     'description': 'Fat finger error on volume for ' + trade.symbol,
-                    'error_code': 'FFV'
+                    'error_code': 'FFV',
+                    'severity': 2
             })
 
         #Update stats with new statistical values
@@ -255,31 +257,34 @@ class AnomalousTradeFinder:
             #Calculate new mean and standard deviation for day's price change
             new_day_change_mean_stdev = self.welford(day_count, day_price_change_stdev, day_price_change_mean, price_change_to_add)
 
-            if to_add >= new_vol_stdev_mean["mean"] + 3 * new_vol_stdev_mean["stdev"]:
+            if to_add >= new_vol_stdev_mean["mean"] + 6 * new_vol_stdev_mean["stdev"]:
                 #Alert volume spike for day
                 self.anomalous_trades.append({
                     'id': date,
                     'time': -1,
                     'description': 'Volume spike over past day for ' + key,
-                    'error_code': 'VS'
+                    'error_code': 'VS',
+                    'severity': 2
                 })
                 
                 #Pump and dump if price change is outside of 3stdev + mean
-                if price_change_to_add >= new_day_change_mean_stdev["mean"] + 3 * new_day_change_mean_stdev["stdev"]:
+                if price_change_to_add >= new_day_change_mean_stdev["mean"] + 6 * new_day_change_mean_stdev["stdev"]:
                     self.anomalous_trades.append({
                         'id': date,
                         'time': -1,
                         'description': 'Pump and dump over past day for ' + key,
-                        'error_code': 'PD'
+                        'error_code': 'PD',
+                        'severity': 2
                     })
 
                 #Bear raid if price change is outside of 3stdev + mean
-                if price_change_to_add <= new_day_change_mean_stdev["mean"] - 3 * new_day_change_mean_stdev["stdev"]:
+                if price_change_to_add <= new_day_change_mean_stdev["mean"] - 6 * new_day_change_mean_stdev["stdev"]:
                     self.anomalous_trades.append({
                         'id': date,
                         'time': -1,
                         'description': 'Bear raid over past day for ' + key,
-                        'error_code': 'BR'
+                        'error_code': 'BR',
+                        'severity': 2
                     })
 
             #Update stats with new total vol stdev and mean, and new count of days
@@ -298,22 +303,56 @@ class AnomalousTradeFinder:
     def calculate_fat_finger(self, volumes, deltas, ids, times, key):
         counter = 0
         for value in deltas:
-            if value >= self.stats[key]["delta_mean"] + 3 * self.stats[key]["delta_stdev"] or value <= (self.stats[key]["delta_mean"] - 3 * self.stats[key]["delta_stdev"]):
+            if value >= self.stats[key]["delta_mean"] + 7 * self.stats[key]["delta_stdev"] or value <= (self.stats[key]["delta_mean"] - 7 * self.stats[key]["delta_stdev"]):
                 self.anomalous_trades.append({
                     'id': ids[counter],
                     'time': times[counter],
                     'description': 'Fat finger error on price for ' + key,
-                    'error_code': 'FFP'
+                    'error_code': 'FFP',
+                    'severity': 1
+                }) 
+            elif value >= self.stats[key]["delta_mean"] + 6 * self.stats[key]["delta_stdev"] or value <= (self.stats[key]["delta_mean"] - 6 * self.stats[key]["delta_stdev"]):
+                self.anomalous_trades.append({
+                    'id': ids[counter],
+                    'time': times[counter],
+                    'description': 'Fat finger error on price for ' + key,
+                    'error_code': 'FFP',
+                    'severity': 2
+                })
+            elif value >= self.stats[key]["delta_mean"] + 5 * self.stats[key]["delta_stdev"] or value <= (self.stats[key]["delta_mean"] - 5 * self.stats[key]["delta_stdev"]):
+                self.anomalous_trades.append({
+                    'id': ids[counter],
+                    'time': times[counter],
+                    'description': 'Fat finger error on price for ' + key,
+                    'error_code': 'FFP',
+                    'severity': 3
                 })
             counter += 1
         counter = 0
         for volume in volumes:
-            if volume >= self.stats[key]["vol_mean"] + 3 * self.stats[key]["vol_stdev"] or volume <= (self.stats[key]["vol_mean"] - 3 * self.stats[key]["vol_stdev"]):
+            if volume >= self.stats[key]["vol_mean"] + 7 * self.stats[key]["vol_stdev"]:
                 self.anomalous_trades.append({
                     'id': ids[counter],
                     'time': times[counter],
                     'description': 'Fat finger error on volume ' + key,
-                    'error_code': 'FFV'
+                    'error_code': 'FFV',
+                    'severity': 1
+                })
+            elif volume >= self.stats[key]["vol_mean"] + 6 * self.stats[key]["vol_stdev"]:
+                self.anomalous_trades.append({
+                    'id': ids[counter],
+                    'time': times[counter],
+                    'description': 'Fat finger error on volume ' + key,
+                    'error_code': 'FFV',
+                    'severity': 2
+                })
+            elif volume >= self.stats[key]["vol_mean"] + 5 * self.stats[key]["vol_stdev"]:
+                self.anomalous_trades.append({
+                    'id': ids[counter],
+                    'time': times[counter],
+                    'description': 'Fat finger error on volume ' + key,
+                    'error_code': 'FFV',
+                    'severity': 3
                 })
             counter += 1
 
