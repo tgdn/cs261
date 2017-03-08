@@ -41,7 +41,6 @@ const getSymbol = (req, res) => {
                 SELECT $(tradeFields^)
                 FROM trades WHERE symbol_name = $(symbol)
                 ORDER BY datetime DESC
-                LIMIT 1000
             ) AS derivedTable ORDER BY datetime ASC`,
         { tradeFields, symbol })
         .then((trades) => {
@@ -168,6 +167,7 @@ const searchAlerts = (req, res, conn) => {
         const term = rawTerm.toString().toLowerCase()
         r.table('alerts')
         .filter(alert => alert('description').downcase().match(`(?i)${term}`))
+        .orderBy('severity') // ascending is default
         .limit(50)
         .run(conn, (queryErr, cursor) => {
             if (!queryErr) {

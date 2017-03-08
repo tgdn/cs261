@@ -86,6 +86,9 @@ def create_tables():
             r.db(PURPLE_DB).table_create('notifications').run(conn) # holds realtime notifications
             r.db(PURPLE_DB).table_create('settings').run(conn) # holds webapp settings
             r.db(PURPLE_DB).table_create('tasks').run(conn) # holds current bg tasks
+            # Create indices
+            r.db(PURPLE_DB).table('tasks').index_create('pid').run(conn)
+            r.db(PURPLE_DB).table('alerts').index_create('severity').run(conn)
             # default settings
             set_default_settings()
         except RqlRuntimeError:
