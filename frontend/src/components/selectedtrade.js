@@ -26,22 +26,31 @@ const SelectedTrade = ({ trade: t }) => {
             </Button>
         ) : ''
     }
+    const bid = attrOrNa(t, 'bid', '.2f')
+    const ask = attrOrNa(t, 'ask', '.2f')
+    let bidAskColor = 'blue'
+    let bidAskSpread = 'n/a'
+    let color = 'blue'
+    if (bid !== 'n/a' && ask !== 'n/a') {
+        const rawBidAsk = (ask - bid) / ask
+        color = (rawBidAsk < 0) ? 'red' : 'blue'
+        bidAskSpread = format('.3%')((ask - bid) / ask)
+    }
     const items = [
-        { label: 'Price (gbx)', value: attrOrNa(t, 'price', '.2f') },
-        { label: 'Vol', value: attrOrNa(t, 'size', '.4s') },
-        { label: 'Bid (gbx)', value: attrOrNa(t, 'bid', '.2f') },
-        { label: 'Ask (gbx)', value: attrOrNa(t, 'ask', '.2f') },
-        { value: flagged },
+        { color: 'blue', label: 'Price (gbx)', value: attrOrNa(t, 'price', '.2f') },
+        { color: 'blue', label: 'Vol', value: attrOrNa(t, 'size', '.4s') },
+        { color: 'blue', label: 'Bid (gbx)', value: bid },
+        { color: 'blue', label: 'Ask (gbx)', value: ask },
+        { color, label: 'Bid-ask spread', value: bidAskSpread },
+        { color: 'blue', value: flagged },
     ]
     return (
         <Segment attached='bottom' inverted>
-            <Statistic.Group
-                inverted
-                size='mini'
-                items={items}
-                color='blue'
-                widths={5}
-            />
+            <Statistic.Group size='mini' widths={items.length}>
+                {items.map((stat, i) => (
+                    <Statistic inverted {...stat} key={i} />
+                ))}
+            </Statistic.Group>
         </Segment>
     )
 }
