@@ -187,7 +187,7 @@ class SymbolChart extends React.Component {
                     <Chart
                         id={2}
                         height={100}
-                        yExtents={() => [0, this.state.maxVolume * 10]}
+                        yExtents={() => [0, this.state.maxVolume * 15]}
                         origin={(w, h) => [0, h - 70]}
                     >
                         <XAxis
