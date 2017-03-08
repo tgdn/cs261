@@ -43,9 +43,8 @@ class AlertPage extends React.Component {
 
     componentWillReceiveProps(newProps) {
         this.setState(this.initialState)
-        if (newProps.params.alertid !== this.props.params.alertid) {
-            this.getAlert(newProps.params.alertid)
-        }
+        // always load trade
+        this.getAlert(newProps.params.alertid)
     }
 
     componentWillUpdate(newProps, newState) {
@@ -85,7 +84,7 @@ class AlertPage extends React.Component {
         }
     }
 
-    loadTrades(tradeid) {
+    loadOne(tradeid) {
         fetch(`/api/trades/flagged/${tradeid}`) // eslint-disable-line
         .then((res) => {
             if (res.status >= 200 && res.status < 300) {
@@ -107,7 +106,17 @@ class AlertPage extends React.Component {
                 // TODO
             }
         })
-        // TODO fetch
+    }
+
+    loadMultiple(tradeid, hours) {
+    }
+
+    loadTrades(tradeid) {
+        if (tradeid === -1) {
+            this.loadMultiple(tradeid, this.state.alert.time)
+        } else {
+            this.loadOne(tradeid)
+        }
     }
 
     render() {
