@@ -20,7 +20,6 @@ class AlertsSidebar extends React.Component {
     }
 
     componentWillReceiveProps(newProps) {
-        console.log('will receive');
         this.setState({ alerts: newProps.alerts })
     }
 
