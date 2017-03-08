@@ -10,6 +10,8 @@ const dbConfig = {
 };
 const db = pgp(dbConfig);
 
+const tradeFields = "id, price, bid, ask, size, flagged, datetime"
+
 const handleException = (err, res, reason) => {
     console.error(err) // eslint-disable-line
     res.status(500)
@@ -35,11 +37,12 @@ const getSymbol = (req, res) => {
         // Nest query to reorder trades by datetime ASC
         db.any(
             `SELECT * FROM (
-                SELECT id, price, size, flagged, datetime
-                FROM trades WHERE symbol_name = $1
+                SELECT $(tradeFields^)
+                FROM trades WHERE symbol_name = $(symbol)
                 ORDER BY datetime DESC
                 LIMIT 1000
-            ) AS derivedTable ORDER BY datetime ASC`, symbol)
+            ) AS derivedTable ORDER BY datetime ASC`,
+        { tradeFields, symbol })
         .then((trades) => {
             res.status(200)
                 .json({
@@ -62,19 +65,20 @@ const getFlaggedTrades = (req, res) => {
                 db.any(
                     `SELECT * FROM (
                         (
-                            SELECT id, price, size, flagged, datetime
+                            SELECT $(tradeFields^)
                             FROM trades
                             WHERE id <= $(tradeid) AND symbol_name = $(symbol_name)
                             ORDER BY datetime DESC LIMIT 101
                         )
                         UNION ALL
                         (
-                            SELECT id, price, size, flagged, datetime
+                            SELECT $(tradeFields^)
                             FROM trades WHERE id > $(tradeid) AND symbol_name = $(symbol_name)
                             ORDER BY datetime ASC LIMIT 30
                         )
                     ) AS sbq ORDER BY datetime ASC`,
                     {
+                        tradeFields,
                         tradeid: trade.id,
                         symbol_name: trade.symbol_name
                     }
@@ -105,12 +109,12 @@ const tradesBefore = (req, res) => {
     if (before != null && symbol != null) { // eslint-disable-line
         db.any(
             `SELECT * FROM (
-                SELECT id, price, size, flagged, datetime
+                SELECT $(tradeFields^)
                 FROM trades
                 WHERE id < $(before) AND symbol_name = $(symbol)
                 ORDER BY datetime DESC LIMIT $(count)
             ) AS sbq ORDER BY datetime ASC`,
-            { before, symbol, count }
+            { tradeFields, before, symbol, count }
         )
         .then((trades) => {
             res.status(200)
@@ -129,11 +133,11 @@ const tradesAfter = (req, res) => {
     const count = req.param.count || 50
     if (after != null && symbol != null) { // eslint-disable-line
         db.any(
-            `SELECT id, price, size, flagged, datetime
+            `SELECT $(tradeFields^)
             FROM trades
             WHERE id > $(after) AND symbol_name = $(symbol)
             ORDER BY datetime ASC LIMIT $(count)`,
-            { after, symbol, count }
+            { tradeFields, after, symbol, count }
         )
         .then((trades) => {
             res.status(200)
@@ -148,7 +152,8 @@ const tradesAfter = (req, res) => {
 
 const getTrade = (req, res) => {
     const tradeid = parseInt(req.body.tradeid, 10)
-    db.one('SELECT * FROM trades WHERE id = $1', tradeid)
+    db.one('SELECT $(tradeFields^) FROM trades WHERE id = $(tradeid)',
+    { tradeFields, tradeid })
     .then((trade) => {
         res.status(200)
             .json({ trade })
