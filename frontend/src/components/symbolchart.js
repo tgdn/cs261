@@ -16,7 +16,7 @@ import {
 
 import ChartTooltip from './charttooltip'
 
-const { BarSeries, AreaSeries } = series
+const { BarSeries, LineSeries } = series
 const { discontinuousTimeScaleProvider } = scale
 
 const {
@@ -150,7 +150,7 @@ class SymbolChart extends React.Component {
                         />
                         <YAxis
                             axisAt='right'
-                            orient='left'
+                            orient='right'
                             ticks={6}
                             fontSize={11}
                             tickFormat={format('.2f')}
@@ -163,9 +163,9 @@ class SymbolChart extends React.Component {
                             orient="right"
                             displayFormat={format('.2f')}
                         />
-                        <AreaSeries
+                        <LineSeries
                             yAccessor={d => d.price}
-                            stroke='#4e91fc'
+                            stroke='#d942f4'
                             opacity={0.3}
                             strokeDasharray='Solid'
                         />
