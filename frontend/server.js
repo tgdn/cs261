@@ -60,6 +60,10 @@ app.get('/api/symbols', db.getSymbols)
 app.get('/api/symbol/:symbol', db.getSymbol)
 app.get('/api/trades/flagged/:tradeid/', db.getFlaggedTrades)
 
+/*
+ * !! One more API call below in rethink connection !!
+ */
+
 app.post('/upload', (req, res) => {
     uploadHandler(req, res, (err) => {
         if (err) {
@@ -134,6 +138,9 @@ r.connect({
         }
         res.json({ success: false })
     })
+
+    // API: Search alerts
+    app.post('/api/alerts/search/', (req, res) => db.searchAlerts(req, res, conn))
 })
 .error((error) => {
     /* eslint-disable no-console */
@@ -156,30 +163,3 @@ app.post('/resetdb', (req, res) => {
 app.get(['/', '*'], (req, res) => {
     res.sendFile('index.html', { root: distPath });
 })
-
-
-// r.connect({
-//     host: 'localhost',
-//     port: 28015,
-//     db: 'purple'
-// })
-// .then((conn) => {
-//     global.db = conn
-//
-//     io.on('connection', (socket) => {
-//         r.table('trades')
-//             .pluck('price', 'symbol')
-//             .changes({ squash: 4, includeInitial: true }).run(global.db)
-//             .then((cursor) => {
-//                 cursor.each((err, item) => {
-//                     socket.emit('tradechange', item)
-//                 })
-//             })
-//     })
-// })
-// .error((error) => {
-//     /* eslint-disable no-console */
-//     console.log(`Connection to db could not be established:\n${error}`)
-//     process.exit(1)
-//     /* eslint-enable */
-// })

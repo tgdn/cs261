@@ -1,5 +1,6 @@
 
-const pgp = require('pg-promise')({})
+const r = require('rethinkdb');
+const pgp = require('pg-promise')({});
 
 const dbConfig = {
     host: 'localhost',
@@ -10,7 +11,7 @@ const dbConfig = {
 };
 const db = pgp(dbConfig);
 
-const tradeFields = "id, price, bid, ask, size, flagged, datetime"
+const tradeFields = 'id, price, bid, ask, size, flagged, datetime';
 
 const handleException = (err, res, reason) => {
     console.error(err) // eslint-disable-line
@@ -161,6 +162,31 @@ const getTrade = (req, res) => {
     .catch(err => handleException(err, res))
 }
 
+const searchAlerts = (req, res, conn) => {
+    const rawTerm = req.body.term
+    if (rawTerm) {
+        const term = rawTerm.toString().toLowerCase()
+        r.table('alerts')
+        .filter(alert => alert('description').downcase().match(`(?i)${term}`))
+        .limit(50)
+        .run(conn, (queryErr, cursor) => {
+            if (!queryErr) {
+                cursor.toArray((err, alerts) => {
+                    if (!err) {
+                        res.status(200).json({ alerts })
+                        return // eslint-disable-line
+                    }
+                })
+            } else {
+                console.error(queryErr);
+                res.status(200).json({ alerts: [] })
+            }
+        })
+    } else {
+        res.status(200).json({ alerts: [] })
+    }
+}
+
 module.exports = {
     getSymbols,
     getSymbol,
@@ -168,4 +194,5 @@ module.exports = {
     getTrade,
     tradesBefore,
     tradesAfter,
+    searchAlerts,
 }
