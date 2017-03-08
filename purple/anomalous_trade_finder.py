@@ -99,6 +99,7 @@ class AnomalousTradeFinder:
             trade_count = 1
             #Keep track of index in array of hourly volume sums
             index_pointer = 0
+            vol_counter = 0
 
             for time in times:
                 #Calculate statistics for db table
@@ -106,13 +107,17 @@ class AnomalousTradeFinder:
                     trade_count = 0
                 trade_count += 1
 
+                current_min = volumes[trade_count]
+
                 #Calculate volumes for every hour
                 if self.stats[key]["current_hour"] != time.strftime("%H"):
                     self.stats[key]["current_hour"] = time.strftime("%H")
                     self.stats[key]["hourly_vol"].append(0)
                     index_pointer += 1
                 else:
-                    self.stats[key]["hourly_vol"][index_pointer] += volumes[trade_count]
+                    self.stats[key]["hourly_vol"][index_pointer] += volumes[vol_counter]
+                vol_counter += 1
+
             #Check for volume spikes
             self._calculate_vol_spikes(key)
             #Update statsistics for db
@@ -137,11 +142,12 @@ class AnomalousTradeFinder:
         # First work out the mean and standard deviation for every hour of volume sums
         mean_vol = mean(self.stats[key]["hourly_vol"])
         vol_stdev = std(self.stats[key]["hourly_vol"])
-
+        spike = False
         # Iterate through each hourly volume sum and check if it's outside of mean + n * stdev
         index = 0
         for volume in self.stats[key]["hourly_vol"]:
             if volume >= mean_vol + 5 * vol_stdev:
+                spike = True
                 self.anomalous_trades.append({
                     'id': self.stats[key]["hourly_vol"][index],
                     'time': self.stats[key]["hourly_vol"][index],
@@ -150,14 +156,16 @@ class AnomalousTradeFinder:
                     'severity': 1
                 })
             elif volume >= mean_vol + 4 * vol_stdev:
+                spike = True
                 self.anomalous_trades.append({
-                    'id': self.stats[key]["hqourly_vol"][index],
+                    'id': self.stats[key]["hourly_vol"][index],
                     'time': self.stats[key]["hourly_vol"][index],
                     'description': 'Hourly volume spike from ' + str(index) + ' to ' + str(index - 1) + ' for ' + key,
                     'error_code': 'VS',
                     'severity': 2
                 })
             elif volume >= mean_vol + 3 * vol_stdev:
+                spike = True
                 self.anomalous_trades.append({
                     'id': self.stats[key]["hourly_vol"][index],
                     'time': self.stats[key]["hourly_vol"][index],
@@ -165,7 +173,12 @@ class AnomalousTradeFinder:
                     'error_code': 'VS',
                     'severity': 3
                 })
+            #if spike:
+                #_calculate_pump_bear(key, index)
             index += 1
+
+    #def _calculate_pump_bear(self, key, hour):
+
 
     #We call this when analysing a trade from the stream that isn't from the first day
     def calculate_anomalies_single_trade(self, trade, identifier):
