@@ -97,7 +97,7 @@ class SymbolChart extends React.Component {
         const { trades, initialMinDatetime, initialMaxDatetime } = this.state
 
         /* chart settings */
-        const margin = { left: 70, right: 80, top: 20, bottom: 50 }
+        const margin = { left: 70, right: 80, top: 20, bottom: 0 }
         const height = 430
         const gridHeight = height - margin.top - margin.bottom
         const gridWidth = width - margin.left - margin.right
@@ -188,7 +188,7 @@ class SymbolChart extends React.Component {
                         id={2}
                         height={100}
                         yExtents={() => [0, this.state.maxVolume * 15]}
-                        origin={(w, h) => [0, h - 70]}
+                        origin={(w, h) => [0, h - 70 - 50]}
                     >
                         <XAxis
                             showGrid
