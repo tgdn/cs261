@@ -21,7 +21,7 @@ export default () => (
         <Grid.Column width={16}>
             <Container fluid textAlign='center'>
                 <div>
-                    <Icon color='grey' name='home' size='massive' />
+                    <img className='nodata-logo' src='/logo.png' alt='Purple Home' />
                     <Header as='h2' color='black'>
                         There is no data to work with yet
                     </Header>

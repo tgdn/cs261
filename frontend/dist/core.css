@@ -15,6 +15,10 @@ body {
     margin-right: 10px;
 }
 
+.nodata-logo {
+    width: 21rem;
+}
+
 /* settings */
 .inverse-setting {
     -webkit-filter: invert(100%);
