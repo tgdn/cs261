@@ -57,6 +57,10 @@ body {
     background: #3e3e3e !important;
 }
 
+.inverse-setting .chartContainer .segment.inverted:not(.statistics) {
+    background: #a5a5a5 important;
+}
+
 i.indicator-green {
     height: 5px;
     width: 5px;
