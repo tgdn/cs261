@@ -15,6 +15,7 @@ import {
 } from 'semantic-ui-react'
 
 import SymbolChart from './symbolchart'
+import ReviewAnomalyModal from './reviewanomalymodal'
 
 const severityToColor = (severity) => {
     switch (severity) {
@@ -116,7 +117,7 @@ class AlertDashboard extends React.Component {
                     content='This action cannot be undone'
                     confirmButton='Yes'
                 />
-            <Menu borderless attached='top' inverted>
+                <Menu borderless attached='top' inverted>
                     <Menu.Item header>
                         <Icon name='warning sign' />
                         {alert.description}
@@ -128,11 +129,7 @@ class AlertDashboard extends React.Component {
                             open {alert.symbol}
                         </Menu.Item>
                         <Menu.Item fitted>
-                            <Button
-                                inverted
-                            >
-                                Review
-                            </Button>
+                            <ReviewAnomalyModal alert={alert} />
                         </Menu.Item>
                         <Menu.Item>
                             <Button
