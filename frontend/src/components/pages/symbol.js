@@ -45,7 +45,11 @@ class SymbolPage extends React.Component {
 
     componentDidMount() {
         this.mounted = true
-        this.subscribeTrades()
+        if (this.state.liveTrades) {
+            this.subscribeTrades()
+        } else {
+            this.getTrades()
+        }
     }
 
     componentWillUnmount() {
