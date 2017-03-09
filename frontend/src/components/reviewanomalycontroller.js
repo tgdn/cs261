@@ -23,6 +23,7 @@ class ReviewAnomalyController extends React.Component {
     constructor(props) {
         super(props)
         this.handleSeverityChange = this.handleSeverityChange.bind(this)
+        this.handleDescriptionChange = this.handleDescriptionChange.bind(this)
     }
 
     static colorOrNa(shouldBe, current, color) {
@@ -32,11 +33,43 @@ class ReviewAnomalyController extends React.Component {
         return 'grey'
     }
 
+    descriptionMaker(type) {
+        const { symbol } = this.props.alert
+        console.log(this.props.alert);
+        switch (type) {
+        case 'VS':
+            return `Hourly volume spike for ${symbol}`
+        case 'VS-D':
+            return `Volume spike over past day for ${symbol}`
+        case 'PDBR':
+            return `Hourly pump and dump/bear raid for ${symbol}`
+        case 'PDBR-D':
+            return `Pump and dump/bear raid over past day for ${symbol}`
+        case 'FFP':
+            return `Fat finger error on price for ${symbol}`
+        case 'FFV':
+            return `Fat finger error on volume for ${symbol}`
+        case 'other':
+        default:
+            return `Other type of anomaly for ${symbol}`
+        }
+    }
+
     handleSeverityChange(severity) {
         const { horizon: hz, alert } = this.props
         hz('alerts').update({
             id: alert.id,
             severity
+        })
+    }
+
+    handleDescriptionChange(e, data) {
+        const { value } = data
+        const { horizon: hz, alert } = this.props
+        if (value === 'current') { return } // early return
+        hz('alerts').update({
+            id: alert.id,
+            description: this.descriptionMaker(value)
         })
     }
 
@@ -49,13 +82,13 @@ class ReviewAnomalyController extends React.Component {
         ]
         const ANOMALY_OPTIONS = [
             { key: 0, value: 'current', text: alert.description, selected: true },
-            { key: 1, value: 'VS', text: 'Hourly volume spike' },
-            { key: 2, value: 'VS-D', text: 'Volume spike over past day' },
-            { key: 3, value: 'FFP', text: 'Fat finger error on price' },
-            { key: 4, value: 'FFV', text: 'Fat finger error on volume' },
-            { key: 6, value: 'PDBR', text: 'Hourly pump and dump/bear raid' },
-            { key: 7, value: 'PDBR-D', text: 'Pump and dump/bear raid over past day' },
-            { key: 8, value: 'other', text: 'Other' },
+            { key: 1, value: 'VS', text: this.descriptionMaker('VS') },
+            { key: 2, value: 'VS-D', text: this.descriptionMaker('VS-D') },
+            { key: 3, value: 'FFP', text: this.descriptionMaker('FFP') },
+            { key: 4, value: 'FFV', text: this.descriptionMaker('FFV') },
+            { key: 6, value: 'PDBR', text: this.descriptionMaker('PDBR') },
+            { key: 7, value: 'PDBR-D', text: this.descriptionMaker('PDBR-D') },
+            { key: 8, value: 'other', text: this.descriptionMaker('other') },
         ]
         return (
             <Grid>
@@ -84,6 +117,7 @@ class ReviewAnomalyController extends React.Component {
                                 fluid
                                 search
                                 selection
+                                onChange={this.handleDescriptionChange}
                                 options={ANOMALY_OPTIONS}
                             />
                         </div>
