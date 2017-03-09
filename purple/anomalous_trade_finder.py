@@ -340,8 +340,8 @@ class AnomalousTradeFinder:
             volume = db.engine.execute(vol_query)
 
             #query that gets price change for day
-            price_query = "(SELECT price FROM trades WHERE symbol_name=\'" + key + "\' AND analysis_date=\'" + date + "\' ORDER BY id ASC LIMIT 1) "
-            price_query += "UNION (SELECT price FROM trades WHERE symbol_name=\'" + key + "\' AND analysis_date=\'" + date + "\' ORDER BY id DESC LIMIT 1)"
+            price_query = "(SELECT MAX(price) FROM trades WHERE symbol_name=\'" + key + "\' AND analysis_date=\'" + date + "\' LIMIT 1) "
+            price_query += "UNION (SELECT MIN(price) FROM trades WHERE symbol_name=\'" + key + "\' AND analysis_date=\'" + date + "\' LIMIT 1)"
 
             prices = db.engine.execute(price_query)
 
@@ -358,14 +358,25 @@ class AnomalousTradeFinder:
             new_vol_stdev_mean = self.welford(day_count, total_vol_stdev, total_vol_mean, float(to_add))
            
             #Get price change for whole day
-            opening_price = prices.fetchone()[0]
-            closing_price = prices.fetchone()[0]
-            price_change_to_add = closing_price - opening_price
-
+            max_price = prices.fetchone()[0]
+            min_price = prices.fetchone()[0]
+            price_change_to_add = min_price - max_price
+            spike = False
             #Calculate new mean and standard deviation for day's price change
             new_day_change_mean_stdev = self.welford(day_count, day_price_change_stdev, day_price_change_mean, price_change_to_add)
 
-            if to_add >= new_vol_stdev_mean["mean"] + 6 * new_vol_stdev_mean["stdev"]:
+            if to_add >= new_vol_stdev_mean["mean"] + 7 * new_vol_stdev_mean["stdev"]:
+                spike = True
+                #Alert volume spike for day
+                self.anomalous_trades.append({
+                    'id': date,
+                    'time': -1,
+                    'description': 'Volume spike over past day for ' + key,
+                    'error_code': 'VS',
+                    'severity': 1
+                })
+            elif to_add >= new_vol_stdev_mean["mean"] + 6 * new_vol_stdev_mean["stdev"]:
+                spike = True
                 #Alert volume spike for day
                 self.anomalous_trades.append({
                     'id': date,
@@ -374,9 +385,28 @@ class AnomalousTradeFinder:
                     'error_code': 'VS',
                     'severity': 2
                 })
-                
-                #Pump and dump if price change is outside of 3stdev + mean
-                if price_change_to_add >= new_day_change_mean_stdev["mean"] + 6 * new_day_change_mean_stdev["stdev"]:
+            elif to_add >= new_vol_stdev_mean["mean"] + 5 * new_vol_stdev_mean["stdev"]:
+                spike = True
+                #Alert volume spike for day
+                self.anomalous_trades.append({
+                    'id': date,
+                    'time': -1,
+                    'description': 'Volume spike over past day for ' + key,
+                    'error_code': 'VS',
+                    'severity': 3
+                })
+            # If there's a volume spike, check for a pump and dump
+            if spike:
+                #Pump and dump if price change is outside of n * stdev + mean
+                if price_change_to_add >= new_day_change_mean_stdev["mean"] + 7 * new_day_change_mean_stdev["stdev"]:
+                    self.anomalous_trades.append({
+                        'id': date,
+                        'time': -1,
+                        'description': 'Pump and dump over past day for ' + key,
+                        'error_code': 'PD',
+                        'severity': 1
+                    })
+                elif price_change_to_add >= new_day_change_mean_stdev["mean"] + 6 * new_day_change_mean_stdev["stdev"]:
                     self.anomalous_trades.append({
                         'id': date,
                         'time': -1,
@@ -384,15 +414,13 @@ class AnomalousTradeFinder:
                         'error_code': 'PD',
                         'severity': 2
                     })
-
-                #Bear raid if price change is outside of 3stdev + mean
-                if price_change_to_add <= new_day_change_mean_stdev["mean"] - 6 * new_day_change_mean_stdev["stdev"]:
+                elif price_change_to_add >= new_day_change_mean_stdev["mean"] + 5 * new_day_change_mean_stdev["stdev"]:
                     self.anomalous_trades.append({
                         'id': date,
                         'time': -1,
-                        'description': 'Bear raid over past day for ' + key,
-                        'error_code': 'BR',
-                        'severity': 2
+                        'description': 'Pump and dump over past day for ' + key,
+                        'error_code': 'PD',
+                        'severity': 3
                     })
 
             #Update stats with new total vol stdev and mean, and new count of days
