@@ -228,9 +228,16 @@ class AnomalousTradeFinder:
         #Calculate new stdev for price deltas
         delta_values = self.welford(trade_count, price_delta_stdev, price_delta_mean, new_delta_to_add)
 
-        if new_delta_to_add >= delta_values["stdev"] * 6 + delta_values["mean"]:
+        if new_delta_to_add >= delta_values["stdev"] * 7 + delta_values["mean"]:
+            self.anomalous_trades.append({
+                    'id': identifier,
+                    'time': trade.time,
+                    'description': 'Fat finger error on price for ' + trade.symbol,
+                    'error_code': 'FFP',
+                    'severity': 1
+            })
+        elif new_delta_to_add >= delta_values["stdev"] * 6 + delta_values["mean"]:
             #Alert fat finger on price
-            print "Found a fat finger on price on individual trade"
             self.anomalous_trades.append({
                     'id': identifier,
                     'time': trade.time,
@@ -238,16 +245,44 @@ class AnomalousTradeFinder:
                     'error_code': 'FFP',
                     'severity': 2
             })
+        elif new_delta_to_add >= delta_values["stdev"] * 5 + delta_values["mean"]:
+            #Alert fat finger on price
+            self.anomalous_trades.append({
+                    'id': identifier,
+                    'time': trade.time,
+                    'description': 'Fat finger error on price for ' + trade.symbol,
+                    'error_code': 'FFP',
+                    'severity': 3
+            })
+
+
         vol_values = self.welford(trade_count, vol_stdev, vol_mean, new_vol_to_add)
-        if new_vol_to_add >= vol_values["stdev"] * 6 + vol_values["mean"]:
+        if new_vol_to_add >= vol_values["stdev"] * 7 + vol_values["mean"]:
             #Alert fat finger on volume
-            print "Found a fat finger on volume on individual trade"
+            self.anomalous_trades.append({
+                    'id': identifier,
+                    'time': trade.time,
+                    'description': 'Fat finger error on volume for ' + trade.symbol,
+                    'error_code': 'FFV',
+                    'severity': 1
+            })
+        elif new_vol_to_add >= vol_values["stdev"] * 6 + vol_values["mean"]:
+            #Alert fat finger on volume
             self.anomalous_trades.append({
                     'id': identifier,
                     'time': trade.time,
                     'description': 'Fat finger error on volume for ' + trade.symbol,
                     'error_code': 'FFV',
                     'severity': 2
+            })
+        elif new_vol_to_add >= vol_values["stdev"] * 5 + vol_values["mean"]:
+            #Alert fat finger on volume
+            self.anomalous_trades.append({
+                    'id': identifier,
+                    'time': trade.time,
+                    'description': 'Fat finger error on volume for ' + trade.symbol,
+                    'error_code': 'FFV',
+                    'severity': 3
             })
 
         #Update stats with new statistical values
