@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
+############################
+# Class that holds a trade #
+############################
+
 import pytz
 from datetime import datetime
 
 import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
 
+# Set our timezone
 tz = pytz.timezone('Europe/London')
 
 class Trade:
@@ -13,10 +18,10 @@ class Trade:
         self.parse_err = False
 
         try:
-            # try splitting
+            # Try splitting
             split_row = row.split(',')
 
-            # localize timezone
+            # Localize timezone
             self.time = tz.localize(datetime.strptime(split_row[0], '%Y-%m-%d %H:%M:%S.%f'))
             self.buyer = split_row[1]
             self.seller = split_row[2]

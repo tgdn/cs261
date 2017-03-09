@@ -1,22 +1,34 @@
 # -*- coding: utf-8 -*-
 
+# Used for file management
 import os
+# Used for timezone handling
 import pytz
 import sys
+# Used for file handling
 import fcntl
+# Used for exit handling
 import signal
+# Used for connection to feed
 import socket
+# Used to generate hash of csv
 import hashlib
+# Used for exit handling
 import atexit
+# Used for time handling
 import time
+# Used for datetime handling
 from datetime import datetime, timedelta
+# rethinkDB
 import rethinkdb as r
 
+# PostgreSQL
 from purple import db
 from purple.realtime import NotificationManager, TaskManager
 from purple.finance import Trade
 from purple.analysis import TradesAnalyser
 
+# Set our timezone
 tz = pytz.timezone('Europe/London')
 
 # process globals
@@ -26,6 +38,7 @@ FILE_HANDLE = None
 notification_manager = NotificationManager()
 task_manager = TaskManager()
 
+# Handles process ending
 def before_exit(signum=None, frame=None):
     '''
     Will store the tasks exit in rethinkdb
@@ -68,12 +81,13 @@ class App:
         global TASK_ENDED
         global TASK_PK
 
+        # Drop or initialise the PostgreSQL db as necessary
         if args.reset_db:
             db.drop_tables()
         if args.init_db:
             db.create_tables()
 
-        # check whether there is no analysis happening currently
+        # Check whether there is no analysis happening currently
         if args.file or args.stream_url:
             with db.get_reql_connection(db=True) as conn:
                 task_count = r.table('tasks').filter(r.row['terminated'] == False).count().run(conn)
@@ -86,9 +100,11 @@ class App:
                     )
                     return
 
+        # Analyse a file
         if args.file:
             TASK_PK = task_manager.store(task='analysis', type='file')
             self.from_file(args.file)
+        # Analyse a stream
         if args.stream_url:
             port = args.port or 80
             TASK_PK = task_manager.store(task='analysis', type='stream')
@@ -109,15 +125,15 @@ class App:
         global FILE_HANDLE
         FILE_HANDLE = f
 
-        # set non blocking i/o
+        # Set non blocking i/o
         fd = f.fileno()
         flag = fcntl.fcntl(fd, fcntl.F_GETFD)
         fcntl.fcntl(fd, fcntl.F_SETFL, flag |  os.O_NONBLOCK)
 
-        #The blocksize we are using reading into our hash buffer
+        # The blocksize we are using reading into our hash buffer
         BLOCKSIZE = 65536
 
-        #Take a SHA1 hash of our file
+        # Take a SHA1 hash of our file
         file_buff = f.read(BLOCKSIZE)
 
         while len(file_buff) > 0:
@@ -134,10 +150,10 @@ class App:
         # the time it takes.
 
         trades_analyser = TradesAnalyser(tradeacc_limit=1000)
-        # read line by line
+        # Read line by line
         print "Adding lines for analysis"
         for line in f:
-            # continue if row is parsed correctly
+            # Continue if row is parsed correctly
             t = Trade(line)
             if not t.parse_err:
                 trades_analyser.add(t, sha1_hash, True, commit=True)
@@ -145,9 +161,10 @@ class App:
         trades_analyser.force_commit()
         print "Lines added to memory, beginning anomaly detection"
 
-        #Calculate delta_mean, delta_stdev, vol_mean, vol_stdev for file analysed
+        # Calculate stats once all trades added
         trades_analyser.alert_stats(True, True)
 
+        # Close the file
         try:
             f.close()
         except:
@@ -186,10 +203,10 @@ class App:
         firstline = True
         trades_analyser = TradesAnalyser(tradeacc_limit=50)
 
-        # read character by character until new line '\n'
+        # Read character by character until new line '\n'
         # is found. Parse line at that time and continue.
         while 1:
-            # read character
+            # Read character
             try:
                 char = sock.recv(1)
                 if char == '\n':
@@ -198,22 +215,24 @@ class App:
                     else:
                         t = Trade(line)
                         if not t.parse_err:
+                            # Add trade if it is correct
                             trades_analyser.add(t, None, firstday, commit=True)
                     line = ''
                 else:
                     line = line + char
-            #The feed is down, we've got to analyse then reconnect
+            # The feed is down, we've got to analyse then reconnect
             except socket.timeout:
                 print "Connection lost, attempting to reconnect"
                 disconnected = True
-                #Only analyse if the day of trades is over
+                # Only analyse if the day of trades is over
                 if datetime.now().strftime('%H') == '00':
                     print "Beginning analysis"
                     trades_analyser.alert_stats(firstday, False)
                     firstday = False
-                    #Wait for 5 minutes until the feed is accepting connections again
+                    # Wait for 5 minutes until the feed is accepting connections again
                     time.sleep(300)
                 else:
+                    # Feed has gone down, notify front end and reconnect
                     print "Feed appears to be down"
                     notification_manager.add(
                         level = 'error',
@@ -224,6 +243,7 @@ class App:
                         datetime = tz.localize(datetime.now())
                     )
 
+                # Attempt to reconnect
                 while disconnected:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     try:

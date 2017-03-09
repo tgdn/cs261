@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import sys
+# rethinkdB
 import rethinkdb as r
+# rethink errors
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
-
+# 
 from contextlib import contextmanager
+
+# Types for PostgreSQL
 from sqlalchemy import (
     create_engine,
     Column,
@@ -18,14 +22,18 @@ from sqlalchemy import (
     DateTime,
     Binary
 )
+
+# Base for tables for PostgreSQL
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import sessionmaker, relationship
 
+# rethinkDB connection info
 RDB_HOST = 'localhost'
 RDB_PORT = '28015'
 PURPLE_DB = 'purple'
 
+# PostgreSQL connection info
 DATABASE_SETTINGS = {
     'drivername': 'postgres',
     'host': 'localhost',
@@ -35,7 +43,7 @@ DATABASE_SETTINGS = {
     'database': 'cs261'
 }
 
-# create database engine and setup session
+# Create database engine and setup session
 engine = create_engine(URL(**DATABASE_SETTINGS))
 Base = declarative_base(bind=engine)
 Session = sessionmaker(bind=engine)
@@ -69,6 +77,7 @@ def get_reql_connection(db=False):
 #           Public Methods          #
 #####################################
 
+# Create tables for both rethink and Postgres
 def create_tables():
     '''
     Create all tables
@@ -79,7 +88,7 @@ def create_tables():
     # Rethinkdb
     with get_reql_connection() as conn:
         try:
-             # Database
+            # Database
             r.db_create(PURPLE_DB).run(conn)
             # Tables
             r.db(PURPLE_DB).table_create('alerts').run(conn) # holds financial alerts
@@ -92,13 +101,12 @@ def create_tables():
             # default settings
             set_default_settings()
         except RqlRuntimeError:
-            # fail silently
-            # Remember to reset db first to migrate db
+            # Fail silently
             pass
         finally:
             print 'Rethinkdb setup complete.'
 
-
+# Reset our databases
 def drop_tables():
     '''
     Delete all data in the tables (destroy databases)
@@ -113,6 +121,7 @@ def drop_tables():
         except RqlRuntimeError:
             pass
 
+# Initialise rethink with correct defaults
 def set_default_settings():
     '''
     Insert default settings into rethink
@@ -133,10 +142,12 @@ def set_default_settings():
 #               Models               #
 ######################################
 
+# Base table model
 class BaseModel(Base):
     __abstract__ = True
     id = Column(Integer, primary_key=True)
 
+# Stores symbol and statistics
 class SymbolModel(Base):
     __tablename__ = 'symbols'
     name = Column(String, primary_key=True)
@@ -150,6 +161,7 @@ class SymbolModel(Base):
 
     trades = relationship('TradeModel', back_populates='symbol')
 
+    # Checks whether symbol is already in db
     @classmethod
     def get_or_create(cls, name):
         # retrieve symbol or create a new one and return
@@ -179,7 +191,7 @@ class TradeModel(BaseModel):
     datetime = Column(DateTime)
 
     symbol = relationship('SymbolModel', back_populates='trades')
-
+    # Set's a trade as flagged
     def flag(self, truth_value):
         self.flagged = truth_value
         session.commit()

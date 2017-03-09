@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Collects data for testing
+
 import sys
 import socket
 import sqlite3 as s
