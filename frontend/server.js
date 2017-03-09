@@ -60,10 +60,49 @@ app.get('/api/symbols', db.getSymbols)
 app.get('/api/symbol/:symbol', db.getSymbol)
 app.get('/api/trades/flagged/:tradeid/', db.getFlaggedTrades)
 
-/*
- * !! One more API call below in rethink connection !!
- */
+ /*
+  * Connect to RethinkDB here
+  */
+ r.connect({
+     host: 'localhost',
+     port: 28015,
+     db: 'purple'
+ })
+ .then((conn) => {
+     // API: Search alerts
+     app.post('/api/alerts/search', (req, res) => db.searchAlerts(req, res, conn))
 
+     // API: Delete anomaly (single one)
+     app.post('/api/alerts/delete', (req, res) => db.cancelOneAlert(req, res, conn))
+
+     // Kill process endpoint
+     app.post('/killprocess', (req, res) => {
+         const id = req.body.id
+         if (id) {
+             r.table('tasks').get(id).run(conn, (err, task) => {
+                 if (!err) {
+                     /* verify the task isnt finished and kill process */
+                     if (!task.terminated) {
+                         process.kill(task.pid)
+                     }
+                 }
+             })
+             res.json({ success: true })
+             return
+         }
+         res.json({ success: false })
+     })
+ })
+ .error((error) => {
+     /* eslint-disable no-console */
+     console.log(`Connection to db could not be established:\n${error}`)
+     process.exit(1)
+     /* eslint-enable */
+ })
+
+/*
+ * Upload file and do analysis on file
+ */
 app.post('/upload', (req, res) => {
     uploadHandler(req, res, (err) => {
         if (err) {
@@ -89,6 +128,9 @@ app.post('/upload', (req, res) => {
     })
 })
 
+/*
+ * Do analysis on live stream
+ */
 app.post('/setstream', (req, res) => {
     const streamUrl = req.body.streamUrl
     const port = req.body.port || 80
@@ -113,43 +155,6 @@ app.post('/setstream', (req, res) => {
     res.json({
         success: false,
     })
-})
-
-r.connect({
-    host: 'localhost',
-    port: 28015,
-    db: 'purple'
-})
-.then((conn) => {
-    // Kill process endpoint
-    app.post('/killprocess', (req, res) => {
-        const id = req.body.id
-        if (id) {
-            r.table('tasks').get(id).run(conn, (err, task) => {
-                if (!err) {
-                    /* verify the task isnt finished and kill process */
-                    if (!task.terminated) {
-                        process.kill(task.pid)
-                    }
-                }
-            })
-            res.json({ success: true })
-            return
-        }
-        res.json({ success: false })
-    })
-
-    // API: Search alerts
-    app.post('/api/alerts/search', (req, res) => db.searchAlerts(req, res, conn))
-
-    // API: Delete anomaly (single one)
-    app.post('/api/alerts/delete', (req, res) => db.cancelOneAlert(req, res, conn))
-})
-.error((error) => {
-    /* eslint-disable no-console */
-    console.log(`Connection to db could not be established:\n${error}`)
-    process.exit(1)
-    /* eslint-enable */
 })
 
 /*
