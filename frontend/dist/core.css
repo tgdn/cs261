@@ -47,6 +47,16 @@ body {
     transform: translate3d(190px, 0, 0) !important;
 }
 
+.alertsidebar {
+    width: 220px !important;
+}
+
+.alertsidebar~.pusher {
+    width: calc(100% - 220px) !important;
+    -webkit-transform: translate3d(220px, 0, 0) !important;
+    transform: translate3d(220px, 0, 0) !important;
+}
+
 .pulsate {
 	-webkit-animation: pulse 3s infinite !important;
     animation: pulse 3s infinite !important;

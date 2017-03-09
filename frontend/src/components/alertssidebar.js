@@ -83,7 +83,7 @@ class AlertsSidebar extends React.Component {
                 visible
                 vertical
                 inverted
-                className='symbolsidebar'
+                className='alertsidebar'
             >
                 <Menu.Item>
                     <Input
