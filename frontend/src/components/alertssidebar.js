@@ -15,6 +15,7 @@ class AlertsSidebar extends React.Component {
         this.handleInputChange = this.handleInputChange.bind(this)
         this.state = {
             searchTerm: '',
+            searching: false,
             alerts: this.props.alerts
         }
     }
@@ -40,6 +41,7 @@ class AlertsSidebar extends React.Component {
     fetchSearch() {
         const term = this.state.searchTerm
         if (term) {
+            this.setState({ searching: true })
             fetch('/api/alerts/search/', { // eslint-disable-line
                 method: 'POST',
                 headers: {
@@ -48,6 +50,7 @@ class AlertsSidebar extends React.Component {
                 body: JSON.stringify({ term })
             })
             .then((res) => {
+                this.setState({ searching: false })
                 if (res.status >= 200 && res.status < 300) {
                     return res.json()
                 }
@@ -62,7 +65,8 @@ class AlertsSidebar extends React.Component {
             })
             .catch((err) => {
                 this.setState({
-                    alerts: []
+                    alerts: [],
+                    searching: false
                 })
                 throw err
             })
@@ -71,7 +75,7 @@ class AlertsSidebar extends React.Component {
 
     render() {
         const { alertid = -1 } = this.props.params
-        const { alerts } = this.state
+        const { alerts, searching } = this.state
         return (
             <Sidebar
                 as={Menu}
@@ -88,6 +92,7 @@ class AlertsSidebar extends React.Component {
                         icon='search'
                         value={this.state.searchTerm}
                         onChange={this.handleInputChange}
+                        loading={searching}
                     />
                 </Menu.Item>
                 {map(alerts, alert => (
