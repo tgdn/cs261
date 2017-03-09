@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
-import { browserHistory } from 'react-router'
+import { browserHistory, Link } from 'react-router'
 
 import {
     Container,
@@ -91,6 +91,10 @@ class AlertDashboard extends React.Component {
                         <Label color={severityToColor(alert.severity)}>{alert.severity}</Label>
                     </Menu.Item>
                     <Menu.Menu position='right'>
+                        <Menu.Item as={Link} to={`/${alert.symbol}`}>
+                            <Icon name='external' />
+                            {alert.symbol}
+                        </Menu.Item>
                         <Menu.Item fitted>
                             <Button
                                 inverted
