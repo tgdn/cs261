@@ -138,7 +138,11 @@ class AlertPage extends React.Component {
                                 </Segment>
                             </div>
                         ) : (
-                            <AlertDashboard alert={alert} trades={trades} />
+                            <AlertDashboard
+                                alert={alert}
+                                trades={trades}
+                                horizon={this.props.horizon}
+                            />
                         )}
                     </Container>
                 </Grid.Column>

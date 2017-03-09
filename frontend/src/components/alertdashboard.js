@@ -6,7 +6,7 @@ import {
     Menu,
     Segment,
     Loader,
-    Button,
+    Confirm,
     Label
 } from 'semantic-ui-react'
 
@@ -22,38 +22,92 @@ const severityToColor = (severity) => {
     }
 }
 
-const AlertDashboard = ({ alert, trades }) => (
-    <div>
-        <Menu size='huge' borderless attached='top' inverted>
-            <Menu.Item header>
-                <Icon name='warning sign' />
-                {alert.description}
-                <Label color={severityToColor(alert.severity)}>{alert.severity}</Label>
-            </Menu.Item>
-            <Menu.Menu position='right'>
-                <Menu.Item as={Button}>
-                    Review
-                </Menu.Item>
-                <Menu.Item as={Button}>
-                    Not an anomaly
-                </Menu.Item>
-            </Menu.Menu>
-        </Menu>
-        <div>
-            <Segment inverted attached='bottom'>
-                {(trades.length === 0) ? (
-                    <h1>Loading trades...</h1>
-                ) : (
-                    <SymbolChart
-                        symbol='random'
-                        trades={trades}
-                        flagAnomalies={false}
-                        flagOne={alert.trade_pk}
-                    />
-                )}
-            </Segment>
-        </div>
-    </div>
-)
+class AlertDashboard extends React.Component {
+    constructor(props) {
+        super(props)
+        this.handleCancelAnomaly = this.handleCancelAnomaly.bind(this)
+        this.state = {
+            cancelModalOpened: false,
+        }
+    }
+
+    handleOpenCancelAnomaly = () => this.setState({ cancelModalOpened: true })
+
+    handleCancelAnomalyCancelBtn = (e) => this.setState({ cancelModalOpened: false })
+
+    handleCancelAnomalyConfirmBtn = (e) => {
+        this.setState({ cancelModalOpened: false })
+        this.handleCancelAnomaly()
+    }
+
+    cancelMultiple(id) {
+        const horizon = this.props.horizon
+        try {
+            horizon('alerts').update({ id })
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    cancelOne(alertid) {
+        console.log('cancel one');
+    }
+
+    handleCancelAnomaly() {
+        const { alert } = this.props
+        if (alert.trade_pk === -1) {
+            this.cancelMultiple()
+        } else {
+            this.cancelOne()
+        }
+    }
+
+    render() {
+        const { alert, trades } = this.props
+        return (
+            <div>
+                <Confirm
+                    open={this.state.cancelModalOpened}
+                    onCancel={this.handleCancelAnomalyCancelBtn}
+                    onConfirm={this.handleCancelAnomalyConfirmBtn}
+                    header='Are you sure you want to delete this anomaly?'
+                    content='This action cannot be undone'
+                    confirmButton='Yes'
+                />
+                <Menu size='huge' borderless attached='top' inverted>
+                    <Menu.Item header>
+                        <Icon name='warning sign' />
+                        {alert.description}
+                        <Label color={severityToColor(alert.severity)}>{alert.severity}</Label>
+                    </Menu.Item>
+                    <Menu.Menu position='right'>
+                        <Menu.Item>
+                            Review
+                        </Menu.Item>
+                        <Menu.Item onClick={this.handleOpenCancelAnomaly}>
+                            Not an anomaly
+                        </Menu.Item>
+                    </Menu.Menu>
+                </Menu>
+                <div>
+                    <Segment inverted attached='bottom'>
+                        {(trades.length === 0) ? (
+                            <Loader active inverted size='large' inline='centered'>
+                                Loading trades...
+                            </Loader>
+                        ) : (
+                            <SymbolChart
+                                symbol='random'
+                                trades={trades}
+                                flagAnomalies={false}
+                                flagOne={alert.trade_pk}
+                            />
+                        )}
+                    </Segment>
+                </div>
+            </div>
+        )
+    }
+}
 
 export default AlertDashboard
