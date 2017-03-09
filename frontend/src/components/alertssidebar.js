@@ -21,7 +21,9 @@ class AlertsSidebar extends React.Component {
     }
 
     componentWillReceiveProps(newProps) {
-        this.setState({ alerts: newProps.alerts })
+        if (!this.state.searchTerm) {
+            this.setState({ alerts: newProps.alerts })
+        }
     }
 
     handleInputChange(e) {
