@@ -60,8 +60,9 @@ class AlertPage extends React.Component {
     getAlert(alertid) {
         const alert = find(this.props.alerts, obj => obj.id === alertid)
         if (alert === undefined) {
-            this.props.horizon('alerts').find(alertid)
-                .fetch()
+            this.props.horizon('alerts')
+                .find(alertid)
+                .watch()
                 .subscribe((doc) => {
                     if (this.mounted) {
                         if (doc != null) {
