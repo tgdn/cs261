@@ -43,3 +43,13 @@ def test_read_from_file():
 		assert False
 	except IndexError:
 		assert True
+
+######################################################################
+#                            Manual Testing                          #
+######################################################################
+
+# These manual tests should be carried out everytime any changes are made to the app.py file.
+
+# Check to make sure the logic for connection to sockets is still correct. This can be done by simply running the code and making sure
+# that no exceptions are caught by the try except clause.
+

@@ -103,5 +103,17 @@ def test_calculate_anomalies_single_trade():
 	assert round(test_finder.stats['AV.L']['vol_stdev'],3) == round(std([15952,10000,12000]),3)
 
 
+######################################################################
+#                            Manual Testing                          #
+######################################################################
 
+# These manual tests should be carried out everytime any changes are made to the anomalous_trade_finder.py file.
+
+# Ensure that _calculate_vol_spikes and _calculate_pump_bear correctly flag the right trades. This can be done through inspection
+# by printing out appropriate information, such as symbol and time period, when those functions flag an anomaly.
+
+# Ensure that the calculate_anomalies_end_of_day function still gets the correct data from the database. This can be checked by 
+# inserting some test data into an empty trades table, then querying the table with the query from the function, replacing
+# variables for appropriate values. The remaining logic has all been tested in units so you should be alerted if they are not
+# functioning correctly.
 
