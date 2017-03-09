@@ -135,7 +135,7 @@ class AnomalousTradeFinder:
                 #Check for bid ask spread errors
                 if self.trade_history[key][vol_counter]["bid_ask_spread"] < 0:
                     description = 'Negative bid ask spread for ' + key
-                    self.add_anomaly(vol_counter, times[vol_counter], description, 'NBAS', 1, key)
+                    self.add_anomaly(ids[vol_counter], times[vol_counter], description, 'NBAS', 1, key)
                     
                 vol_counter += 1
 
