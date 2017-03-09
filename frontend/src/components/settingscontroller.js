@@ -105,7 +105,7 @@ class SettingsController extends React.Component {
                     active={this.state.resetingDb}
                     page
                 >
-                    <Loader size='large'>Reseting database...</Loader>
+                    <Loader size='large'>Resetting database...</Loader>
                 </Dimmer>
                 <Grid.Row columns={1}>
                     <Grid.Column>
