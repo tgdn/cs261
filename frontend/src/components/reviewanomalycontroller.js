@@ -14,16 +14,6 @@ import {
     Loader
 } from 'semantic-ui-react'
 
-const ANOMALY_OPTIONS = [
-    { key: 1, value: 'VS', text: 'Hourly volume spike' },
-    { key: 2, value: 'VS-D', text: 'Volume spike over past day' },
-    { key: 3, value: 'FFP', text: 'Fat finger error on price' },
-    { key: 4, value: 'FFV', text: 'Fat finger error on volume' },
-    { key: 6, value: 'PDBR', text: 'Hourly pump and dump/bear raid' },
-    { key: 7, value: 'PDBR-D', text: 'Pump and dump/bear raid over past day' },
-    { key: 8, value: 'other', text: 'Other' },
-]
-
 class ReviewAnomalyController extends React.Component {
     // constructor(props) {
     //     super(props)
@@ -31,6 +21,16 @@ class ReviewAnomalyController extends React.Component {
 
     render() {
         const alert = this.props.alert
+        const ANOMALY_OPTIONS = [
+            { key: 0, value: 'current', text: alert.description, selected: true },
+            { key: 1, value: 'VS', text: 'Hourly volume spike' },
+            { key: 2, value: 'VS-D', text: 'Volume spike over past day' },
+            { key: 3, value: 'FFP', text: 'Fat finger error on price' },
+            { key: 4, value: 'FFV', text: 'Fat finger error on volume' },
+            { key: 6, value: 'PDBR', text: 'Hourly pump and dump/bear raid' },
+            { key: 7, value: 'PDBR-D', text: 'Pump and dump/bear raid over past day' },
+            { key: 8, value: 'other', text: 'Other' },
+        ]
         return (
             <Grid>
                 <Grid.Row columns={2}>
