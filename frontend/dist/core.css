@@ -83,6 +83,19 @@ i.indicator-red {
     box-shadow: 0 0 3px #d62f2f;
 }
 
+/* alerts */
+.alert-item-1 {
+    border-left: 4px solid #d62f2f;
+}
+
+.alert-item-2 {
+    border-left: 4px solid #eef442;
+}
+
+.alert-item-3 {
+    border-left: 4px solid #41e2f4;
+}
+
 /* animations */
 @-webkit-keyframes pulse{
 	0% {font-size: 8em;}

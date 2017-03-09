@@ -96,6 +96,7 @@ class AlertsSidebar extends React.Component {
                         as={Link}
                         active={alertid === alert.id}
                         to={`/flagged/${alert.id}`}
+                        className={`alert-item-${alert.severity}`}
                     >
                         {alert.description}
                     </Menu.Item>
