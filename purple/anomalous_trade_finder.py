@@ -183,8 +183,8 @@ class AnomalousTradeFinder:
                 spike = True
                 self.anomalous_trades.append({
                     'id': -1,
-                    'time': index,
-                    'description': 'Hourly volume spike from ' + str(index - 1) + ' to ' + str(index) + ' for ' + key,
+                    'time': index + 1,
+                    'description': 'Hourly volume spike from ' + str(index + 1) + ' to ' + str(index + 2) + ' for ' + key,
                     'error_code': 'VS',
                     'severity': 1
                 })
@@ -193,8 +193,8 @@ class AnomalousTradeFinder:
                 spike = True
                 self.anomalous_trades.append({
                     'id': -1,
-                    'time': index,
-                    'description': 'Hourly volume spike from ' + str(index - 1) + ' to ' + str(index) + ' for ' + key,
+                    'time': index + 1,
+                    'description': 'Hourly volume spike from ' + str(index + 1) + ' to ' + str(index + 2) + ' for ' + key,
                     'error_code': 'VS',
                     'severity': 2
                 })
@@ -203,8 +203,8 @@ class AnomalousTradeFinder:
                 spike = True
                 self.anomalous_trades.append({
                     'id': -1,
-                    'time': index,
-                    'description': 'Hourly volume spike from ' + str(index - 1) + ' to ' + str(index) + ' for ' + key,
+                    'time': index + 1,
+                    'description': 'Hourly volume spike from ' + str(index + 1) + ' to ' + str(index + 2) + ' for ' + key,
                     'error_code': 'VS',
                     'severity': 3
                 })
@@ -217,8 +217,8 @@ class AnomalousTradeFinder:
         if self.stats[key]["hourly_max_change"][hour] > mean +  2 * stdev:
             self.anomalous_trades.append({
                 'id': -1,
-                'time': hour,
-                'description': 'Hourly pump and dump/bear raid from ' + str(hour - 1) + ' to ' + str(hour) + ' for ' + key,
+                'time': hour + 1,
+                'description': 'Hourly pump and dump/bear raid from ' + str(hour + 1) + ' to ' + str(hour + 2) + ' for ' + key,
                 'error_code': 'PDBR',
                 'severity': sev
             })
