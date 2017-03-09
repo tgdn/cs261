@@ -30,7 +30,8 @@ class AnomalousTradeFinder:
                 'id': identifier,
                 'price': trade.price,
                 'price_delta': 0,
-                'volume': trade.size
+                'volume': trade.size,
+                'bid_ask_spread': trade.ask - trade.bid
             }]
         else:
             price_delta = trade.price - self.trade_history[trade.symbol][-1]["price"]
@@ -40,7 +41,8 @@ class AnomalousTradeFinder:
                 'price': trade.price,
                 # Round to stop float errors
                 'price_delta': round(price_delta,3),
-                'volume': trade.size
+                'volume': trade.size,
+                'bid_ask_spread': trade.ask - trade.bid
             })
 
         if trade.symbol not in self.stats:
@@ -129,6 +131,16 @@ class AnomalousTradeFinder:
                         self.stats[key]["hourly_max"] = prices[vol_counter]
                     if prices[vol_counter] < self.stats[key]["hourly_min"]:
                         self.stats[key]["hourly_min"] = prices[vol_counter]
+
+                #Check for bid ask spread errors
+                if self.trade_history[key][vol_counter]["bid_ask_spread"] < 0:
+                    self.anomalous_trades.append({
+                    'id': vol_counter,
+                    'time': times[vol_counter],
+                    'description': 'Negative bid ask spread for ' + key,
+                    'error_code': 'NBAS',
+                    'severity': 1
+                })
                 vol_counter += 1
 
             #Check for volume spikes
