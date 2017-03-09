@@ -61,19 +61,18 @@ const getFlaggedTrades = (req, res) => {
         db.oneOrNone('SELECT id, symbol_name FROM trades WHERE id = $1', tradeid)
         .then((trade) => {
             if (trade != null) {
-                // get 100 trades on each side of flagged trade
+                // get some trades on each side of flagged trade
                 db.any(
                     `SELECT * FROM (
                         (
-                            SELECT $(tradeFields^)
-                            FROM trades
+                            SELECT $(tradeFields^) FROM trades
                             WHERE id <= $(tradeid) AND symbol_name = $(symbol_name)
-                            ORDER BY datetime DESC LIMIT 101
+                            ORDER BY datetime DESC LIMIT 201
                         )
-                        UNION ALL
+                        UNION
                         (
-                            SELECT $(tradeFields^)
-                            FROM trades WHERE id > $(tradeid) AND symbol_name = $(symbol_name)
+                            SELECT $(tradeFields^) FROM trades
+                            WHERE id > $(tradeid) AND symbol_name = $(symbol_name)
                             ORDER BY datetime ASC LIMIT 30
                         )
                     ) AS sbq ORDER BY datetime ASC`,
@@ -99,6 +98,46 @@ const getFlaggedTrades = (req, res) => {
             }
         })
         .catch(err => handleException(err, res))
+    }
+}
+
+const getFlaggedTimeConstraintTrades = (req, res) => {
+    const tradeid = req.params.tradeid
+    const timedelta = req.params.timedelta
+    if (tradeid && timedelta) {
+        db.oneOrNone('SELECT id, symbol_name FROM trades WHERE id = $1', tradeid)
+        .then((tradeid) => {
+            if (trade) {
+                // const from =
+                // const dateUntil = trade.datetime
+
+                db.any(
+                    `SELECT DISTINCT $(tradeFields^) FROM (
+                        (
+                            SELECT $(tradeFields^) FROM trades
+                            WHERE id <= $(tradeid) AND symbol_name = $(symbol_name)
+                            ORDER BY datetime DESC LIMIT 101
+                        )
+                        UNION
+                        (
+                            SELECT $(tradeFields^) FROM trades
+                            WHERE
+                                id > $(tradeid) AND
+                                symbol_name = $(symbol_name) AND
+                                datetime <= $(future_date)
+                                ORDER BY datetime ASC
+                        )
+                        UNION
+                        (
+                            SELECT $(tradeFields^) FROM trades
+                            WHERE datetime >= $(future_date)
+                            ORDER BY datetime ASC
+                            LIMIT 100
+                        )
+                    ) AS sbq ORDER BY datetime ASC`
+                )
+            }
+        })
     }
 }
 
