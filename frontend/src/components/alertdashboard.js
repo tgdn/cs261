@@ -1,4 +1,7 @@
 import React, { PropTypes } from 'react'
+import { connect } from 'react-redux'
+import { browserHistory } from 'react-router'
+
 import {
     Container,
     Grid,
@@ -7,7 +10,8 @@ import {
     Segment,
     Loader,
     Confirm,
-    Label
+    Label,
+    Button
 } from 'semantic-ui-react'
 
 import SymbolChart from './symbolchart'
@@ -43,7 +47,13 @@ class AlertDashboard extends React.Component {
     cancelMultiple(id) {
         const horizon = this.props.horizon
         try {
-            horizon('alerts').update({ id })
+            horizon('alerts').remove(id)
+            this.props.notificationsystem.addNotification({
+                level: 'info',
+                title: 'Anomaly correctly discarded',
+                message: 'The anomaly was successfully removed'
+            })
+            browserHistory.push('/flagged')
         } catch (err) {
             console.log(err);
         }
@@ -56,7 +66,7 @@ class AlertDashboard extends React.Component {
     handleCancelAnomaly() {
         const { alert } = this.props
         if (alert.trade_pk === -1) {
-            this.cancelMultiple()
+            this.cancelMultiple(alert.id)
         } else {
             this.cancelOne()
         }
@@ -74,18 +84,28 @@ class AlertDashboard extends React.Component {
                     content='This action cannot be undone'
                     confirmButton='Yes'
                 />
-                <Menu size='huge' borderless attached='top' inverted>
+            <Menu borderless attached='top' inverted>
                     <Menu.Item header>
                         <Icon name='warning sign' />
                         {alert.description}
                         <Label color={severityToColor(alert.severity)}>{alert.severity}</Label>
                     </Menu.Item>
                     <Menu.Menu position='right'>
-                        <Menu.Item>
-                            Review
+                        <Menu.Item fitted>
+                            <Button
+                                inverted
+                            >
+                                Review
+                            </Button>
                         </Menu.Item>
-                        <Menu.Item onClick={this.handleOpenCancelAnomaly}>
-                            Not an anomaly
+                        <Menu.Item>
+                            <Button
+                                inverted
+                                color='orange'
+                                onClick={this.handleOpenCancelAnomaly}
+                            >
+                                Not an anomaly?
+                            </Button>
                         </Menu.Item>
                     </Menu.Menu>
                 </Menu>
@@ -110,4 +130,8 @@ class AlertDashboard extends React.Component {
     }
 }
 
-export default AlertDashboard
+export default connect(
+    state => ({
+        notificationsystem: state.notifications.notificationsystem,
+    })
+)(AlertDashboard)
