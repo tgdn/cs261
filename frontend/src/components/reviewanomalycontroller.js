@@ -1,4 +1,9 @@
-/* eslint-disable react/sort-comp, react/prop-types, react/forbid-prop-types */
+/* eslint-disable
+   react/sort-comp,
+   react/prop-types,
+   react/forbid-prop-types,
+   react/no-array-index-key
+  */
 
 import React, { PropTypes } from 'react'
 import { connect } from 'react-redux'
@@ -15,12 +20,33 @@ import {
 } from 'semantic-ui-react'
 
 class ReviewAnomalyController extends React.Component {
-    // constructor(props) {
-    //     super(props)
-    // }
+    constructor(props) {
+        super(props)
+        this.handleSeverityChange = this.handleSeverityChange.bind(this)
+    }
+
+    static colorOrNa(shouldBe, current, color) {
+        if (shouldBe === current) {
+            return color
+        }
+        return 'grey'
+    }
+
+    handleSeverityChange(severity) {
+        const { horizon: hz, alert } = this.props
+        hz('alerts').update({
+            id: alert.id,
+            severity
+        })
+    }
 
     render() {
         const alert = this.props.alert
+        const severityOptions = [
+            { val: 1, color: ReviewAnomalyController.colorOrNa(1, alert.severity, 'red') },
+            { val: 2, color: ReviewAnomalyController.colorOrNa(2, alert.severity, 'yellow') },
+            { val: 3, color: ReviewAnomalyController.colorOrNa(3, alert.severity, 'blue') },
+        ]
         const ANOMALY_OPTIONS = [
             { key: 0, value: 'current', text: alert.description, selected: true },
             { key: 1, value: 'VS', text: 'Hourly volume spike' },
@@ -38,15 +64,15 @@ class ReviewAnomalyController extends React.Component {
                         <div>
                             <Header size='small'>Severity</Header>
                             <Button.Group>
-                                <Button color='red'>
-                                    1
-                                </Button>
-                                <Button color='yellow'>
-                                    2
-                                </Button>
-                                <Button color='blue'>
-                                    3
-                                </Button>
+                                {severityOptions.map((el, i) => (
+                                    <Button
+                                        key={i}
+                                        color={el.color}
+                                        onClick={() => { this.handleSeverityChange(el.val) }}
+                                    >
+                                        {el.val}
+                                    </Button>
+                                ))}
                             </Button.Group>
                         </div>
                     </Grid.Column>
