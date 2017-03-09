@@ -160,14 +160,8 @@ export default connect(
         notificationsystem: state.notifications.notificationsystem,
     }),
     dispatch => ({
-        updateFile: (res) => {
-            console.log(res)
-            // dispatch({
-            //     type: 'UPDATE_FILE',
-            //     data: {
-            //         file: res.,
-            //     }
-            // })
+        updateFile: () => {
+            // nothing
         },
         updateStream: (e) => {
             dispatch({
