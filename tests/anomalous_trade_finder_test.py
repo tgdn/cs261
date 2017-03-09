@@ -22,7 +22,7 @@ def test_history_add():
 def test_stats_add():
 	test_finder = AnomalousTradeFinder()
 	test_finder.add(t,1)
-	assert len(test_finder.stats[t.symbol]) == 7
+	assert len(test_finder.stats[t.symbol]) == 9
 
 def test_add_correct_delta():
 	test_finder = AnomalousTradeFinder()
@@ -79,7 +79,7 @@ def test_calculate_fat_finger():
 
 	test_finder.calculate_fat_finger(volumes,deltas,ids,times,'AV.L')
 
-	assert len(test_finder.anomalous_trades) == 6
+	assert len(test_finder.anomalous_trades) == 4
 
 def test_calculate_anomalies_single_trade():
 	test_finder = AnomalousTradeFinder()
