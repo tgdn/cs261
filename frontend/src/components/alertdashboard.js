@@ -37,22 +37,26 @@ class AlertDashboard extends React.Component {
 
     handleOpenCancelAnomaly = () => this.setState({ cancelModalOpened: true })
 
-    handleCancelAnomalyCancelBtn = (e) => this.setState({ cancelModalOpened: false })
+    handleCancelAnomalyCancelBtn = () => this.setState({ cancelModalOpened: false })
 
-    handleCancelAnomalyConfirmBtn = (e) => {
+    handleCancelAnomalyConfirmBtn = () => {
         this.setState({ cancelModalOpened: false })
         this.handleCancelAnomaly()
+    }
+
+    handleSuccessfulDelete() {
+        this.props.notificationsystem.addNotification({
+            level: 'info',
+            title: 'Anomaly correctly discarded',
+            message: 'The anomaly was successfully removed'
+        })
     }
 
     cancelMultiple(id) {
         const horizon = this.props.horizon
         try {
             horizon('alerts').remove(id)
-            this.props.notificationsystem.addNotification({
-                level: 'info',
-                title: 'Anomaly correctly discarded',
-                message: 'The anomaly was successfully removed'
-            })
+            this.handleSuccessfulDelete()
             browserHistory.push('/flagged')
         } catch (err) {
             console.log(err);
@@ -60,7 +64,35 @@ class AlertDashboard extends React.Component {
     }
 
     cancelOne(alertid) {
-        console.log('cancel one');
+        fetch('/api/alerts/delete', { // eslint-disable-line
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ alertid })
+        })
+        .then((res) => {
+            if (res.status >= 200 && res.status < 300) {
+                return res.json()
+            }
+            const err = new Error(res.statusText)
+            err.response = res
+            throw err
+        })
+        .then((res) => {
+            if (res.success) {
+                this.handleSuccessfulDelete()
+                browserHistory.push('/flagged')
+            }
+        })
+        .catch((err) => {
+            console.error(err); // eslint-disable-line
+            this.props.notificationsystem.addNotification({
+                level: 'error',
+                title: 'The anomaly couldn\'t be discarded',
+                message: 'Something unexpected came up, try again soon'
+            })
+        })
     }
 
     handleCancelAnomaly() {
@@ -68,7 +100,7 @@ class AlertDashboard extends React.Component {
         if (alert.trade_pk === -1) {
             this.cancelMultiple(alert.id)
         } else {
-            this.cancelOne()
+            this.cancelOne(alert.id)
         }
     }
 
@@ -93,7 +125,7 @@ class AlertDashboard extends React.Component {
                     <Menu.Menu position='right'>
                         <Menu.Item as={Link} to={`/${alert.symbol}`}>
                             <Icon name='external' />
-                            {alert.symbol}
+                            open {alert.symbol}
                         </Menu.Item>
                         <Menu.Item fitted>
                             <Button

@@ -140,7 +140,10 @@ r.connect({
     })
 
     // API: Search alerts
-    app.post('/api/alerts/search/', (req, res) => db.searchAlerts(req, res, conn))
+    app.post('/api/alerts/search', (req, res) => db.searchAlerts(req, res, conn))
+
+    // API: Delete anomaly (single one)
+    app.post('/api/alerts/delete', (req, res) => db.cancelOneAlert(req, res, conn))
 })
 .error((error) => {
     /* eslint-disable no-console */

@@ -226,6 +226,37 @@ const searchAlerts = (req, res, conn) => {
     }
 }
 
+const cancelOneAlert = (req, res, conn) => {
+    const alertid = req.body.alertid
+    if (alertid) {
+        r.table('alerts')
+            .get(alertid)
+            .delete({ returnChanges: true })
+            .run(conn, (err, result) => {
+                if (!err) {
+                    // get tradeid from result set
+                    const tradeid = result.changes[0].old_val.trade_pk
+                    db.none(
+                        'UPDATE trades SET flagged = FALSE WHERE id = $(tradeid)',
+                        { tradeid }
+                    )
+                    .then(() => {
+                        res.status(200).json({ success: true })
+                    })
+                    .catch((qerr) => {
+                        console.log(qerr)
+                        res.status(200).json({ success: false })
+                    })
+                } else {
+                    console.error(err);
+                    res.status(200).json({ success: false })
+                }
+            })
+    } else {
+        res.status(200).json({ success: false })
+    }
+}
+
 module.exports = {
     getSymbols,
     getSymbol,
@@ -234,4 +265,5 @@ module.exports = {
     tradesBefore,
     tradesAfter,
     searchAlerts,
+    cancelOneAlert,
 }
