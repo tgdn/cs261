@@ -16,6 +16,8 @@ function setup {
     echo "### Launching rethinkdb in background ###"
     rethinkdb &
 
+    python main.py --init-db
+
     # frontend, node etc
     cd frontend
     npm install --save
