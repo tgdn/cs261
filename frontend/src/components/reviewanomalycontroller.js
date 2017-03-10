@@ -35,7 +35,6 @@ class ReviewAnomalyController extends React.Component {
 
     descriptionMaker(type) {
         const { symbol } = this.props.alert
-        console.log(this.props.alert);
         switch (type) {
         case 'VS':
             return `Hourly volume spike for ${symbol}`
@@ -81,7 +80,7 @@ class ReviewAnomalyController extends React.Component {
             { val: 3, color: ReviewAnomalyController.colorOrNa(3, alert.severity, 'blue') },
         ]
         const ANOMALY_OPTIONS = [
-            { key: 0, value: 'current', text: alert.description, selected: true },
+            { key: 0, value: 'current', text: `${alert.description} (current)`, selected: true },
             { key: 1, value: 'VS', text: this.descriptionMaker('VS') },
             { key: 2, value: 'VS-D', text: this.descriptionMaker('VS-D') },
             { key: 3, value: 'FFP', text: this.descriptionMaker('FFP') },
