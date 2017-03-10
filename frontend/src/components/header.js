@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 import { Menu, Loader } from 'semantic-ui-react'
 
 import SettingsModal from './settingsmodal'
+import HelpModal from './helpmodal'
 
 const MainHeader = ({ tasks }) => {
     return (
@@ -21,6 +22,7 @@ const MainHeader = ({ tasks }) => {
                         </small>
                     )}
                 </Menu.Item>
+                <HelpModal />
                 <Menu.Item>
                     <SettingsModal />
                 </Menu.Item>
