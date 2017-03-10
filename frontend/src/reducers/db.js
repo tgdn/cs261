@@ -19,6 +19,7 @@ const initialState = {
     trades: horizon('trades'),
     settings: horizon('settings'),
     alerts: [],
+    alertCount: 0,
     notifications: horizon('notifications'),
     tasks: horizon('tasks'),
     symbols: [],
@@ -36,6 +37,24 @@ function db(state = initialState, action) {
         return {
             ...state,
             alerts: action.data.alerts || [],
+        }
+    }
+    case 'SET_ALERT_COUNT': {
+        return {
+            ...state,
+            alertCount: action.data.count || 0
+        }
+    }
+    case 'INCREMENT_ALERT_COUNT': {
+        return {
+            ...state,
+            alertCount: state.alertCount + 1
+        }
+    }
+    case 'DECREMENT_ALERT_COUNT': {
+        return {
+            ...state,
+            alertCount: state.alertCount - 1
         }
     }
     default:

@@ -46,6 +46,7 @@ class AlertDashboard extends React.Component {
     }
 
     handleSuccessfulDelete() {
+        this.props.decrementAlertCount()
         this.props.notificationsystem.addNotification({
             level: 'info',
             title: 'Anomaly correctly discarded',
@@ -166,5 +167,10 @@ class AlertDashboard extends React.Component {
 export default connect(
     state => ({
         notificationsystem: state.notifications.notificationsystem,
+    }),
+    dispatch => ({
+        decrementAlertCount: () => {
+            dispatch({ type: 'DECREMENT_ALERT_COUNT' })
+        }
     })
 )(AlertDashboard)

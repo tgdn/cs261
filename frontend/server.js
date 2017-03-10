@@ -75,6 +75,8 @@ app.get('/api/trades/flagged/:tradeid/', db.getFlaggedTrades)
      // API: Delete anomaly (single one)
      app.post('/api/alerts/delete', (req, res) => db.cancelOneAlert(req, res, conn))
 
+     app.post('/api/alertcount', (req, res) => db.getAlertCount(req, res, conn))
+
      // Kill process endpoint
      app.post('/killprocess', (req, res) => {
          const id = req.body.id

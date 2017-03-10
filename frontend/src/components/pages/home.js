@@ -17,7 +17,7 @@ class HomePage extends React.Component {
         const style = {
             height: `calc(100vh - ${this.props.headerHeight}px)`
         }
-        const alerts = this.props.alerts
+        const { alerts, alertCount } = this.props
         return (
             <div>
                 <Sidebar.Pushable as='div' style={style}>
@@ -34,7 +34,13 @@ class HomePage extends React.Component {
                                     ) : (
                                         <div>
                                             <Icon color='red' name='remove circle' size='massive' class='pulsate' />
-                                            <Header as='h2' color='red'>There are issues to review</Header>
+                                            <Header as='h2' color='red'>
+                                                {alertCount === 1 ? (
+                                                    'There is one issue to review'
+                                                ) : (
+                                                    `There are ${alertCount} issues to review`
+                                                )}
+                                            </Header>
                                             <Button as={Link} to='/flagged' secondary>
                                                 Review now
                                             </Button>
@@ -54,12 +60,14 @@ HomePage.propTypes = {
     headerHeight: React.PropTypes.number,
     alerts: React.PropTypes.array, // eslint-disable-line
     symbols: React.PropTypes.array, // eslint-disable-line
+    alertCount: React.PropTypes.number,
 }
 
 HomePage.defaultProps = {
     headerHeight: 0,
     alerts: [],
     symbols: [],
+    alertCount: 0,
 }
 
 export default connect(
@@ -67,5 +75,6 @@ export default connect(
         alerts: state.db.alerts,
         symbols: state.db.symbols,
         headerHeight: state.ui.headerHeight,
+        alertCount: state.db.alertCount,
     }),
 )(HomePage)

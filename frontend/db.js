@@ -257,6 +257,20 @@ const cancelOneAlert = (req, res, conn) => {
     }
 }
 
+const getAlertCount = (req, res, conn) => {
+    r.table('alerts')
+        .filter({ reviewed: false })
+        .count()
+        .run(conn, (err, count) => {
+            if (!err) {
+                res.status(200).json({ count })
+            } else {
+                console.log(err);
+                res.status(200).json({ count: 0 })
+            }
+        })
+}
+
 module.exports = {
     getSymbols,
     getSymbol,
@@ -266,4 +280,5 @@ module.exports = {
     tradesAfter,
     searchAlerts,
     cancelOneAlert,
+    getAlertCount,
 }

@@ -17,6 +17,7 @@ class App extends React.Component {
     constructor(props) {
         super(props)
         this.getSymbols = this.getSymbols.bind(this)
+        this.subscribeAlertCount = this.subscribeAlertCount.bind(this)
     }
 
     componentDidMount() {
@@ -31,6 +32,8 @@ class App extends React.Component {
         this.subscribeAlerts()
         this.subscribeTasks()
         this.subscribeSymbols()
+        this.subscribeAlertCount()
+        setInterval(this.subscribeAlertCount, 8000)
     }
 
     subscribeNotifications() {
@@ -80,6 +83,29 @@ class App extends React.Component {
             .subscribe((alerts) => {
                 this.props.updateAlerts(alerts)
             })
+    }
+
+    subscribeAlertCount() {
+        fetch('/api/alertcount', { // eslint-disable-line
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then((res) => {
+            if (res.status >= 200 && res.status < 300) {
+                return res.json()
+            }
+            const err = new Error(res.statusText)
+            err.response = res
+            throw err
+        })
+        .then((res) => {
+            this.props.setAlertCount(res.count)
+        })
+        .catch((err) => {
+            console.error(err)
+        })
     }
 
     subscribeSymbols() {
@@ -184,6 +210,7 @@ class App extends React.Component {
 }
 
 App.propTypes = {
+    horizon: PropTypes.any,
     children: PropTypes.node,
     notifications: PropTypes.object,
     settings: PropTypes.object,
@@ -195,9 +222,11 @@ App.propTypes = {
     updateSettings: PropTypes.func,
     updateTasks: PropTypes.func,
     updateSymbols: PropTypes.func,
+    setAlertCount: PropTypes.func,
 }
 
 App.defaultProps = {
+    horizon: null,
     children: null,
     notifications: null,
     settings: null,
@@ -208,7 +237,8 @@ App.defaultProps = {
     largetext: false,
     updateSettings: () => {},
     updateTasks: () => {},
-    updateSymbols: () => {}
+    updateSymbols: () => {},
+    setAlertCount: () => {},
 }
 
 export default connect(
@@ -252,6 +282,12 @@ export default connect(
                 type: 'UPDATE_SYMBOLS',
                 data: { symbols }
             })
-        }
+        },
+        setAlertCount: (count) => {
+            dispatch({
+                type: 'SET_ALERT_COUNT',
+                data: { count }
+            })
+        },
     })
 )(App)
