@@ -47,15 +47,15 @@ class AlertPage extends React.Component {
         this.getAlert(newProps.params.alertid)
     }
 
-    componentWillUpdate(newProps, newState) {
-        // console.log('will update')
-        /* check whether we're loading another alert */
-        // const notNull = (newState.alert != null && this.state.alert != null)
-        // if (newState.alert !== this.state.alert && newState.alert != null) {
-        //     /* if we just loaded the alert */
-        //     this.loadTrades(newState.alert.trade_pk)
-        // }
-    }
+    // componentWillUpdate(newProps, newState) {
+    //     // console.log('will update')
+    //     /* check whether we're loading another alert */
+    //     // const notNull = (newState.alert != null && this.state.alert != null)
+    //     // if (newState.alert !== this.state.alert && newState.alert != null) {
+    //     //     /* if we just loaded the alert */
+    //     //     this.loadTrades(newState.alert.trade_pk)
+    //     // }
+    // }
 
     getAlert(alertid) {
         const alert = find(this.props.alerts, obj => obj.id === alertid)
@@ -68,19 +68,19 @@ class AlertPage extends React.Component {
                         if (doc != null) {
                             this.setState(
                                 { alert: doc },
-                                () => this.loadTrades(doc.trade_pk)
+                                () => this.loadTrades(doc)
                             )
                         } else {
                             this.setState({ doesNotExist: true })
                         }
                     }
                 }, (err) => {
-                    // TODO
+                    console.log(err);
                 })
         } else {
             this.setState(
                 { alert },
-                () => this.loadTrades(alert.trade_pk)
+                () => this.loadTrades(alert)
             )
         }
     }
@@ -109,12 +109,33 @@ class AlertPage extends React.Component {
         })
     }
 
-    loadMultiple(tradeid, hours) {
+    loadMultiple(hour, symbol) {
+        fetch(`/api/trades/flagged/${symbol}/${hour}`) // eslint-disable-line
+        .then((res) => {
+            if (res.status >= 200 && res.status < 300) {
+                return res.json()
+            }
+            const err = new Error(res.statusText)
+            err.response = res
+            throw err
+        })
+        .then((res) => {
+            if (this.mounted) {
+                this.setState({
+                    trades: res.trades,
+                })
+            }
+        })
+        .catch((err) => {
+            if (this.mounted) {
+                // TODO
+            }
+        })
     }
 
-    loadTrades(tradeid) {
+    loadTrades({ trade_pk: tradeid, time: hour, symbol }) {
         if (tradeid === -1) {
-            this.loadMultiple(tradeid, this.state.alert.time)
+            this.loadMultiple(hour, symbol)
         } else {
             this.loadOne(tradeid)
         }

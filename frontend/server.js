@@ -59,6 +59,7 @@ const uploadHandler = upload.single('file')
 app.get('/api/symbols', db.getSymbols)
 app.get('/api/symbol/:symbol', db.getSymbol)
 app.get('/api/trades/flagged/:tradeid/', db.getFlaggedTrades)
+app.get('/api/trades/flagged/:symbol/:hour', db.getFlaggedTimeConstraintTrades)
 
  /*
   * Connect to RethinkDB here

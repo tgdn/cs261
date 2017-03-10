@@ -102,42 +102,22 @@ const getFlaggedTrades = (req, res) => {
 }
 
 const getFlaggedTimeConstraintTrades = (req, res) => {
-    const tradeid = req.params.tradeid
-    const timedelta = req.params.timedelta
-    if (tradeid && timedelta) {
-        db.oneOrNone('SELECT id, symbol_name FROM trades WHERE id = $1', tradeid)
-        .then((tradeid) => {
-            if (trade) {
-                // const from =
-                // const dateUntil = trade.datetime
-
-                db.any(
-                    `SELECT DISTINCT $(tradeFields^) FROM (
-                        (
-                            SELECT $(tradeFields^) FROM trades
-                            WHERE id <= $(tradeid) AND symbol_name = $(symbol_name)
-                            ORDER BY datetime DESC LIMIT 101
-                        )
-                        UNION
-                        (
-                            SELECT $(tradeFields^) FROM trades
-                            WHERE
-                                id > $(tradeid) AND
-                                symbol_name = $(symbol_name) AND
-                                datetime <= $(future_date)
-                                ORDER BY datetime ASC
-                        )
-                        UNION
-                        (
-                            SELECT $(tradeFields^) FROM trades
-                            WHERE datetime >= $(future_date)
-                            ORDER BY datetime ASC
-                            LIMIT 100
-                        )
-                    ) AS sbq ORDER BY datetime ASC`
-                )
-            }
+    const hour = req.params.hour
+    const symbol = req.params.symbol
+    if (hour && symbol) {
+        db.any(
+            `SELECT $(tradeFields^) FROM trades
+            WHERE
+                EXTRACT(hour from datetime) >= $(hour) - 1 AND
+                EXTRACT(hour from datetime) < $(hour) + 2 AND
+                symbol_name = $(symbol)
+            ORDER BY datetime ASC`,
+            { tradeFields, hour, symbol }
+        )
+        .then((trades) => {
+            res.status(200).json({ success: true, trades })
         })
+        .catch(err => handleException(err, res))
     }
 }
 
@@ -281,4 +261,5 @@ module.exports = {
     searchAlerts,
     cancelOneAlert,
     getAlertCount,
+    getFlaggedTimeConstraintTrades,
 }
