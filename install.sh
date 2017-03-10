@@ -20,9 +20,13 @@ function setup {
     cd frontend
     npm install --save
 
+    echo "\n\n"
+    echo "###################################"
     echo "### Everything is now installed ###"
-    echo "You are provided with a JS bundle, you do not need to compile again, but if you wish"
+    echo "\n\nYou are provided with a JS bundle, you do not need to compile again, but if you wish"
     echo "to compile the javascript and watch for changes type in the frontend/ folder: `npm run build`"
+
+    echo "\n\n\nTO LAUNCH SERVER:"
     echo "in frontend/ type `node server.js` to launch the server"
 
 }
