@@ -1,5 +1,7 @@
+/* eslint-disable react/sort-comp, react/forbid-prop-types */
+
 import React, { PropTypes } from 'react'
-import { Segment, Statistic, Button } from 'semantic-ui-react'
+import { Segment, Statistic, Button, Loader } from 'semantic-ui-react'
 import { format } from 'd3-format'
 import { Link } from 'react-router'
 
@@ -12,19 +14,23 @@ const attrOrNa = (obj, attr, frmt) => {
     return frmt ? format(frmt)(obj[attr]) : obj[attr]
 }
 
-const SelectedTrade = ({ trade: t }) => {
+const SelectedTrade = ({ trade: t, alert: a }) => {
     let flagged = ''
     if (t != null) {
-        flagged = t.flagged ? (
-            <Button
-                as={Link}
-                to={`/flagged/${t.id}`}
-                color='red'
-                inverted
-            >
-                Review anomaly
-            </Button>
-        ) : ''
+        if (t.flagged && a) {
+            flagged = (
+                <Button
+                    as={Link}
+                    to={`/flagged/${a.id}`}
+                    color='red'
+                    inverted
+                >
+                    Review anomaly
+                </Button>
+            )
+        } else if (t.flagged && !a) {
+            flagged = <Loader active />
+        }
     }
     const bid = attrOrNa(t, 'bid', '.2f')
     const ask = attrOrNa(t, 'ask', '.2f')
@@ -57,10 +63,12 @@ const SelectedTrade = ({ trade: t }) => {
 
 SelectedTrade.propTypes = {
     trade: PropTypes.any,
+    alert: PropTypes.any,
 }
 
 SelectedTrade.defaultProps = {
     trade: null,
+    alert: null,
 }
 
 export default SelectedTrade
