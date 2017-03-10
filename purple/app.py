@@ -118,9 +118,10 @@ class App:
         Read each line and insert in DB.
         f is file handle opened by argparse.
 
-        Trades are commited once the whole file
-        has been read. Cancelling command will
-        leave database unchanged.
+        Trades are commited every `tradeacc_limit`
+        but analysis is only performed at the end.
+        Cancelling command will store some trades
+        in DB but wont perform analysis
         '''
         global FILE_HANDLE
         FILE_HANDLE = f
