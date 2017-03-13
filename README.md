@@ -38,7 +38,7 @@ It will install the main binary for our database
 ### Step 4: NodeJS
 
 While our backend is in Python, our frontend runs on a light
-`node` app called `expressjs` coupled with a real-time framework
+`expressjs` server coupled with a real-time framework
 called `horizon`.
 
     brew install node
