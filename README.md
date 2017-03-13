@@ -2,6 +2,9 @@
 
 Basically the project for CS261
 
+![Anomaly graph](docs/alert-dashboard.png)
+![Symbol graph](docs/symbol-dashboard.png)
+
 ## Installation instructions
 
 I am not aware of how installation works on Microsoft machines,
@@ -97,9 +100,9 @@ I guess you can now go and visit `http://127.0.0.1:8181/`
 The file which handles what you want to do when running the backend is main.py.
 
 The first time you run the backend, you will want to initialise the db, which is done by running:
-    
+
     python main.py --init-db
-    
+
 (You only need to do this once)
 
 Then, if you would like to analyse the live feed as it comes in, run the following:
